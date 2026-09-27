@@ -1,0 +1,1 @@
+export function formatHistoryDiagnostic(items){return items.map((x,i)=>[`#${i+1}`,`id: ${x.id??'(fehlt)'}`,`parentId: ${x.parentId??'(keine)'}`,`provider: ${x.provider??''}`,`model: ${x.model??''}`,`savedAt: ${x.savedAt??''}`,`task: ${(x.userInput??'').slice(0,120)}`].join('\n')).join('\n\n');}
