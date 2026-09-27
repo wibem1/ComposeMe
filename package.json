@@ -1,0 +1,12 @@
+{
+  "name": "minimal-composer-next",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "syntax": "node --check src/core.js && node --check test/core.test.js && node --check test/smoke.test.js",
+    "unit": "node --test test/core.test.js",
+    "smoke": "node test/smoke.test.js",
+    "verify": "npm run syntax && npm run unit && npm run smoke"
+  }
+}
