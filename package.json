@@ -1,4 +1,1 @@
-{
-  "name":"minimal-composer-next","version":"0.0.4","private":true,"type":"module",
-  "scripts":{"syntax":"node --check src/core.js && node --check src/composition-request.js && node --check src/communication-protocol.js && node --check src/ai-client.js && node --check src/providers/openai.js && node --check src/providers/anthropic.js && node --check src/providers/google.js && node --check test/core.test.js && node --check test/composition-request.test.js && node --check test/communication-protocol.test.js && node --check test/ai-client.test.js && node --check test/smoke.test.js","unit":"node --test test/core.test.js test/composition-request.test.js test/communication-protocol.test.js test/ai-client.test.js","smoke":"node test/smoke.test.js","verify":"npm run syntax && npm run unit && npm run smoke"}
-}
+{"name":"minimal-composer-next","version":"0.1.0","private":true,"type":"module","scripts":{"syntax":"find src test -name '*.js' -print0 | xargs -0 -n1 node --check","unit":"node --test test/*.test.js","smoke":"node test/smoke.test.js","verify":"npm run syntax && npm run unit && npm run smoke"}}

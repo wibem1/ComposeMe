@@ -1,0 +1,2 @@
+import {buildCompositionRequest} from './composition-request.js'; import {sendToAI} from './ai-client.js'; import {createCommunicationRecord} from './communication-protocol.js';
+export async function compose({task,additionalInstructions='',provider,model,apiKey,transport}){const actualRequest=buildCompositionRequest({task,additionalInstructions}); const aiResponse=await sendToAI({provider,model,prompt:actualRequest,apiKey,transport}); return createCommunicationRecord({userInput:task,appAdditions:additionalInstructions,actualRequest,aiResponse,provider,model});}

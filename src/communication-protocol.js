@@ -1,13 +1,2 @@
-export function createCommunicationRecord({ userInput, appAdditions = '', actualRequest, aiResponse, provider = '', model = '' }) {
-  for (const [name, value] of Object.entries({ userInput, appAdditions, actualRequest, aiResponse })) {
-    if (typeof value !== 'string') throw new TypeError(`${name} muss Text sein.`);
-  }
-  return Object.freeze({
-    userInput,
-    appAdditions,
-    actualRequest,
-    aiResponse,
-    provider: String(provider),
-    model: String(model)
-  });
-}
+export function createCommunicationRecord({ userInput, appAdditions = '', actualRequest, aiResponse, provider = '', model = '' }) { for (const [name,value] of Object.entries({userInput,appAdditions,actualRequest,aiResponse})) if(typeof value!=='string') throw new TypeError(`${name} muss Text sein.`); return Object.freeze({userInput,appAdditions,actualRequest,aiResponse,provider:String(provider),model:String(model)}); }
+export function formatCommunicationRecord(r){return `NUTZER:\n${r.userInput}\n\nAPP-ZUSATZ:\n${r.appAdditions}\n\nTATSÄCHLICH AN DIE KI GESENDET:\n${r.actualRequest}\n\nKI-ANTWORT:\n${r.aiResponse}\n\nPROVIDER: ${r.provider}\nMODELL: ${r.model}`;}
