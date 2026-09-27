@@ -1,0 +1,1 @@
+export function comparisonPair(selected,store){if(!selected)return null;if(selected.parentId){const original=store.get(selected.parentId);return original?{original,variant:selected}:null;}const variant=store.variantsOf(selected.id)[0]??null;return variant?{original:selected,variant}:null;}
