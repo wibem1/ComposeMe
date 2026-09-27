@@ -1,11 +1,11 @@
 {
   "name": "minimal-composer-next",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "type": "module",
   "scripts": {
-    "syntax": "node --check src/core.js && node --check src/composition-request.js && node --check test/core.test.js && node --check test/composition-request.test.js && node --check test/smoke.test.js",
-    "unit": "node --test test/core.test.js test/composition-request.test.js",
+    "syntax": "node --check src/core.js && node --check src/composition-request.js && node --check src/communication-protocol.js && node --check test/core.test.js && node --check test/composition-request.test.js && node --check test/communication-protocol.test.js && node --check test/smoke.test.js",
+    "unit": "node --test test/core.test.js test/composition-request.test.js test/communication-protocol.test.js",
     "smoke": "node test/smoke.test.js",
     "verify": "npm run syntax && npm run unit && npm run smoke"
   }
