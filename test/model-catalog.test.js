@@ -1,0 +1,1 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {modelsFor} from '../src/model-catalog.js';test('each provider has selectable models',()=>{for(const p of ['openai','anthropic','google'])assert.ok(modelsFor(p).length>0);});test('unknown provider is harmless',()=>assert.deepEqual(modelsFor('x'),[]));

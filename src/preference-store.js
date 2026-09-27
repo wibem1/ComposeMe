@@ -1,0 +1,1 @@
+const PREFIX='minimal-composer-next:preference:';export function createPreferenceStore(storage){return {get(name,fallback=''){return storage.getItem(PREFIX+name)??fallback;},set(name,value){storage.setItem(PREFIX+name,String(value));}};}
