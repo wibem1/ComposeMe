@@ -1,0 +1,3 @@
+export function anthropicRequest({model,prompt,apiKey}) {
+  return {url:'https://api.anthropic.com/v1/messages',options:{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:8192,messages:[{role:'user',content:prompt}]})},extract:data=>(data.content??[]).filter(x=>x.type==='text').map(x=>x.text).join('')};
+}

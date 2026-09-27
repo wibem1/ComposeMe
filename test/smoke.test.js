@@ -1,9 +1,1 @@
-import assert from 'node:assert/strict';
-import { appStatus } from '../src/core.js';
-import { buildCompositionRequest } from '../src/composition-request.js';
-import { createCommunicationRecord } from '../src/communication-protocol.js';
-assert.equal(appStatus(),'ready');
-const request=buildCompositionRequest({task:'Teststück'});
-const record=createCommunicationRecord({userInput:'Teststück',actualRequest:request,aiResponse:'ABC'});
-assert.equal(record.aiResponse,'ABC');
-console.log('Smoke test: OK');
+import assert from 'node:assert/strict';import {buildCompositionRequest} from '../src/composition-request.js';import {sendToAI} from '../src/ai-client.js';import {createCommunicationRecord} from '../src/communication-protocol.js';const request=buildCompositionRequest({task:'Teststück'});const answer=await sendToAI({provider:'openai',model:'test',prompt:request,apiKey:'x',transport:async()=>({ok:true,status:200,json:async()=>({output_text:'ABC'})})});const record=createCommunicationRecord({userInput:'Teststück',actualRequest:request,aiResponse:answer,provider:'openai',model:'test'});assert.equal(record.aiResponse,'ABC');console.log('Smoke test: OK');
