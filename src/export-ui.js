@@ -1,5 +1,5 @@
-import {recognizeNotation} from './notation-recognition.js?v=0.7.2';
-import {normalizeAbcForAbcjs} from './music-view.js?v=0.7.2';
+import {recognizeNotation} from './notation-recognition.js?v=0.7.3';
+import {normalizeAbcForAbcjs} from './music-view.js?v=0.7.3';
 import {abcToMusicXml} from './abc-to-musicxml.js';
 import {safeExportName,normalizeMidiBinary,assertMidiFile,svgFileText,printableHtml} from './export-core.js';
 
