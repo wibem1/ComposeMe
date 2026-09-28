@@ -18,8 +18,8 @@ test('backup excludes API keys and restores app data without touching keys',()=>
 });
 
 test('diagnostic contains current request response and notation metadata',()=>{
- const d=createDiagnostic({appVersion:'0.5.10',provider:'openai',model:'m',task:'Analyse',response:'Antwort',history:[{id:'1'}],notation:{format:'LilyPond',error:null}});
- assert.equal(d.appVersion,'0.5.10');assert.equal(d.task,'Analyse');assert.equal(d.response,'Antwort');assert.equal(d.notation.format,'LilyPond');assert.equal(d.history.length,1);
+ const d=createDiagnostic({appVersion:'0.6.1',provider:'openai',model:'m',task:'Analyse',response:'Antwort',history:[{id:'1'}],notation:{format:'LilyPond',error:null}});
+ assert.equal(d.appVersion,'0.6.1');assert.equal(d.task,'Analyse');assert.equal(d.response,'Antwort');assert.equal(d.notation.format,'LilyPond');assert.equal(d.history.length,1);assert.equal(d.app,'ComposeMe');
 });
 
 test('key backup contains only API keys and restores them',()=>{
