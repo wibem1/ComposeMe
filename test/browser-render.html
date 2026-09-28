@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>ComposeMe browser render test</title></head>
+<body data-render-success="pending">
+<div id="paper"></div><div id="audio"></div>
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
+<script type="module">
+import {renderMusic} from '../src/music-view.js?v=0.6.13';
+try {
+  const abc=await (await fetch('./fixtures/valse-melancolique.abc')).text();
+  renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
+  const svgCount=document.querySelectorAll('#paper svg').length;
+  const noteCount=document.querySelectorAll('#paper .abcjs-note').length;
+  document.body.dataset.svgCount=String(svgCount);
+  document.body.dataset.noteCount=String(noteCount);
+  document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
+} catch (error) {
+  document.body.dataset.renderSuccess='false';
+  document.body.dataset.renderError=error?.message??String(error);
+}
+</script>
+</body></html>
