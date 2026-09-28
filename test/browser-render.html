@@ -4,10 +4,24 @@
 <div id="paper"></div><div id="audio"></div>
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
 <script type="module">
-import {renderMusic} from '../src/music-view.js?v=0.6.13';
+import {renderMusic,normalizeAbcForAbcjs} from '../src/music-view.js?v=0.6.14';
 try {
   const abc=await (await fetch('./fixtures/valse-melancolique.abc')).text();
+  const normalized=normalizeAbcForAbcjs(abc);
   const visual=renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
+  document.body.dataset.violinProgramDirective=String(normalized.includes('%%MIDI program 40'));
+  const midi=ABCJS.synth.getMidiFile(normalized,{midiOutputType:'binary'});
+  let bytes;
+  const payload=Array.isArray(midi)&&midi.length===1?midi[0]:midi;
+  if(payload instanceof Uint8Array)bytes=payload;
+  else if(payload instanceof ArrayBuffer)bytes=new Uint8Array(payload);
+  else if(typeof payload==='string')bytes=Uint8Array.from(payload, ch=>ch.charCodeAt(0)&255);
+  else if(Array.isArray(payload))bytes=Uint8Array.from(payload);
+  else if(payload?.buffer instanceof ArrayBuffer)bytes=new Uint8Array(payload.buffer);
+  else throw new Error('Unbekanntes MIDI-Binärformat: '+Object.prototype.toString.call(payload));
+  let violinProgram=false;
+  for(let i=0;i<bytes.length-1;i++)if((bytes[i]&0xF0)===0xC0&&bytes[i+1]===40){violinProgram=true;break;}
+  document.body.dataset.violinProgramMidi=String(violinProgram);
   const svgCount=document.querySelectorAll('#paper svg').length;
   const noteCount=document.querySelectorAll('#paper .abcjs-note').length;
   document.body.dataset.svgCount=String(svgCount);
@@ -15,6 +29,8 @@ try {
   document.body.dataset.lineCount=String(visual?.lines?.length??0);
   document.body.dataset.warningCount=String(visual?.warnings?.length??0);
   const pre=document.createElement('pre');pre.id='warnings';pre.textContent=JSON.stringify(visual?.warnings??[]);document.body.append(pre);
+  const rangeWarning=document.querySelector('#paper .notation-warning')?.textContent??'';
+  document.body.dataset.rangeWarning=String(Boolean(rangeWarning));
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
