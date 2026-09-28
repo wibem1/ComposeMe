@@ -1,5 +1,5 @@
 import {extractAbc} from './music-view.js';
-import {lilyToAbc} from './lilypond-import.js';
+import {lilyToAbc} from './lilypond-import.js?v=0.4.5';
 export function recognizeNotation(text){
 if(typeof text!=='string'||!text.trim())return {format:null,abc:'',error:null};
 const fence=text.match(/```(?:lilypond|ly)\s*\n([\s\S]*?)\n```/i);

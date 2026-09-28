@@ -28,16 +28,16 @@ export function lilyToAbc(input){
   const permitted=/\\(?:clef\s+(?:treble|bass)|key\s+c\s+\\major|time\s+4\/4|tempo\s+(?:"[^"]+"\s*)?4\s*=\s*\d+)\s*/g;
   if(remainder.replace(permitted,'').trim())throw Error('Nicht unterstützte Anweisung außerhalb des Notenblocks.');
   let body=part.slice(start,end-1).replace(/\\bar\s+"\|\."/, '');
-  const tokens=body.match(/<[^>]+>\d+|[a-g](?:'{0,2}|,{1,2})\d+|\|/g)??[];
+  const tokens=body.match(/<[^>]+>\d*|[a-g](?:'{0,2}|,{1,2})\d*|\|/g)??[];
   if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,''))throw Error('Nicht unterstützte Noten oder Anweisungen.');
-  let previous=5*7;const pitch=(p)=>{const m=p.match(/^([a-g])('{0,2}|,{1,2})$/);if(!m)throw Error('Ungültige Tonhöhe: '+p);const marks=m[2];const letter=m[1].toUpperCase();let octave;if(mode[1]==='fixed'){octave=3+(mode[2].length-1)+(marks.startsWith("'")?marks.length:-marks.length);}else{const step='cdefgab'.indexOf(m[1]);const prevStep=((previous%7)+7)%7;let delta=step-prevStep;while(delta>3)delta-=7;while(delta< -3)delta+=7;previous+=delta+7*(marks.startsWith("'")?marks.length:-marks.length);octave=Math.floor(previous/7);}if(octave===4)return letter;if(octave>4)return letter.toLowerCase()+"'".repeat(octave-5);return letter+','.repeat(4-octave);};
-  const bars=[];let bar=[],duration=0;
+  let previous=5*7;const pitch=(p)=>{const m=p.match(/^([a-g])('{0,2}|,{1,2})$/);if(!m)throw Error('Ungültige Tonhöhe: '+p);const marks=m[2];const letter=m[1].toUpperCase();let octave;if(mode[1]==='fixed'){octave=3+(marks.startsWith("'")?marks.length:-marks.length);}else{const step='cdefgab'.indexOf(m[1]);const prevStep=((previous%7)+7)%7;let delta=step-prevStep;while(delta>3)delta-=7;while(delta< -3)delta+=7;previous+=delta+7*(marks.startsWith("'")?marks.length:-marks.length);octave=Math.floor(previous/7);}if(octave===4)return letter;if(octave>4)return letter.toLowerCase()+"'".repeat(octave-5);return letter+','.repeat(4-octave);};
+  const bars=[];let bar=[],duration=0,lastLength=null;
   for(const token of tokens){
    if(token==='|'){if(duration!==8)throw Error('Takt hat nicht genau vier Viertel.');bars.push(beamBar(bar));bar=[];duration=0;continue;}
-   const match=token.match(/^(<([^>]+)>|([a-g][',]*))(\d+)$/);
+   const match=token.match(/^(<([^>]+)>|([a-g][',]*))(\d*)$/);
    if(!match)throw Error('Nicht unterstütztes Notenereignis: '+token);
-   const length=Number(match[4]);if(![1,2,4,8].includes(length))throw Error('Nicht unterstützter Notenwert.');
-   const abcLength=8/length;duration+=abcLength;
+   const length=match[4]?Number(match[4]):lastLength;if(![1,2,4,8].includes(length))throw Error('Nicht unterstützter Notenwert.');
+   lastLength=length;const abcLength=8/length;duration+=abcLength;
    const notes=match[2]?match[2].trim().split(/\s+/).map(pitch):[pitch(match[3])];
    bar.push({abc:(notes.length>1?'['+notes.join('')+']':notes[0])+(abcLength===1?'':abcLength),length:abcLength,start:duration-abcLength});
   }
