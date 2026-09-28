@@ -6,3 +6,5 @@
 .export-bar{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid #aaa}.export-bar label{margin:0;min-width:140px;max-width:260px;flex:1}.export-bar button{width:auto;min-width:135px;margin:0}.export-status{width:100%;font-size:.9em;margin:0}
 
 .playback-cursor{stroke:#d00;stroke-width:2.2;pointer-events:none;vector-effect:non-scaling-stroke}.tempo-hint{display:block;margin-top:4px;font-size:.85em;opacity:.8}
+
+#status.working{color:#198754;font-weight:700}
