@@ -3,16 +3,28 @@ export function normalizeAbcForAbcjs(abc){
  const lines=abc.replace(/\r\n?/g,'\n').split('\n');
  const kIndex=lines.findIndex(line=>/^K\s*:/.test(line.trim()));
  if(kIndex<0)return abc.trim();
- const movable=[];
- const kept=[];
+ const movable=[],kept=[];
  for(let i=0;i<lines.length;i++){
   const line=lines[i],trim=line.trim();
-  if(i>kIndex&&/^V\s*:[^\[]/.test(trim)&&/\b(?:clef|name|snm|staves?)\s*=/.test(trim)){movable.push(line);continue;}
+  if(i>kIndex&&/^V\s*:/.test(trim)&&/\b(?:clef|name|snm|sname|staves?)\s*=/.test(trim)){movable.push(line);continue;}
   kept.push(line);
  }
- if(!movable.length)return abc.trim();
  const newK=kept.findIndex(line=>/^K\s*:/.test(line.trim()));
- kept.splice(newK,0,...movable);
+ if(movable.length)kept.splice(newK,0,...movable);
+ const voices=new Map();
+ for(const line of kept){
+  const m=/^V\s*:\s*([^\s]+)(.*)$/.exec(line.trim());
+  if(m)voices.set(m[1],m[2]);
+ }
+ for(let i=0;i<kept.length;i++){
+  const m=/^%%score\s+\(([^()\s]+)\)\s+\(([^()\s]+)\s+([^()\s]+)\)\s*$/.exec(kept[i].trim());
+  if(!m)continue;
+  const [,solo,rh,lh]=m;
+  const rhProps=voices.get(rh)??'',lhProps=voices.get(lh)??'';
+  if(/clef\s*=\s*treble\b/.test(rhProps)&&/clef\s*=\s*bass\b/.test(lhProps)){
+   kept[i]='%%score '+solo+' {'+rh+' '+lh+'}';
+  }
+ }
  return kept.join('\n').trim();
 }
 export function extractAbc(text){if(typeof text!=='string')return '';const cleaned=text.replace(/^\s*\`\`\`(?:abc)?\s*/i,'').replace(/\s*\`\`\`\s*$/,'').trim();const start=cleaned.search(/^X\s*:/m);return start<0?'':cleaned.slice(start).trim();}
