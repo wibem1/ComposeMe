@@ -1,7 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>ComposeMe browser render test</title></head>
 <body data-render-success="pending">
-<div id="paper"></div><div id="audio"></div>
+<div id="paper"></div><div id="audio"></div><div id="abendlicht-paper"></div><div id="abendlicht-audio"></div>
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
 <script type="module">
 import {renderMusic,normalizeAbcForAbcjs} from '../src/music-view.js?v=0.7.0';
@@ -34,6 +34,12 @@ try {
   const pre=document.createElement('pre');pre.id='warnings';pre.textContent=JSON.stringify(visual?.warnings??[]);document.body.append(pre);
   const rangeWarning=document.querySelector('#paper .notation-warning')?.textContent??'';
   document.body.dataset.rangeWarning=String(Boolean(rangeWarning));
+  const abendlicht=await (await fetch('./fixtures/abendlicht-original.abc')).text();
+  const piano=renderMusic({abc:abendlicht,ABCJS:window.ABCJS,
+    paper:document.getElementById('abendlicht-paper'),audio:document.getElementById('abendlicht-audio')});
+  document.body.dataset.abendlichtLines=String(piano?.lines?.length??0);
+  document.body.dataset.abendlichtPaired=String(piano?.lines?.length===4 && piano.lines.every(line=>line.staff?.length===2));
+  document.body.dataset.abendlichtWarnings=String(piano?.warnings?.length??0);
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
