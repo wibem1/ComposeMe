@@ -12,8 +12,8 @@ function voiceBody(source,id,nextId=null){
 }
 test('Abendlicht: align sixteen piano bars into four paired staff lines',()=>{
  const actual=normalizeAbcForAbcjs(abendlicht);
- const right=actual.match(/\[V:RH\][^\n]*|^ {7}[^\n]*/gm)||[];
- const left=actual.slice(actual.indexOf('[V:LH]')).split('\n');
+ const right=actual.slice(actual.indexOf('[V:RH]'),actual.indexOf('[V:LH]')).trim().split('\n');
+ const left=actual.slice(actual.indexOf('[V:LH]')).trim().split('\n');
  assert.equal(right.length,4);
  assert.equal(left.length,4);
  assert.equal((right[0].match(/\|/g)||[]).length,4);
