@@ -31,6 +31,7 @@ function keyInfo(part){
 }
 function cleanMusicBody(body){
  let x=body;
+ x=x.replace(/<<\s*\{([^{}]*)\}\s*\\\\\s*\{([^{}]*)\}\s*>>/g,(_,a,b)=>{const norm=s=>s.replace(/\\fermata\b/g,' ').replace(/\s+/g,' ').trim();return norm(a)===norm(b)?a:' <<UNSUPPORTED_POLYPHONY>> ';});
  // Preserve tuplet ratios as parser markers. Common AI output uses flat (non-nested) tuplet blocks.
  let changed=true;
  while(changed){
@@ -41,11 +42,12 @@ function cleanMusicBody(body){
  x=x.replace(/\\barNumberCheck\s+#\d+/g,' ');
  x=x.replace(/\\bar\s+"[^"]*"/g,' ');
  x=x.replace(/[_^]\\markup\s*\{\s*\\italic\s*\{[^{}]*\}\s*\}/g,' ');
+ x=x.replace(/[_^]?\\markup\s*\{\s*\\italic\s*"[^"]*"\s*\}/g,' ');
  x=x.replace(/[_^]?\s*\\(?:p{1,3}|f{1,3}|mf|mp|sfz|fermata)\b/g,' ');
  x=x.replace(/\\(?:>|<|!)/g,' ');
  x=x.replace(/\\tempo\s+(?:"[^"]+"\s*)?\d+\.?\s*=\s*\d+/g,' ');
  x=x.replace(/\\tempo\s+"[^"]+"/g,' ');
- x=x.replace(/\\(?:sustainOn|sustainOff|crescendo|diminuendo|prall|staccatissimo|tenuto|accent|marcato)\b/g,' ');
+ x=x.replace(/\\(?:sustainOn|sustainOff|crescendo|diminuendo|prall|staccatissimo|tenuto|accent|marcato|espressivo|arpeggio)\b/g,' ');
  x=x.replace(/\\~|~/g,' ');
  x=x.replace(/-\.|->|--/g,' ');
  x=x.replace(/\\clef\s+"?(?:treble|bass)"?/g,' ');
@@ -70,13 +72,58 @@ function ensembleStaves(text){
  const found=[];
  for(const m of score.matchAll(re)){
   const b=blockFrom(score,m.index+m[0].length),staff=b.body;
-  const clef=staff.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
   const refs=[...staff.matchAll(/\\([A-Za-z][A-Za-z0-9_]*)\b/g)].map(x=>x[1]);
   const ref=refs.find(name=>defs.has(name)&&name!=='global');
-  if(!clef||!ref)continue;
+  if(!ref)continue;
   let music=defs.get(ref).replace(/\\global\b/g,global);
+  const clef=staff.match(/\\clef\s+"?(treble|bass)"?/)?.[1]??music.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
+  if(!clef)continue;
   const instrument=m[0].match(/instrumentName\s*=\s*"([^"]+)"/)?.[1]??(ref.toLowerCase().includes('violin')?'Violine':'');
-  found.push({clef,name:instrument||ref,part:'\\clef '+clef+' '+music});
+  found.push({clef,name:instrument||ref,part:music});
+ }
+ return found.length>=2?found:null;
+}
+function directEnsembleStaves(text){
+ const scorePos=text.indexOf('\\score');if(scorePos<0)return null;
+ const open=text.indexOf('{',scorePos);if(open<0)return null;
+ const score=blockFrom(text,open+1).body,defs=namedBlocks(text),global=defs.get('global')??'';
+ const re=/\\new Staff(?:\s*=\s*"[^"]+")?\s*(?:\\with\s*\{[^{}]*\}\s*)?\{/g;
+ const found=[];
+ for(const m of score.matchAll(re)){
+  const staff=blockFrom(score,m.index+m[0].length).body.replace(/\\global\b/g,global);
+  const clef=staff.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
+  if(!clef)continue;
+  const instrument=m[0].match(/instrumentName\s*=\s*"([^"]+)"/)?.[1]??'';
+  found.push({clef,name:instrument,part:staff});
+ }
+ if(found.length<2)return null;
+ if(found.length===3){
+  if(!found[0].name)found[0].name='Violine';
+  if(!found[1].name)found[1].name='Klavier rechts';
+  if(!found[2].name)found[2].name='Klavier links';
+ }
+ return found;
+}
+function referencedVariableStaves(text){
+ const defs=new Map(),defRe=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:isis|eses|is|es)?[',]*)\s*\{/g;
+ for(const m of text.matchAll(defRe)){
+  const b=blockFrom(text,m.index+m[0].length);
+  defs.set(m[1],(m[0]+b.body+'}'));
+ }
+ const scorePos=text.indexOf('\\score');if(scorePos<0)return null;
+ const open=text.indexOf('{',scorePos);if(open<0)return null;
+ const score=blockFrom(text,open+1).body,global=namedBlocks(text).get('global')??'';
+ const re=/\\new Staff(?:\s*=\s*"[^"]+")?\s*(?:\\with\s*\{[^{}]*\}\s*)?\\([A-Za-z][A-Za-z0-9_]*)\b/g;
+ const found=[];
+ for(const m of score.matchAll(re)){
+  const ref=m[1],def=defs.get(ref);if(!def)continue;
+  const part=def.replace(/\\global\b/g,global);
+  const explicit=part.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
+  const inferred=/violin|vln/i.test(ref)?'treble':/(?:piano)?(?:rh|right|rechts|upper)/i.test(ref)?'treble':/(?:piano)?(?:lh|left|links|lower)/i.test(ref)?'bass':null;
+  const clef=explicit??inferred;if(!clef)continue;
+  const withName=m[0].match(/instrumentName\s*=\s*"([^"]+)"/)?.[1];
+  const name=withName??(/violin|vln/i.test(ref)?'Violine':clef==='bass'?'Klavier links':'Klavier rechts');
+  found.push({clef,name,part});
  }
  return found.length>=2?found:null;
 }
@@ -123,7 +170,7 @@ function namedRelativePiano(text){
 function meterUnits(meter){
  const m=/^(\d+)\/(\d+)$/.exec(meter);if(!m)throw Error('Ungültige Taktart: '+meter);
  const units=Number(m[1])*8/Number(m[2]);
- if(![6,8].includes(units)||!['6/8','4/4'].includes(meter))throw Error('Derzeit nur 4/4 und 6/8 unterstützt.');
+ if(!['3/4','4/4','6/8'].includes(meter))throw Error('Derzeit nur 3/4, 4/4 und 6/8 unterstützt.');
  return units;
 }
 function abcLength(length){
@@ -142,7 +189,7 @@ function parsePart(item){
  let body,modeType,anchor;
  if(mode){const b=blockFrom(part,mode.index+mode[0].length);body=cleanMusicBody(b.body);modeType=mode[1];anchor=mode[2];}
  else{body=cleanMusicBody(part);modeType='absolute';anchor='c';}
- const tokenRe=/@M\d+\/\d+@|@T\d+\/\d+@|@E@|<[^>]+>\d*\.?|q\d*\.?|r\d*\.?|[a-g](?:isis|eses|is|es)?[',]*\d*\.?|\|/g;
+ const tokenRe=/@M\d+\/\d+@|@T\d+\/\d+@|@E@|<[^>]+>\d*\.?|q\d*\.?|[rR]\d*\.?|[a-g](?:isis|eses|is|es)?[',]*\d*\.?|\|/g;
  const matches=[...body.matchAll(tokenRe)],tokens=matches.map(m=>m[0]);
  let cursor=0,unsupported='';
  for(const m of matches){
@@ -177,11 +224,11 @@ function parsePart(item){
    const next=token.slice(2,-1);meterUnits(next);currentMeter=next;continue;
   }
   if(token==='|'){if(!bar.length&&duration===0)continue;pushBar();continue;}
-  const m=/^(<([^>]+)>|q|r|([a-g](?:isis|eses|is|es)?[',]*))(\d*)(\.)?$/.exec(token);
+  const m=/^(<([^>]+)>|q|[rR]|([a-g](?:isis|eses|is|es)?[',]*))(\d*)(\.)?$/.exec(token);
   if(!m)throw Error('Nicht unterstütztes Notenereignis: '+token);
   const lilyLength=m[4]?Number(m[4]):lastLength;if(![1,2,4,8,16,32].includes(lilyLength))throw Error('Nicht unterstützter Notenwert.');
   lastLength=lilyLength;let length=8/lilyLength;if(m[5])length*=1.5;const actualLength=length*tupletFactor,start=duration;duration+=actualLength;
-  let abc;if(m[1]==='r')abc='z'+abcLength(length);
+  let abc;if(m[1]==='r'||m[1]==='R')abc='z'+abcLength(length);
   else if(m[1]==='q'){
    if(!lastChord)throw Error('q ohne vorherigen Akkord.');
    abc=lastChord+abcLength(length);
@@ -204,7 +251,7 @@ export function lilyToAbc(input){
  const text=input.replace(/%[^\n]*/g,'');
  if(!/\\version\s+"[^"]+"/.test(text))throw Error('Keine LilyPond-Version gefunden.');
  const title=text.match(/title\s*=\s*"([^"]*)"/)?.[1]??'LilyPond-Import';
- let items=ensembleStaves(text)??contextVoiceStaves(text);
+ let items=referencedVariableStaves(text)??ensembleStaves(text)??contextVoiceStaves(text)??directEnsembleStaves(text);
  if(!items&&text.includes('\\new PianoStaff'))items=directPianoStaves(text)??namedRelativePiano(text);
  if(!items)throw Error('Keine unterstützten Notensysteme gefunden.');
  const parsed=items.map(parsePart),key=parsed[0].key,bars=parsed[0].bars.length,initialMeter=parsed[0].firstMeter;
