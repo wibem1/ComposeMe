@@ -4,7 +4,7 @@ test('Abendlicht pitch and duration',()=>{const abc=lilyToAbc(source);assert.mat
 test('unsupported key rejected',()=>assert.throws(()=>lilyToAbc(source.replaceAll('\\key c \\major','\\key g \\major')),/C-Dur/));
 
 const variant=source.replace('\\tempo 4 = 80','\\tempo "Andante" 4 = 88').replace("\\fixed c' { e'4 g'8 a'8 g'4 e'4","\\relative c'' { e4 g8 a8 g4 e4").replace("\\fixed c' { <c g>2","\\fixed c { <c g>2");
-test('relative melody, fixed c bass and named tempo',()=>{const abc=lilyToAbc(variant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] [C,,G,,]4'));});
+test('relative melody, fixed c bass and named tempo',()=>{const abc=lilyToAbc(variant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] [C,G,]4'));});
 
 const exactVariant=String.raw`\version "2.24.3"
 \header { title = "Abendlicht" composer = " " }
@@ -40,4 +40,4 @@ const exactVariant=String.raw`\version "2.24.3"
 \layout { }
 \midi { }
 }`;
-test('user LilyPond example with relative melody and omitted bass durations',()=>{const abc=lilyToAbc(exactVariant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] C,2 G,2 E2 G,2'));assert.ok(abc.includes('[CEG]4 |]'));assert.equal(abc.match(/ \| /g)?.length,14);});
+test('user LilyPond example with relative melody and omitted bass durations',()=>{const abc=lilyToAbc(exactVariant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] C,2 G,2 E2 G,2'));assert.ok(abc.includes('[C,E,G,]4 |]'));assert.equal(abc.match(/ \| /g)?.length,14);});
