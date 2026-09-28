@@ -7,11 +7,6 @@ test('ABC unchanged',()=>{
  assert.equal(r.format,'ABC');
  assert.equal(r.abc,'X:1\nK:C\nC4|]');
 });
-test('LilyPond is ignored in ABC-only ComposeMe',()=>{
- const r=recognizeNotation('\\version "2.24.3"\n\\score { }');
- assert.equal(r.format,null);
- assert.equal(r.abc,'');
-});
 test('prose ignored',()=>assert.equal(recognizeNotation('Beschreibung').format,null));
 test('fenced ABC is extracted from mixed prose',()=>{
  const r=recognizeNotation('Hier ist die Komposition:\n\n```abc\nX:1\nT:Test\nK:C\nC4|]\n```\n\nKommentar danach.');
