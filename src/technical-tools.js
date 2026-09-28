@@ -20,6 +20,22 @@ export function restoreBackup(storage,backup){
   }
 }
 
+export function createKeyBackup(storage){
+  const data={};
+  for(let i=0;i<storage.length;i++){
+    const key=storage.key(i);
+    if(key?.startsWith(KEY_PREFIX))data[key]=storage.getItem(key);
+  }
+  return {format:'minimal-composer-next-key-backup',version:1,exportedAt:new Date().toISOString(),data};
+}
+
+export function restoreKeyBackup(storage,backup){
+  if(!backup||backup.format!=='minimal-composer-next-key-backup'||backup.version!==1||!backup.data||typeof backup.data!=='object')throw new Error('Ungültige Key-Backup-Datei.');
+  for(const [key,value] of Object.entries(backup.data)){
+    if(key.startsWith(KEY_PREFIX)&&typeof value==='string')storage.setItem(key,value);
+  }
+}
+
 export function createDiagnostic({appVersion,provider,model,task,additional,response,currentId,history,notation}){
   return {
     app:'Minimal Composer Next',
