@@ -8,3 +8,5 @@
 .playback-cursor{stroke:#d00;stroke-width:2.2;pointer-events:none;vector-effect:non-scaling-stroke}.tempo-hint{display:block;margin-top:4px;font-size:.85em;opacity:.8}
 
 #status.working{color:#198754;font-weight:700}
+
+.technical-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.technical-actions button{width:auto;margin:0}
