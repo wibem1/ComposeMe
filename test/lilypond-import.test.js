@@ -3,5 +3,5 @@ const source="\\version \"2.24.3\"\n\\header { title = \"Abendlicht\" composer =
 test('Abendlicht pitch and duration',()=>{const abc=lilyToAbc(source);assert.match(abc,/T:Abendlicht/);assert.match(abc,/Q:1\/4=80/);assert.match(abc,/\[V:RH\] E2 GA G2 E2/);assert.match(abc,/\[V:LH\] \[C,G,\]4 \[E,G,\]4/);assert.match(abc,/c8 \|\]/);assert.match(abc,/\[C,G,C\]8 \|\]/);});
 test('unsupported key rejected',()=>assert.throws(()=>lilyToAbc(source.replaceAll('\\key c \\major','\\key g \\major')),/C-Dur/));
 
-const variant=source.replace('\\\\tempo 4 = 80', '\\\\tempo "Andante" 4 = 88').replace("\\\\fixed c' { e'4 g'8 a'8 g'4 e'4", "\\\\relative c'' { e4 g8 a8 g4 e4").replace("\\\\fixed c' { <c g>2", "\\\\fixed c { <c g>2");
-test('relative melody, fixed c bass and named tempo',()=>{const abc=lilyToAbc(variant);assert.match(abc,/Q:1\\/4=88/);assert.match(abc,/\\[V:RH\\] e2 ga g2 e2/);assert.match(abc,/\\[V:LH\\] \\[C,,G,,\\]4/);});
+const variant=source.replace('\\tempo 4 = 80','\\tempo "Andante" 4 = 88').replace("\\fixed c' { e'4 g'8 a'8 g'4 e'4","\\relative c'' { e4 g8 a8 g4 e4").replace("\\fixed c' { <c g>2","\\fixed c { <c g>2");
+test('relative melody, fixed c bass and named tempo',()=>{const abc=lilyToAbc(variant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] [C,,G,,]4'));});
