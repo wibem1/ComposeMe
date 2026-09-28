@@ -30,11 +30,16 @@ export function estimateCost(model,usage){
   return (Number(usage.input||0)*rates[0]+Number(usage.output||0)*rates[1])/1_000_000;
 }
 
+function localDay(value){
+  const d=value instanceof Date?value:new Date(value);
+  if(Number.isNaN(d.getTime()))return '';
+  return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+}
 export function todayTotals(items,now=new Date()){
-  const day=now.toISOString().slice(0,10);
+  const day=localDay(now);
   let cost=0,input=0,output=0,total=0,priced=0,count=0;
   for(const item of items??[]){
-    if(String(item.savedAt??'').slice(0,10)!==day)continue;
+    if(localDay(item.savedAt)!==day)continue;
     count++;
     const u=item.usage??{};
     input+=Number(u.input||0);output+=Number(u.output||0);total+=Number(u.total||0);
