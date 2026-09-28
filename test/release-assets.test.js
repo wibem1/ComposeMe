@@ -16,3 +16,15 @@ test('all internal cache-busted module imports match app version',()=>{
  }
  assert.ok(checked>0,'no versioned internal module imports found');
 });
+
+
+test('production app is ABC-only and contains no LilyPond path',()=>{
+ const production=['index.html',...fs.readdirSync(new URL('../src/',import.meta.url)).filter(name=>name.endsWith('.js')).map(name=>'src/'+name)];
+ for(const file of production){
+  const text=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
+  assert.doesNotMatch(text,/lilypond|lilyToAbc|\.ly\b/i,file+' still contains LilyPond code');
+ }
+ assert.match(html,/vollständige, gültige ABC-Notation/);
+ assert.match(html,/abcjs 6\.5\.2/);
+ assert.doesNotMatch(html,/notate-response|notation-action\.js/);
+});
