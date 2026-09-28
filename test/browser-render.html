@@ -6,7 +6,7 @@
 <script type="module">
 import {renderMusic,normalizeAbcForAbcjs} from '../src/music-view.js?v=0.6.14';
 import {abcToMusicXml} from '../src/abc-to-musicxml.js';
-import {normalizeMidiBinary,assertMidiFile,svgFileText} from '../src/export-core.js';
+import {normalizeMidiBinary,assertMidiFile,svgFileText,printableHtml} from '../src/export-core.js';
 try {
   const abc=await (await fetch('./fixtures/valse-melancolique.abc')).text();
   const normalized=normalizeAbcForAbcjs(abc);
@@ -23,6 +23,8 @@ try {
   document.body.dataset.midiExport=String(bytes.length>14&&String.fromCharCode(...bytes.slice(0,4))==='MThd');
   document.body.dataset.musicxmlExport=String(musicXml.includes('<score-partwise')&&musicXml.includes('<part-name>Violine</part-name>')&&musicXml.includes('<part-name>Klavier</part-name>'));
   document.body.dataset.svgExport=String(svgText.includes('<svg')&&svgText.length>1000);
+  const printHtml=printableHtml(document.querySelector('#paper svg'),'Valse');
+  document.body.dataset.printExport=String(printHtml.includes('window.print()')&&printHtml.includes('<svg'));
   const svgCount=document.querySelectorAll('#paper svg').length;
   const noteCount=document.querySelectorAll('#paper .abcjs-note').length;
   document.body.dataset.svgCount=String(svgCount);
