@@ -137,4 +137,4 @@ const directNamedStaves=String.raw`\version "2.24.3"
   \layout { }
   \midi { }
 }`;
-test('16-bar direct named Staff blocks with absolute pitches and dynamics are imported',()=>{const abc=lilyToAbc(directNamedStaves);assert.match(abc,/T:Abendlicht/);assert.match(abc,/Q:1\/4=76/);assert.match(abc,/K:C/);assert.match(abc,/%%barsperstaff 4/);assert.match(abc,/\[V:RH\] e'2 g'a' g'2 e'2/);assert.match(abc,/z2/);assert.match(abc,/\[E,G,c\]8/);const rh=abc.match(/^\[V:RH\](.*)$/m)?.[1];const lh=abc.match(/^\[V:LH\](.*)$/m)?.[1];assert.equal((rh.match(/ \| /g)||[]).length,15);assert.equal((lh.match(/ \| /g)||[]).length,15);});
+test('16-bar direct named Staff blocks with absolute pitches and dynamics are imported',()=>{const abc=lilyToAbc(directNamedStaves);assert.match(abc,/T:Abendlicht/);assert.match(abc,/Q:1\/4=76/);assert.match(abc,/K:C/);assert.match(abc,/%%barsperstaff 4/);assert.match(abc,/\[V:RH\] e2 ga g2 e2/);assert.match(abc,/z2/);assert.match(abc,/\[E,G,c\]8/);const rh=abc.match(/^\[V:RH\](.*)$/m)?.[1];const lh=abc.match(/^\[V:LH\](.*)$/m)?.[1];assert.equal((rh.match(/ \| /g)||[]).length,15);assert.equal((lh.match(/ \| /g)||[]).length,15);});
