@@ -151,3 +151,39 @@ PartPTwoVoiceTwo = \relative d { \clef bass \time 4/4 \key d \minor d2 a2 | <d d
 \context Staff = "2" << \context Voice = "PartPTwoVoiceTwo" { \PartPTwoVoiceTwo } >>
  >> >> }`;
 test('context Voice ensemble keeps instrument names and relative chord reference',()=>{const abc=lilyToAbc(contextVoiceRegression);assert.match(abc,/V:V1 clef=treble name="Violine"/);assert.match(abc,/V:V2 clef=treble name="Klavier rechts"/);assert.match(abc,/V:V3 clef=bass name="Klavier links"/);const bass=abc.match(/^\[V:V3\](.*)$/m)?.[1];assert.ok(bass.includes('D,4 A,,4'));assert.ok(!bass.includes('D,,,,'));});
+
+
+const changingMeter=String.raw`\version "2.24.0"
+\header { title = "Taktwechsel" }
+global = { \key c \minor \time 6/8 }
+upper = \relative c'' {
+ \global
+ \tempo "Andante" 4.=72
+ c4. d4. | e8 f g aes bes c |
+ \time 4/4
+ c4 d e f | g2 aes2 |
+ \time 6/8
+ g4. f4. | e8 d c bes aes g |
+}
+lower = \relative c {
+ \global \clef bass
+ c4. g4. | aes4. ees4. |
+ \time 4/4
+ c4 g' ees c | f2 g2 |
+ \time 6/8
+ c,4. g'4. | c,8 d ees f g aes |
+}
+\score { \new PianoStaff << \new Staff = "upper" \upper \new Staff = "lower" \lower >> }`;
+
+test('6/8 with 4/4 meter changes and dotted quarters is imported',()=>{
+ const abc=lilyToAbc(changingMeter);
+ assert.match(abc,/M:6\/8/);
+ assert.match(abc,/Q:3\/8=72/);
+ assert.match(abc,/\[M:4\/4\]/);
+ assert.match(abc,/\[M:6\/8\]/);
+ assert.match(abc,/K:Cm/);
+ const rh=abc.match(/^\[V:RH\](.*)$/m)?.[1]??'';
+ const lh=abc.match(/^\[V:LH\](.*)$/m)?.[1]??'';
+ assert.equal((rh.match(/ \| /g)||[]).length,5);
+ assert.equal((lh.match(/ \| /g)||[]).length,5);
+});
