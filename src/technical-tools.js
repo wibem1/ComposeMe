@@ -38,7 +38,7 @@ export function restoreKeyBackup(storage,backup){
 
 export function createDiagnostic({appVersion,provider,model,task,additional,response,currentId,history,notation}){
   return {
-    app:'Minimal Composer Next',
+    app:'ComposeMe',
     appVersion,
     createdAt:new Date().toISOString(),
     currentId:currentId??null,
