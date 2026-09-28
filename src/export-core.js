@@ -22,3 +22,9 @@ export function svgFileText(svg,title='Noten'){
  if(!clone.getAttribute('xmlns'))clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
  return '<?xml version="1.0" encoding="UTF-8"?>\n<!-- '+String(title).replaceAll('--','—')+' -->\n'+clone.outerHTML;
 }
+
+export function printableHtml(svg,title='Noten'){
+ if(!svg)throw Error('Für PDF/Druck muss ein Notenbild sichtbar sein.');
+ const safe=String(title).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+ return '<!doctype html><html lang="de"><head><meta charset="utf-8"><title>'+safe+'</title><style>@page{size:A4 landscape;margin:10mm}html,body{margin:0;padding:0}body{font-family:system-ui;padding:10mm}button{padding:10px 14px;font:inherit;margin-bottom:12px}svg{display:block;width:100%;height:auto}@media print{button,p{display:none}body{padding:0}}</style></head><body><button onclick="window.print()">Drucken / Als PDF sichern</button><p>Im Druckdialog „Als PDF sichern“ wählen.</p>'+svg.outerHTML+'</body></html>';
+}
