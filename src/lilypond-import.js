@@ -30,7 +30,8 @@ function keyInfo(part){
  return tonic+(m[2]==='minor'?'m':'');
 }
 function cleanMusicBody(body){
- let x=body;\n x=x.replace(/<<\s*\{([^{}]*)\}\s*\\\\\s*\{([^{}]*)\}\s*>>/g,(_,a,b)=>{const norm=s=>s.replace(/\\fermata\\b/g,' ').replace(/\\s+/g,' ').trim();return norm(a)===norm(b)?a:' <<UNSUPPORTED_POLYPHONY>> ';});
+ let x=body;
+ x=x.replace(/<<\s*\{([^{}]*)\}\s*\\\\\s*\{([^{}]*)\}\s*>>/g,(_,a,b)=>{const norm=s=>s.replace(/\\fermata\b/g,' ').replace(/\s+/g,' ').trim();return norm(a)===norm(b)?a:' <<UNSUPPORTED_POLYPHONY>> ';});
  // Preserve tuplet ratios as parser markers. Common AI output uses flat (non-nested) tuplet blocks.
  let changed=true;
  while(changed){
