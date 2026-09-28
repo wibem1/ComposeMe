@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {abcToMusicXml} from '../src/abc-to-musicxml.js';
 import {normalizeAbcForAbcjs} from '../src/music-view.js';
-import {safeExportName,normalizeMidiBinary,assertMidiFile,svgFileText} from '../src/export-core.js';
+import {safeExportName,normalizeMidiBinary,assertMidiFile,svgFileText,printableHtml} from '../src/export-core.js';
 
 const abendlicht=['X:1','T:Abendlicht','M:4/4','L:1/8','Q:1/4=88','K:C','%%score {RH LH}',
 'V:RH clef=treble name="Klavier"','V:LH clef=bass name="Klavier"',
@@ -51,4 +51,12 @@ test('SVG export creates standalone XML',()=>{
  const out=svgFileText(svg,'Test');
  assert.match(out,/^<\?xml/);
  assert.match(out,/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+});
+
+test('print/PDF document embeds rendered SVG and print action',()=>{
+ const svg={outerHTML:'<svg xmlns="http://www.w3.org/2000/svg"><g/></svg>'};
+ const out=printableHtml(svg,'Valse');
+ assert.match(out,/Drucken \/ Als PDF sichern/);
+ assert.match(out,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+ assert.match(out,/window\.print\(\)/);
 });
