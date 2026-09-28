@@ -231,3 +231,33 @@ test('exact Éclats d’Ombre fixture converts without importer error',async()=>
  assert.match(abc,/\[M:4\/4\]/);
  assert.match(abc,/\[M:6\/8\]/);
 });
+
+
+const directViolinPiano=String.raw`\\version "2.24.3"
+\header { title = "Valse mélancolique" }
+\score {
+ <<
+  \new Staff \with { instrumentName = "Violine" } {
+   \clef treble \key d \minor \time 4/4
+   a'4 bes' c'' d'' | e''2 d''2 |
+  }
+  \new PianoStaff <<
+   \new Staff {
+    \clef treble \key d \minor \time 4/4
+    f'4 a' d'' c'' | bes'2 a'2 |
+   }
+   \new Staff {
+    \clef bass \key d \minor \time 4/4
+    d2 a | bes2 a |
+   }
+  >>
+ >>
+}`;
+test('direct violin plus piano three-staff score is imported',()=>{
+ const abc=lilyToAbc(directViolinPiano);
+ assert.match(abc,/T:Valse mélancolique/);
+ assert.match(abc,/%%score V1 \{V2 V3\}/);
+ assert.match(abc,/V:V1 clef=treble name="Violine"/);
+ assert.match(abc,/V:V2 clef=treble name="Klavier rechts"/);
+ assert.match(abc,/V:V3 clef=bass name="Klavier links"/);
+});
