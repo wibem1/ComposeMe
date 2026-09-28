@@ -18,13 +18,15 @@ test('all internal cache-busted module imports match app version',()=>{
 });
 
 
-test('production app is ABC-only and contains no LilyPond path',()=>{
+test('production keeps ABC rendering and adds LilyPond pass-through only',()=>{
  const production=['index.html',...fs.readdirSync(new URL('../src/',import.meta.url)).filter(name=>name.endsWith('.js')).map(name=>'src/'+name)];
  for(const file of production){
   const text=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
-  assert.doesNotMatch(text,/lilypond|lilyToAbc|\.ly\b/i,file+' still contains LilyPond code');
+  assert.doesNotMatch(text,/lilyToAbc/i,file+' must not convert LilyPond musically');
  }
  assert.match(html,/vollständige, gültige ABC-Notation/);
  assert.match(html,/abcjs 6\.5\.2/);
+ assert.match(html,/Ausgabe als Datei speichern/);
+ assert.match(html,/In Hacklily öffnen/);
  assert.doesNotMatch(html,/notate-response|notation-action\.js/);
 });
