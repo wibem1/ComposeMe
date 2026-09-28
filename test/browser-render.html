@@ -12,12 +12,13 @@ try {
   document.body.dataset.violinProgramDirective=String(normalized.includes('%%MIDI program 40'));
   const midi=ABCJS.synth.getMidiFile(normalized,{midiOutputType:'binary'});
   let bytes;
-  if(midi instanceof Uint8Array)bytes=midi;
-  else if(midi instanceof ArrayBuffer)bytes=new Uint8Array(midi);
-  else if(typeof midi==='string')bytes=Uint8Array.from(midi, ch=>ch.charCodeAt(0)&255);
-  else if(Array.isArray(midi))bytes=Uint8Array.from(midi);
-  else if(midi?.buffer instanceof ArrayBuffer)bytes=new Uint8Array(midi.buffer);
-  else throw new Error('Unbekanntes MIDI-Binärformat: '+Object.prototype.toString.call(midi));
+  const payload=Array.isArray(midi)&&midi.length===1?midi[0]:midi;
+  if(payload instanceof Uint8Array)bytes=payload;
+  else if(payload instanceof ArrayBuffer)bytes=new Uint8Array(payload);
+  else if(typeof payload==='string')bytes=Uint8Array.from(payload, ch=>ch.charCodeAt(0)&255);
+  else if(Array.isArray(payload))bytes=Uint8Array.from(payload);
+  else if(payload?.buffer instanceof ArrayBuffer)bytes=new Uint8Array(payload.buffer);
+  else throw new Error('Unbekanntes MIDI-Binärformat: '+Object.prototype.toString.call(payload));
   let violinProgram=false;
   for(let i=0;i<bytes.length-1;i++)if((bytes[i]&0xF0)===0xC0&&bytes[i+1]===40){violinProgram=true;break;}
   document.body.dataset.violinProgramMidi=String(violinProgram);
