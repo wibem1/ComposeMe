@@ -70,15 +70,37 @@ function ensembleStaves(text){
  const found=[];
  for(const m of score.matchAll(re)){
   const b=blockFrom(score,m.index+m[0].length),staff=b.body;
-  const clef=staff.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
   const refs=[...staff.matchAll(/\\([A-Za-z][A-Za-z0-9_]*)\b/g)].map(x=>x[1]);
   const ref=refs.find(name=>defs.has(name)&&name!=='global');
-  if(!clef||!ref)continue;
+  if(!ref)continue;
   let music=defs.get(ref).replace(/\\global\b/g,global);
+  const clef=staff.match(/\\clef\s+"?(treble|bass)"?/)?.[1]??music.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
+  if(!clef)continue;
   const instrument=m[0].match(/instrumentName\s*=\s*"([^"]+)"/)?.[1]??(ref.toLowerCase().includes('violin')?'Violine':'');
-  found.push({clef,name:instrument||ref,part:'\\clef '+clef+' '+music});
+  found.push({clef,name:instrument||ref,part:music});
  }
  return found.length>=2?found:null;
+}
+function directEnsembleStaves(text){
+ const scorePos=text.indexOf('\\score');if(scorePos<0)return null;
+ const open=text.indexOf('{',scorePos);if(open<0)return null;
+ const score=blockFrom(text,open+1).body,defs=namedBlocks(text),global=defs.get('global')??'';
+ const re=/\\new Staff(?:\s*=\s*"[^"]+")?\s*(?:\\with\s*\{[^{}]*\}\s*)?\{/g;
+ const found=[];
+ for(const m of score.matchAll(re)){
+  const staff=blockFrom(score,m.index+m[0].length).body.replace(/\\global\b/g,global);
+  const clef=staff.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
+  if(!clef)continue;
+  const instrument=m[0].match(/instrumentName\s*=\s*"([^"]+)"/)?.[1]??'';
+  found.push({clef,name:instrument,part:staff});
+ }
+ if(found.length<2)return null;
+ if(found.length===3){
+  if(!found[0].name)found[0].name='Violine';
+  if(!found[1].name)found[1].name='Klavier rechts';
+  if(!found[2].name)found[2].name='Klavier links';
+ }
+ return found;
 }
 function contextVoiceStaves(text){
  const defs=new Map(),defRe=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:isis|eses|is|es)?[',]*)\s*\{/g;
@@ -204,7 +226,7 @@ export function lilyToAbc(input){
  const text=input.replace(/%[^\n]*/g,'');
  if(!/\\version\s+"[^"]+"/.test(text))throw Error('Keine LilyPond-Version gefunden.');
  const title=text.match(/title\s*=\s*"([^"]*)"/)?.[1]??'LilyPond-Import';
- let items=ensembleStaves(text)??contextVoiceStaves(text);
+ let items=ensembleStaves(text)??contextVoiceStaves(text)??directEnsembleStaves(text);
  if(!items&&text.includes('\\new PianoStaff'))items=directPianoStaves(text)??namedRelativePiano(text);
  if(!items)throw Error('Keine unterstützten Notensysteme gefunden.');
  const parsed=items.map(parsePart),key=parsed[0].key,bars=parsed[0].bars.length,initialMeter=parsed[0].firstMeter;
