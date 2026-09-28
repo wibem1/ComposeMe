@@ -7,11 +7,14 @@
 import {renderMusic} from '../src/music-view.js?v=0.6.12';
 try {
   const abc=await (await fetch('./fixtures/valse-melancolique.abc')).text();
-  renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
+  const visual=renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
   const svgCount=document.querySelectorAll('#paper svg').length;
   const noteCount=document.querySelectorAll('#paper .abcjs-note').length;
   document.body.dataset.svgCount=String(svgCount);
   document.body.dataset.noteCount=String(noteCount);
+  document.body.dataset.lineCount=String(visual?.lines?.length??0);
+  document.body.dataset.warningCount=String(visual?.warnings?.length??0);
+  const pre=document.createElement('pre');pre.id='warnings';pre.textContent=JSON.stringify(visual?.warnings??[]);document.body.append(pre);
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
