@@ -11,6 +11,6 @@ test('notation conversion button and module are present',async()=>{
   const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
   const action=await readFile(new URL('../src/notation-action.js',import.meta.url),'utf8');
   assert.match(html,/id="notate-response"/);
-  assert.match(html,/notation-action\.js\?v=0\.6\.5/);
+  assert.match(html,/notation-action\.js\?v=0\.6\.6/);
   assert.match(action,/form\.requestSubmit\(\)/);
 });
