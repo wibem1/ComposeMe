@@ -71,21 +71,18 @@ function ensembleStaves(text){
  return found.length>=2?found:null;
 }
 function contextVoiceStaves(text){
- const scorePos=text.indexOf('\\score');if(scorePos<0)return null;
- const open=text.indexOf('{',scorePos);if(open<0)return null;
- const score=blockFrom(text,open+1).body;
  const defs=new Map(),defRe=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:is|es)?[',]*)\s*\{/g;
  for(const m of text.matchAll(defRe)){
   const b=blockFrom(text,m.index+m[0].length);
   defs.set(m[1],m[0]+b.body+'}');
  }
- const refs=[...score.matchAll(/\\context Voice\s*=\s*"[^"]+"\s*\{\s*\\([A-Za-z][A-Za-z0-9_]*)\s*\}/g)];
+ const refs=[...text.matchAll(/\\context Voice\s*=\s*"[^"]+"\s*\{\s*\\([A-Za-z][A-Za-z0-9_]*)\s*\}/g)];
  if(refs.length<2)return null;
  const found=[];
  for(const m of refs){
   const ref=m[1],part=defs.get(ref);if(!part)continue;
   const clef=part.match(/\\clef\s+"?(treble|bass)"?/)?.[1];if(!clef)continue;
-  const prefix=score.slice(0,m.index);
+  const prefix=text.slice(0,m.index);
   const labels=[...prefix.matchAll(/\\set\s+(Staff|PianoStaff)\.instrumentName\s*=\s*"([^"]+)"/g)];
   const label=labels.at(-1);
   let name=ref;
