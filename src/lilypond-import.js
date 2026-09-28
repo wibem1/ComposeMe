@@ -175,8 +175,8 @@ function parsePart(item){
   if(token==='|'){if(!bar.length&&duration===0)continue;pushBar();continue;}
   const m=/^(<([^>]+)>|q|r|([a-g](?:is|es)?[',]*))(\d*)(\.)?$/.exec(token);
   if(!m)throw Error('Nicht unterstütztes Notenereignis: '+token);
-  const lilyLength=m[5]?Number(m[5]):lastLength;if(![1,2,4,8,16,32].includes(lilyLength))throw Error('Nicht unterstützter Notenwert.');
-  lastLength=lilyLength;let length=8/lilyLength;if(m[6])length*=1.5;const actualLength=length*tupletFactor,start=duration;duration+=actualLength;
+  const lilyLength=m[4]?Number(m[4]):lastLength;if(![1,2,4,8,16,32].includes(lilyLength))throw Error('Nicht unterstützter Notenwert.');
+  lastLength=lilyLength;let length=8/lilyLength;if(m[5])length*=1.5;const actualLength=length*tupletFactor,start=duration;duration+=actualLength;
   let abc;if(m[1]==='r')abc='z'+abcLength(length);
   else if(m[1]==='q'){
    if(!lastChord)throw Error('q ohne vorherigen Akkord.');
@@ -187,7 +187,7 @@ function parsePart(item){
    if(firstReference!==null)previous=firstReference;
    lastChord='['+notes.join('')+']';abc=lastChord+abcLength(length);
   }else{
-   abc=convertPitch(m[4])+abcLength(length);
+   abc=convertPitch(m[3])+abcLength(length);
   }
   if(pendingTuplet){abc=pendingTuplet+abc;pendingTuplet='';}
   bar.push({abc,length:actualLength,start});
