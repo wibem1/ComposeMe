@@ -1,16 +1,18 @@
 export const COST_RATES=Object.freeze({
-  'gpt-5.6-sol':[1.75,14],
-  'gpt-5.6-terra':[1.25,10],
-  'gpt-5.6-luna':[0.25,2],
-  'claude-sonnet-5':[3,15],
-  'claude-fable-5':[3,15],
-  'claude-opus-5':[15,75],
+  'gpt-6-sol':[2,10],
+  'gpt-6-luna':[0.10,0.50],
+  'gpt-5.6-sol':[4,20],
+  'gpt-5.6-terra':[2,12],
+  'gpt-5.6-luna':[0.20,1.20],
+  'claude-sonnet-5':[2,10],
+  'claude-opus-5':[5,25],
+  'claude-fable-5':[10,50],
   'claude-sonnet-4-6':[3,15],
-  'gemini-3.1-pro-preview':[1.25,10],
-  'gemini-3.8-flash':[0.30,2.50],
-  'gemini-3.7-flash':[0.30,2.50],
-  'gemini-3.6-flash':[0.30,2.50],
-  'gemini-3.5-flash-lite':[0.10,0.40]
+  'gemini-3.1-pro-preview':[2,12],
+  'gemini-3.8-flash':[0.75,3.75],
+  'gemini-3.7-flash':[0.75,3.75],
+  'gemini-3.6-flash':[0.75,3.75],
+  'gemini-3.5-flash-lite':[0.30,2.50]
 });
 
 export function extractUsage(provider,data){
@@ -46,6 +48,6 @@ export function formatCostLine(record){
   const tokens=Number(u.total||0);
   const cost=Number.isFinite(record?.estimatedCost)?record.estimatedCost:null;
   const tokenPart=tokens?tokens.toLocaleString('de-DE')+' Tokens (Eingabe '+Number(u.input||0).toLocaleString('de-DE')+', Ausgabe '+Number(u.output||0).toLocaleString('de-DE')+')':'Tokenzahl nicht verfügbar';
-  const costPart=cost==null?'Kosten für dieses Modell nicht berechenbar':'geschätzte Kosten ca. '+cost.toFixed(4)+' €';
+  const costPart=cost==null?'Kosten für dieses Modell nicht berechenbar':'geschätzte Kosten ca. '+cost.toFixed(4)+' $';
   return tokenPart+' · '+costPart;
 }
