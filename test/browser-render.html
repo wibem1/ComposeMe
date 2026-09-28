@@ -11,7 +11,13 @@ try {
   const visual=renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
   document.body.dataset.violinProgramDirective=String(normalized.includes('%%MIDI program 40'));
   const midi=ABCJS.synth.getMidiFile(normalized,{midiOutputType:'binary'});
-  const bytes=midi instanceof Uint8Array?midi:new Uint8Array(await midi.arrayBuffer());
+  let bytes;
+  if(midi instanceof Uint8Array)bytes=midi;
+  else if(midi instanceof ArrayBuffer)bytes=new Uint8Array(midi);
+  else if(typeof midi==='string')bytes=Uint8Array.from(midi, ch=>ch.charCodeAt(0)&255);
+  else if(Array.isArray(midi))bytes=Uint8Array.from(midi);
+  else if(midi?.buffer instanceof ArrayBuffer)bytes=new Uint8Array(midi.buffer);
+  else throw new Error('Unbekanntes MIDI-Binärformat: '+Object.prototype.toString.call(midi));
   let violinProgram=false;
   for(let i=0;i<bytes.length-1;i++)if((bytes[i]&0xF0)===0xC0&&bytes[i+1]===40){violinProgram=true;break;}
   document.body.dataset.violinProgramMidi=String(violinProgram);
