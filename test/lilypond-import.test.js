@@ -40,4 +40,4 @@ const exactVariant=String.raw`\version "2.24.3"
 \layout { }
 \midi { }
 }`;
-test('user LilyPond example with relative melody and omitted bass durations',()=>{const abc=lilyToAbc(exactVariant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] C,2 G,2 E2 G,2'));assert.ok(abc.includes('[C,E,G,]4 |]'));assert.equal(abc.match(/ \| /g)?.length,14);});
+test('user LilyPond example with relative melody and omitted bass durations',()=>{const abc=lilyToAbc(exactVariant);assert.ok(abc.includes('Q:1/4=88'));assert.ok(abc.includes('[V:RH] e2 ga g2 e2'));assert.ok(abc.includes('[V:LH] C,,2 G,,2 E,2 G,,2'));assert.ok(abc.includes('[C,E,G,]4 |]'));assert.equal(abc.match(/ \| /g)?.length,14);});
