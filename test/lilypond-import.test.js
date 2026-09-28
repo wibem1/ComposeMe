@@ -216,6 +216,6 @@ lower = \relative c { \clef bass \key cis \minor \time 4/4 cis2 gis | cis1 }
 
 test('double sharps such as fisis are imported',()=>{
  const abc=lilyToAbc(doubleAccidental);
- assert.match(abc,/\^\^F/);
+ assert.match(abc,/\^\^f/);
  assert.match(abc,/K:C#m/);
 });
