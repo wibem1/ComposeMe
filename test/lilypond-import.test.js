@@ -206,3 +206,16 @@ test('tuplets and q chord repeats are imported',()=>{
  assert.match(abc,/\[[^\]]+\]2 \[[^\]]+\]2/);
  assert.match(abc,/M:4\/4/);
 });
+
+
+const doubleAccidental=String.raw`\version "2.24.0"
+\header { title = "Doppelte Vorzeichen" }
+upper = \relative c'' { \clef treble \key cis \minor \time 4/4 fisis4 gis a b | cis1 }
+lower = \relative c { \clef bass \key cis \minor \time 4/4 cis2 gis | cis1 }
+\score { \new PianoStaff << \new Staff = "upper" \upper \new Staff = "lower" \lower >> }`;
+
+test('double sharps such as fisis are imported',()=>{
+ const abc=lilyToAbc(doubleAccidental);
+ assert.match(abc,/\^\^F/);
+ assert.match(abc,/K:C#m/);
+});
