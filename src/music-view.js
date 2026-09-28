@@ -1,3 +1,4 @@
+import {alignScoreVoiceLines} from './voice-line-sync.js';
 export function normalizeAbcForAbcjs(abc){
  if(typeof abc!=='string'||!abc.trim())return '';
  const lines=abc.replace(/\r\n?/g,'\n').split('\n').filter(line=>line.trim()!==''&&!/^%%(?:stretchstaff|measurenb)\b/i.test(line.trim()));
@@ -44,7 +45,7 @@ export function normalizeAbcForAbcjs(abc){
   }
   kept.length=0;kept.push(...scoped);
  }
- return kept.join('\n').trim();
+ return alignScoreVoiceLines(kept.join('\n').trim());
 }
 
 function abcPitchToMidi(token){
