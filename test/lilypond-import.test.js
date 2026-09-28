@@ -89,3 +89,52 @@ PartPOneVoiceTwo = \relative a, {
  \context Staff = "2" << \context Voice = "PartPOneVoiceTwo" { \PartPOneVoiceTwo } >>
 >> >> \layout {} }`;
 test('16-bar named relative voices in A minor are imported',()=>{const abc=lilyToAbc(sixteenBarNamedVoices);assert.match(abc,/T:Im Abendlicht/);assert.match(abc,/K:Am/);assert.match(abc,/Q:1\/4=76/);assert.match(abc,/%%barsperstaff 4/);assert.match(abc,/\^G/);assert.match(abc,/z2/);assert.match(abc,/\[A,,E,A,C\]4/);const rh=abc.match(/^\[V:RH\](.*)$/m)?.[1];const lh=abc.match(/^\[V:LH\](.*)$/m)?.[1];assert.equal((rh.match(/ \| /g)||[]).length,15);assert.equal((lh.match(/ \| /g)||[]).length,15);});
+
+const directNamedStaves=String.raw`\version "2.24.3"
+\header { title = "Abendlicht" composer = " " }
+\score {
+  \new PianoStaff <<
+    \new Staff = "rechts" {
+      \clef treble \key c \major \time 4/4
+      \tempo "Andante, cantabile" 4 = 76
+      e''4\p g''8 a''8 g''4 e''4 |
+      c''4 e''8 f''8 e''4 c''4 |
+      a'4 c''8 d''8 c''4 a'4 |
+      b'4 d''8 f''8 d''4 b'4 |
+      g'4 b'8 c''8 b'4 g'4 |
+      a'4 c''8 e''8 a''4 g''4 |
+      f''4 e''8 d''8 c''4 a'4 |
+      b'2 d''4 r4 |
+      e''4\mf g''8 c'''8 b''4 g''4 |
+      d''4 g''8 b''8 a''4 g''4 |
+      e''4 a''8 c'''8 b''4 a''4 |
+      g''4 e''8 d''8 b'4 g'4 |
+      a'4\> c''8 f''8 e''4 c''4 |
+      d''4 f''8 a''8 g''4 f''4 |
+      f''4 d''8 b'8 g'4 b'4 |
+      <e' g' c''>1\pp\! \bar "|."
+    }
+    \new Staff = "links" {
+      \clef bass \key c \major \time 4/4
+      c8 g c' e' g e' c' g |
+      a,8 e a c' e c' a e |
+      f,8 c f a c' a f c |
+      g,8 d g b d' b g d |
+      e,8 b, e g b g e b, |
+      a,8 e a c' e' c' a e |
+      d,8 a, d f a f d a, |
+      g,8 d g b d' b g d |
+      c8 g c' e' g e' c' g |
+      b,8 g b d' g' d' b g |
+      a,8 e a c' e' c' a e |
+      g,8 e g b e' b g e |
+      f,8 c f a c' a f c |
+      d,8 a, d f a f d a, |
+      g,8 d g b f' b g d |
+      c,8 g, c e <c e g c'>2
+    }
+  >>
+  \layout { }
+  \midi { }
+}`;
+test('16-bar direct named Staff blocks with absolute pitches and dynamics are imported',()=>{const abc=lilyToAbc(directNamedStaves);assert.match(abc,/T:Abendlicht/);assert.match(abc,/Q:1\/4=76/);assert.match(abc,/K:C/);assert.match(abc,/%%barsperstaff 4/);assert.match(abc,/\[V:RH\] e'2 g'a' g'2 e'2/);assert.match(abc,/z2/);assert.match(abc,/\[E,G,c\]8/);const rh=abc.match(/^\[V:RH\](.*)$/m)?.[1];const lh=abc.match(/^\[V:LH\](.*)$/m)?.[1];assert.equal((rh.match(/ \| /g)||[]).length,15);assert.equal((lh.match(/ \| /g)||[]).length,15);});

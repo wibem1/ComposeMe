@@ -40,7 +40,8 @@ function cleanMusicBody(body){
  x=x.replace(/\\barNumberCheck\s+#\d+/g,' ');
  x=x.replace(/\\bar\s+"[^"]*"/g,' ');
  x=x.replace(/[_^]\\markup\s*\{\s*\\italic\s*\{[^{}]*\}\s*\}/g,' ');
- x=x.replace(/[_^]\s*\\(?:p{1,3}|f{1,3}|mf|mp|sfz|fermata)\b/g,' ');
+ x=x.replace(/[_^]?\s*\\(?:p{1,3}|f{1,3}|mf|mp|sfz|fermata)\b/g,' ');
+ x=x.replace(/\\(?:>|<|!)/g,' ');
  x=x.replace(/\\tempo\s+(?:"[^"]+"\s*)?\d+\s*=\s*\d+/g,' ');
  x=x.replace(/\\clef\s+"?(?:treble|bass)"?/g,' ');
  x=x.replace(/\\key\s+[a-g](?:is|es)?\s+\\(?:major|minor)\b/g,' ');
@@ -49,7 +50,7 @@ function cleanMusicBody(body){
  return x;
 }
 function extractDirectStaves(text){
- const matches=[...text.matchAll(/\\new Staff\s*\{/g)];
+ const matches=[...text.matchAll(/\\new Staff(?:\s*=\s*"[^"]+")?\s*\{/g)];
  if(matches.length!==2)return null;
  return matches.map(m=>blockFrom(text,m.index+m[0].length).body);
 }
@@ -71,9 +72,13 @@ function parsePart(part){
  if(!/(?:\\numericTimeSignature\s*)?\\time\s+4\/4\b/.test(part))throw Error('Derzeit nur 4/4 unterstützt.');
  const key=keyInfo(part);
  const mode=part.match(/\\(fixed|relative)\s+([a-g](?:is|es)?[',]*)\s*\{/);
- if(!mode)throw Error('Keine unterstützte \\fixed- oder \\relative-Stimme gefunden.');
- const b=blockFrom(part,mode.index+mode[0].length);
- let body=cleanMusicBody(b.body);
+ let body,modeType,anchor;
+ if(mode){
+  const b=blockFrom(part,mode.index+mode[0].length);
+  body=cleanMusicBody(b.body);modeType=mode[1];anchor=mode[2];
+ }else{
+  body=cleanMusicBody(part);modeType='absolute';anchor='c';
+ }
  const tokens=body.match(/<[^>]+>\d*|r\d*|[a-g](?:is|es)?[',]*\d*|\|/g)??[];
  if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,''))throw Error('Nicht unterstützte LilyPond-Anweisung im Notenblock.');
  const beamBar=(events)=>{
@@ -85,10 +90,10 @@ function parsePart(part){
   }
   return out;
  };
- let previous=absoluteAnchor(mode[2]),lastLength=null,bar=[],duration=0;const bars=[];
+ let previous=absoluteAnchor(anchor),lastLength=null,bar=[],duration=0;const bars=[];
  const convertPitch=token=>{
   const spec=pitchSpec(token);const step='cdefgab'.indexOf(spec.letter);let octave;
-  if(mode[1]==='fixed'){
+  if(modeType==='fixed'||modeType==='absolute'){
    octave=3+[...spec.marks].reduce((n,c)=>n+(c==="'"?1:-1),0);
   }else{
    const prevStep=((previous%7)+7)%7;let delta=step-prevStep;
