@@ -41,7 +41,8 @@ function cleanMusicBody(body){
  x=x.replace(/\\(?:stemUp|stemDown|numericTimeSignature|break|mergeDifferentlyDottedOn|mergeDifferentlyHeadedOn)\b/g,' ');
  x=x.replace(/\\barNumberCheck\s+#\d+/g,' ');
  x=x.replace(/\\bar\s+"[^"]*"/g,' ');
- x=x.replace(/[_^]\\markup\s*\{\s*\\italic\s*\{[^{}]*\}\s*\}/g,' ');\n x=x.replace(/[_^]?\\markup\s*\{\s*\\italic\s*\"[^\"]*\"\s*\}/g,' ');
+ x=x.replace(/[_^]\\markup\s*\{\s*\\italic\s*\{[^{}]*\}\s*\}/g,' ');
+ x=x.replace(/[_^]?\\markup\s*\{\s*\\italic\s*"[^"]*"\s*\}/g,' ');
  x=x.replace(/[_^]?\s*\\(?:p{1,3}|f{1,3}|mf|mp|sfz|fermata)\b/g,' ');
  x=x.replace(/\\(?:>|<|!)/g,' ');
  x=x.replace(/\\tempo\s+(?:"[^"]+"\s*)?\d+\.?\s*=\s*\d+/g,' ');
