@@ -1,4 +1,4 @@
-import {recognizeNotation} from './notation-recognition.js?v=0.4.5';
+import {recognizeNotation} from './notation-recognition.js?v=0.5.1';
 import {abcToMusicXml} from './abc-to-musicxml.js';
 function lilySource(text){
  const fenced=typeof text==='string'&&text.match(/`{3}(?:lilypond|ly)\s*\n([\s\S]*?)\n`{3}/i);
