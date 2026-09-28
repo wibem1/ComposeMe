@@ -132,5 +132,5 @@ export function lilyToAbc(input){
  if(top.bars.length!==bottom.bars.length)throw Error('Die beiden Systeme haben unterschiedlich viele Takte.');
  if(!top.bars.length)throw Error('Keine Takte gefunden.');
  const tempo=Number(text.match(/\\tempo\s+(?:"[^"]+"\s*)?4\s*=\s*(\d+)/)?.[1]??80);
- return ['X:1','T:'+title,'M:4/4','L:1/8','Q:1/4='+tempo,'K:'+top.key,'%%score {RH LH}','V:RH clef=treble','V:LH clef=bass','[V:RH] '+top.bars.join(' | ')+' |]','[V:LH] '+bottom.bars.join(' | ')+' |]'].join('\n');
+ return ['X:1','T:'+title,'M:4/4','L:1/8','Q:1/4='+tempo,'K:'+top.key,'%%barsperstaff 4','%%score {RH LH}','V:RH clef=treble','V:LH clef=bass','[V:RH] '+top.bars.join(' | ')+' |]','[V:LH] '+bottom.bars.join(' | ')+' |]'].join('\n');
 }
