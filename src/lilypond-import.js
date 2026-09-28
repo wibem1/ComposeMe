@@ -18,7 +18,7 @@ export function lilyToAbc(input){
   if(!/\\key\s+c\s+\\major\b/.test(part))throw Error('Derzeit nur C-Dur unterstützt.');
   if(!/\\time\s+4\/4\b/.test(part))throw Error('Derzeit nur 4/4 unterstützt.');
   const fixed=part.match(/\\fixed\s+c'\s*\{/);
-  if(!fixed)throw Error('Derzeit wird \\fixed c\\' erwartet.');
+  if(!fixed)throw Error("Derzeit wird \\fixed c' erwartet.");
   let start=fixed.index+fixed[0].length,depth=1,end=start;
   while(depth&&end<part.length){if(part[end]==='{')depth++;if(part[end]==='}')depth--;end++;}
   if(depth)throw Error('Unvollständiger Notenblock.');
