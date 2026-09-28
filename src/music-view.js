@@ -16,18 +16,6 @@ export function normalizeAbcForAbcjs(abc){
   const m=/^V\s*:\s*([^\s]+)(.*)$/.exec(line.trim());
   if(m)voices.set(m[1],m[2]);
  }
- // Give named instrumental voices a matching General MIDI program.
- // abcjs defaults every voice to acoustic grand piano when no program is set.
- const withPrograms=[];
- for(const line of kept){
-  withPrograms.push(line);
-  const m=/^V\s*:\s*([^\s]+)(.*)$/.exec(line.trim());
-  if(!m)continue;
-  const id=m[1],props=m[2],label=(id+' '+props).toLowerCase();
-  if(/violin|violine|vln/.test(label))withPrograms.push('%%MIDI program 40');
-  else if(/pno|piano|klavier/.test(label))withPrograms.push('%%MIDI program 0');
- }
- kept.length=0;kept.push(...withPrograms);
  for(let i=0;i<kept.length;i++){
   const m=/^%%score\s+\(([^()\s]+)\)\s+\(([^()\s]+)\s+([^()\s]+)\)\s*$/.exec(kept[i].trim());
   if(!m)continue;
@@ -36,6 +24,25 @@ export function normalizeAbcForAbcjs(abc){
   if(/clef\s*=\s*treble\b/.test(rhProps)&&/clef\s*=\s*bass\b/.test(lhProps)){
    kept[i]='%%score '+solo+' {'+rh+' '+lh+'}';
   }
+ }
+ const programs=new Map();
+ for(const [id,props] of voices){
+  const label=(id+' '+props).toLowerCase();
+  if(/violin|violine|vln/.test(label))programs.set(id,40);
+  else if(/pno|piano|klavier/.test(label))programs.set(id,0);
+ }
+ if(programs.size){
+  const seen=new Set(),scoped=[];
+  for(const line of kept){
+   const m=/^\[V:([^\]]+)\]/.exec(line.trim());
+   if(m&&programs.has(m[1])&&!seen.has(m[1])){
+    scoped.push('V:'+m[1]);
+    scoped.push('%%MIDI program '+programs.get(m[1]));
+    seen.add(m[1]);
+   }
+   scoped.push(line);
+  }
+  kept.length=0;kept.push(...scoped);
  }
  return kept.join('\n').trim();
 }
