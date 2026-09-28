@@ -15,3 +15,5 @@ fi
 cat /tmp/composeme-render-dom.html
 grep -q 'data-render-success="true"' /tmp/composeme-render-dom.html
 grep -Eq 'data-note-count="[1-9][0-9]*"' /tmp/composeme-render-dom.html
+grep -q 'data-violin-program-directive="true"' /tmp/composeme-render-dom.html
+grep -q 'data-violin-program-midi="true"' /tmp/composeme-render-dom.html
