@@ -1,6 +1,6 @@
 export function normalizeAbcForAbcjs(abc){
  if(typeof abc!=='string'||!abc.trim())return '';
- const lines=abc.replace(/\r\n?/g,'\n').split('\n');
+ const lines=abc.replace(/\r\n?/g,'\n').split('\n').filter(line=>!/^%%(?:stretchstaff|measurenb)\b/i.test(line.trim()));
  const kIndex=lines.findIndex(line=>/^K\s*:/.test(line.trim()));
  if(kIndex<0)return abc.trim();
  const movable=[],kept=[];
