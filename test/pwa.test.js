@@ -26,5 +26,5 @@ test('service worker is network-first and claims clients',async()=>{
   const sw=await readFile(new URL('../sw.js',import.meta.url),'utf8');
   assert.match(sw,/fetch\(event\.request\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
-  assert.match(sw,/composeme-0\.6\.4/);
+  assert.match(sw,/composeme-0\.6\.5/);
 });
