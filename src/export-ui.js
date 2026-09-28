@@ -1,7 +1,7 @@
 import {recognizeNotation} from './notation-recognition.js?v=0.6.14';
 import {normalizeAbcForAbcjs} from './music-view.js?v=0.6.14';
 import {abcToMusicXml} from './abc-to-musicxml.js';
-import {safeExportName,normalizeMidiBinary,assertMidiFile,svgFileText} from './export-core.js';
+import {safeExportName,normalizeMidiBinary,assertMidiFile,svgFileText,printableHtml} from './export-core.js';
 
 function download(data,file,type){
  const blob=data instanceof Blob?data:new Blob([data],{type});
@@ -14,10 +14,7 @@ function printable(svg,abc){
  const w=window.open('','_blank');
  if(!w)throw Error('Druckfenster blockiert. Bitte Pop-ups für diese Seite erlauben.');
  const title=abc.match(/^T:\s*(.*)$/m)?.[1]?.trim()||'Noten';
- const safe=title.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
- w.document.open();
- w.document.write('<!doctype html><html lang="de"><head><meta charset="utf-8"><title>'+safe+'</title><style>@page{size:A4 landscape;margin:10mm}html,body{margin:0;padding:0}body{font-family:system-ui;padding:10mm}button{padding:10px 14px;font:inherit;margin-bottom:12px}svg{display:block;width:100%;height:auto}@media print{button,p{display:none}body{padding:0}}</style></head><body><button onclick="window.print()">Drucken / Als PDF sichern</button><p>Im Druckdialog „Als PDF sichern“ wählen.</p>'+svg.outerHTML+'</body></html>');
- w.document.close();w.focus();
+ w.document.open();w.document.write(printableHtml(svg,title));w.document.close();w.focus();
 }
 export function createExportBar(host,{record,ABCJS,paper,onStatus=()=>{}}){
  const notation=recognizeNotation(record?.aiResponse??'');
