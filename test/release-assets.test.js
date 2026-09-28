@@ -28,5 +28,8 @@ test('production keeps ABC rendering and adds LilyPond pass-through only',()=>{
  assert.match(html,/abcjs 6\.5\.2/);
  assert.match(html,/Ausgabe als Datei speichern/);
  assert.match(html,/In Hacklily öffnen/);
+ assert.match(html,/Ausgabe in Eingabe kopieren/);
+ assert.doesNotMatch(html,/Variante erzeugen/);
+ assert.doesNotMatch(html,/variant-request\.js|buildVariantRequest|actualRequestOverride/);
  assert.doesNotMatch(html,/notate-response|notation-action\.js/);
 });
