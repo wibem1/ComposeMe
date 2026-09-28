@@ -11,7 +11,7 @@ export function buildCompositionRequest({ task, additionalInstructions = '' }) {
 
   const asksForAbc=/\bABC(?:-Notation)?\b|\babc\s*(?:format|Format)\b/i.test(cleanTask);
   const abcGuard=asksForAbc
-    ? '\n\nABC-HINWEIS: Verwende die ABC-Oktavkonvention exakt. In ABC ist C das mittlere c, c liegt eine Oktave höher; Apostrophe erhöhen jeweils um eine weitere Oktave, Kommas erniedrigen. Übertrage Tonhöhen aus deutscher/Helmholtz-Notation daher nicht mechanisch mit denselben Apostrophen. Prüfe die resultierende Lage jedes Instruments vor der Ausgabe.'
+    ? "\n\nABC-TONHÖHENREGEL: Bestimme zuerst die Tonhöhenkonvention des Ausgangstextes und übersetze sie ausdrücklich in ABC. Referenz: wissenschaftlich C4 = mittleres C = ABC C; C5 = ABC c. Wenn der Ausgangstext deutsche/Helmholtz-Schreibweise verwendet, gilt: c' = ABC C, e' = ABC E, a' = ABC A, c'' = ABC c, d'' = ABC d, e''' = ABC e'. Übernimm Apostrophe niemals mechanisch aus dem Ausgangstext. Prüfe vor der Ausgabe jede Instrumentstimme auf plausible reale Lage. Bei gemischten oder mehrdeutigen Angaben löse die Tonhöhe konsistent anhand von Instrument, musikalischem Kontext und den genannten Referenzen auf; erfinde keine zusätzliche Oktavverschiebung."
     : '';
 
   const request=cleanAdditional
