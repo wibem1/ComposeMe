@@ -29,6 +29,8 @@ try {
   document.body.dataset.lineCount=String(visual?.lines?.length??0);
   document.body.dataset.warningCount=String(visual?.warnings?.length??0);
   const pre=document.createElement('pre');pre.id='warnings';pre.textContent=JSON.stringify(visual?.warnings??[]);document.body.append(pre);
+  const rangeWarning=document.querySelector('#paper .notation-warning')?.textContent??'';
+  document.body.dataset.rangeWarning=String(Boolean(rangeWarning));
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
