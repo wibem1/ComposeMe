@@ -1,4 +1,4 @@
-import {recognizeNotation} from './notation-recognition.js?v=0.6.3';
+import {recognizeNotation} from './notation-recognition.js?v=0.6.4';
 
 const button=document.getElementById('notate-response');
 const result=document.getElementById('result');
