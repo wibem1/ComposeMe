@@ -187,3 +187,22 @@ test('6/8 with 4/4 meter changes and dotted quarters is imported',()=>{
  assert.equal((rh.match(/ \| /g)||[]).length,5);
  assert.equal((lh.match(/ \| /g)||[]).length,5);
 });
+
+
+const tupletAndQ=String.raw`\version "2.24.0"
+\header { title = "Tuplet" }
+upper = \relative c'' { \clef treble \key c \minor \time 4/4
+ <c ees g>4 \tuplet 3/2 { c8 d ees } <f aes c>4 q |
+ g16 a bes c d e f g a bes c d e f g a |
+}
+lower = \relative c { \clef bass \key c \minor \time 4/4
+ c2 g | c,4 g' ees c |
+}
+\score { \new PianoStaff << \new Staff = "upper" \upper \new Staff = "lower" \lower >> }`;
+
+test('tuplets and q chord repeats are imported',()=>{
+ const abc=lilyToAbc(tupletAndQ);
+ assert.match(abc,/\(3:2/);
+ assert.match(abc,/\[[^\]]+\]2 \[[^\]]+\]2/);
+ assert.match(abc,/M:4\/4/);
+});
