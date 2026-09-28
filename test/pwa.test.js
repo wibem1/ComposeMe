@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
 
 test('web app manifest requests standalone display and has install icons',async()=>{
   const manifest=JSON.parse(await readFile(new URL('../manifest.webmanifest',import.meta.url),'utf8'));
@@ -26,5 +27,5 @@ test('service worker is network-first and claims clients',async()=>{
   const sw=await readFile(new URL('../sw.js',import.meta.url),'utf8');
   assert.match(sw,/fetch\(event\.request\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
-  assert.match(sw,/composeme-0\.6\.9/);
+  assert.ok(sw.includes('composeme-'+pkg.version));
 });
