@@ -1,0 +1,62 @@
+X:1
+T:Valse mélancolique
+T:(Erinnerung an den Herbst)
+C:Klassischer Entwurf
+M:3/4
+L:1/4
+Q:"Andante con tenerezza, rubato" 1/4=126
+%%score (Vln) (Pno1 Pno2)
+K:Am
+%%stretchstaff 1
+%%measurenb 1
+
+% ==========================================
+% TEIL A (Takte 1 - 8)
+% ==========================================
+V:Vln  clef=treble name="Violine" snm="Vln."
+V:Pno1 clef=treble name="Klavier" snm="Klv."
+V:Pno2 clef=bass
+% --- Takt 1 - 4 ---
+[V:Vln]  z2 "^dolce" e | a3 | g f e | d2 e |
+[V:Pno1] !p! z [A c e] [A c e] | z [A c e] [A c e] | z [F A d] [F A d] | z [^G B d] [^G B d] |
+[V:Pno2] A,,3 | A,,3 | F,,3 | E,,3 |
+% --- Takt 5 - 8 ---
+[V:Vln]  c3 | "^espress." d'2 (c'/2b/2) | b2 a | a3 |
+[V:Pno1] z [A c e] [A c e] | z [F A d] [F A d] | z [A d] [^G d] | z/ A/c/e/ a/c'/ e'/z/ |
+[V:Pno2] A,,3 | D,3 | E,2 E,, | A,,3 |
+
+% ==========================================
+% TEIL B (Takte 9 - 16)
+% ==========================================
+% --- Takt 9 - 12 ---
+[V:Vln]  !crescendo(! c'3 | d' e' g' !crescendo)! | !mf! "^appassionato" a'3 | g'2 f' |
+[V:Pno1] z [E G c] [E G c] | z [D G B] [D G B] | z [F A c] [F A c] | z [E G c] [E G c] |
+[V:Pno2] C,3 | B,,3 | A,,3 | G,,3 |
+% --- Takt 13 - 16 ---
+[V:Vln]  d' f' a' | !f! b'3 | "^rit." (a'/2^g'/2 f'/2e'/2) z | !p! !fermata!d'2 b |
+[V:Pno1] z [F A d] [F A d] | z [^G B e] [^G B e] | [^G d e] z [^G d e] | !fermata![^G B d]3 |
+[V:Pno2] F,3 | E,3 | E, z E,, | !fermata!E,,3 |
+
+% ==========================================
+% TEIL A' (Takte 17 - 24)
+% ==========================================
+% --- Takt 17 - 20 ---
+[V:Vln]  !f! a'3 | g' f' e' | f'2 e' | !mf! e'3 |
+[V:Pno1] z [c e a] [c e a] | z [d f b] [d f b] | z [_B d f] [_B d f] | z [^G d e] [^G d e] |
+[V:Pno2] A,,3 | D,3 | _B,,3 | E,3 |
+% --- Takt 21 - 24 ---
+[V:Vln]  d' c' b | b c' d' | !subito p! c'2 b | a3 |
+[V:Pno1] z [A c f] [A c f] | z [F A d] [F A d] | z [^G B d] [^G B d] | [A c e]3 |
+[V:Pno2] F,3 | D,3 | E,3 | A,,3 |
+
+% ==========================================
+% CODA (Takte 25 - 32)
+% ==========================================
+% --- Takt 25 - 28 ---
+[V:Vln]  !pp! "^con sordino" c' b a | f2 e | e3 | a3 |
+[V:Pno1] z [c e] [c e] | z [F A c e] [F A c e] | z [E A d] [E ^G d] | z [C E A] [C E A] |
+[V:Pno2] A,,3 | D,3 | E,3 | A,,3 |
+% --- Takt 29 - 32 ---
+[V:Vln]  "^harm." !open! e''3- | e''3 | "^harm." !open! a'3 | !fermata! z3 |]
+[V:Pno1] a g f | e3 | z [^G B d e]2 | !fermata![A c e a]3 |]
+[V:Pno2] D,3 | C,2 A,, | E,,3 | !fermata![A,,, E,, A,,]3 |]
