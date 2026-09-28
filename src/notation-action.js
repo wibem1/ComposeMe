@@ -15,7 +15,7 @@ function refresh(){
 button?.addEventListener('click',()=>{
   const source=(result?.value??'').trim();
   if(!source)return;
-  task.value=source+'\n\nErstelle daraus eine Komposition.';
+  task.value=source+'\n\nNOTATIONSAUFTRAG: Erzeuge aus diesem musikalischen Entwurf eine vollständige, direkt darstellbare ABC-Notation für die vorhandene Besetzung. Gib ausschließlich einen vollständigen \`abc\`-Codeblock aus, ohne erklärenden Text. Die Notation muss mit abcjs 6.5.2 darstellbar und abspielbar sein. Übernimm Tonhöhen, Oktavlagen, Rhythmus, Taktart, Tempo, Stimmen und Form musikalisch korrekt aus dem Entwurf; interpretiere Apostrophe oder Oktavbezeichnungen des Ausgangstextes nicht mechanisch als ABC-Oktavzeichen. Prüfe jede Instrumentstimme auf realistische Lage und erhalte ausdrücklich genannte Register, Flageoletts und Oktavlagen. Verwende vollständige V:-Stimmen für alle Instrumente, korrekte Taktlängen und eine passende %%score-Anordnung. Verwende keine von abcjs nicht unterstützten Formatdirektiven. Prüfe den erzeugten ABC-Code vor der Ausgabe auf syntaktische Konsistenz und vollständige Taktzahl.';
   additional.value='';
   button.hidden=true;
   form.requestSubmit();
