@@ -138,3 +138,11 @@ const directNamedStaves=String.raw`\version "2.24.3"
   \midi { }
 }`;
 test('16-bar direct named Staff blocks with absolute pitches and dynamics are imported',()=>{const abc=lilyToAbc(directNamedStaves);assert.match(abc,/T:Abendlicht/);assert.match(abc,/Q:1\/4=76/);assert.match(abc,/K:C/);assert.match(abc,/%%barsperstaff 4/);assert.match(abc,/\[V:RH\] e2 ga g2 e2/);assert.match(abc,/z2/);assert.match(abc,/\[EGc\]8/);const rh=abc.match(/^\[V:RH\](.*)$/m)?.[1];const lh=abc.match(/^\[V:LH\](.*)$/m)?.[1];assert.equal((rh.match(/ \| /g)||[]).length,15);assert.equal((lh.match(/ \| /g)||[]).length,15);});
+
+
+const contextVoiceRegression="\\version \"2.24.3\"\\n"+
+"PartPOneVoiceOne = \\\\relative d'' { \\\\clef treble \\\\time 4/4 \\\\key d \\\\minor d4 f8 e d4 a4 | d1 }\\n"+
+"PartPTwoVoiceOne = \\\\relative f' { \\\\clef treble \\\\time 4/4 \\\\key d \\\\minor <f a>4 a8 d <f, a>4 e8 f | <f a d>1 }\\n"+
+"PartPTwoVoiceTwo = \\\\relative d { \\\\clef bass \\\\time 4/4 \\\\key d \\\\minor d2 a2 | <d d'>1 }\\n"+
+"\\\\score { << \\\\new Staff << \\\\set Staff.instrumentName = \"Violine\" \\\\context Staff << \\\\context Voice = \"PartPOneVoiceOne\" { \\\\PartPOneVoiceOne } >> >> \\\\new PianoStaff << \\\\set PianoStaff.instrumentName = \"Klavier\" \\\\context Staff = \"1\" << \\\\context Voice = \"PartPTwoVoiceOne\" { \\\\PartPTwoVoiceOne } >> \\\\context Staff = \"2\" << \\\\context Voice = \"PartPTwoVoiceTwo\" { \\\\PartPTwoVoiceTwo } >> >> >> }";
+test('context Voice ensemble keeps instrument names and relative chord reference',()=>{const abc=lilyToAbc(contextVoiceRegression);assert.match(abc,/V:V1 clef=treble name="Violine"/);assert.match(abc,/V:V2 clef=treble name="Klavier rechts"/);assert.match(abc,/V:V3 clef=bass name="Klavier links"/);const bass=abc.match(/^\\[V:V3\\](.*)$/m)?.[1];assert.ok(bass.includes('D,4 A,,4'));assert.ok(!bass.includes('D,,,,'));});
