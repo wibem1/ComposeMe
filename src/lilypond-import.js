@@ -7,7 +7,7 @@ function blockFrom(text,start){
  return {body:text.slice(start,end-1),end};
 }
 function pitchSpec(token){
- const m=/^([a-g])((?:is|es)?)([',]*)$/.exec(token);
+ const m=/^([a-g])((?:isis|eses|is|es)?)([',]*)$/.exec(token);
  if(!m)throw Error('Ungültige Tonhöhe: '+token);
  return {letter:m[1],acc:m[2],marks:m[3]};
 }
@@ -18,7 +18,7 @@ function absoluteAnchor(token){
 }
 function abcPitch(spec,octave){
  const letter=spec.letter.toUpperCase();
- const accidental=spec.acc==='is'?'^':spec.acc==='es'?'_':'';
+ const accidental=spec.acc==='isis'?'^^':spec.acc==='eses'?'__':spec.acc==='is'?'^':spec.acc==='es'?'_':'';
  const base=octave===4?letter:octave>4?letter.toLowerCase()+"'".repeat(octave-5):letter+','.repeat(4-octave);
  return accidental+base;
 }
@@ -81,7 +81,7 @@ function ensembleStaves(text){
  return found.length>=2?found:null;
 }
 function contextVoiceStaves(text){
- const defs=new Map(),defRe=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:is|es)?[',]*)\s*\{/g;
+ const defs=new Map(),defRe=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:isis|eses|is|es)?[',]*)\s*\{/g;
  for(const m of text.matchAll(defRe)){
   const b=blockFrom(text,m.index+m[0].length);
   defs.set(m[1],m[0]+b.body+'}');
@@ -109,7 +109,7 @@ function directPianoStaves(text){
 }
 function namedRelativePiano(text){
  const blocks=namedBlocks(text),global=blocks.get('global')??'';
- const found=[],re=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:is|es)?[',]*)\s*\{/g;
+ const found=[],re=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:isis|eses|is|es)?[',]*)\s*\{/g;
  for(const m of text.matchAll(re)){
   const b=blockFrom(text,m.index+m[0].length),whole=(m[0]+b.body+'}').replace(/\\global\b/g,global);
   const explicit=whole.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
@@ -138,11 +138,11 @@ function parsePart(item){
  const firstMeter=part.match(/\\time\s+(\d+\/\d+)/)?.[1];
  if(!firstMeter)throw Error('Keine unterstützte Taktart gefunden.');
  meterUnits(firstMeter);
- const key=keyInfo(part),mode=part.match(/\\(fixed|relative)\s+([a-g](?:is|es)?[',]*)\s*\{/);
+ const key=keyInfo(part),mode=part.match(/\\(fixed|relative)\s+([a-g](?:isis|eses|is|es)?[',]*)\s*\{/);
  let body,modeType,anchor;
  if(mode){const b=blockFrom(part,mode.index+mode[0].length);body=cleanMusicBody(b.body);modeType=mode[1];anchor=mode[2];}
  else{body=cleanMusicBody(part);modeType='absolute';anchor='c';}
- const tokens=body.match(/@M\d+\/\d+@|@T\d+\/\d+@|@E@|<[^>]+>\d*\.?|q\d*\.?|r\d*\.?|[a-g](?:is|es)?[',]*\d*\.?|\|/g)??[];
+ const tokens=body.match(/@M\d+\/\d+@|@T\d+\/\d+@|@E@|<[^>]+>\d*\.?|q\d*\.?|r\d*\.?|[a-g](?:isis|eses|is|es)?[',]*\d*\.?|\|/g)??[];
  if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,'')){
   let rest=body;
   for(const token of tokens)rest=rest.replace(token,' ');
@@ -173,7 +173,7 @@ function parsePart(item){
    const next=token.slice(2,-1);meterUnits(next);currentMeter=next;continue;
   }
   if(token==='|'){if(!bar.length&&duration===0)continue;pushBar();continue;}
-  const m=/^(<([^>]+)>|q|r|([a-g](?:is|es)?[',]*))(\d*)(\.)?$/.exec(token);
+  const m=/^(<([^>]+)>|q|r|([a-g](?:isis|eses|is|es)?[',]*))(\d*)(\.)?$/.exec(token);
   if(!m)throw Error('Nicht unterstütztes Notenereignis: '+token);
   const lilyLength=m[4]?Number(m[4]):lastLength;if(![1,2,4,8,16,32].includes(lilyLength))throw Error('Nicht unterstützter Notenwert.');
   lastLength=lilyLength;let length=8/lilyLength;if(m[5])length*=1.5;const actualLength=length*tupletFactor,start=duration;duration+=actualLength;
