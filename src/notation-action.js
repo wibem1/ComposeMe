@@ -1,4 +1,4 @@
-import {recognizeNotation} from './notation-recognition.js?v=0.6.4';
+import {recognizeNotation} from './notation-recognition.js?v=0.6.5';
 
 const button=document.getElementById('notate-response');
 const result=document.getElementById('result');
@@ -15,7 +15,7 @@ function refresh(){
 button?.addEventListener('click',()=>{
   const source=(result?.value??'').trim();
   if(!source)return;
-  task.value='Setze die folgende bereits entstandene Komposition vollständig in eine direkt darstellbare Musiknotation um. Verwende ausschließlich ABC-Notation. Bewahre alle konkret angegebenen musikalischen Entscheidungen; ergänze nur, was für eine vollständige Notation unvermeidbar ist. Antworte ausschließlich mit der vollständigen ABC-Notation, ohne Kommentar oder Erläuterung.\n\nAUSGANGSKOMPOSITION:\n'+source;
+  task.value=source+'\n\nErstelle daraus eine Komposition.';
   additional.value='';
   button.hidden=true;
   form.requestSubmit();
