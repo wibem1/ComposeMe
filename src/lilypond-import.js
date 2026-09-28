@@ -68,7 +68,7 @@ function extractNamedVoices(text){
 function parsePart(part){
  const clef=part.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
  if(!clef)throw Error('Nur Violin- und Bassschlüssel unterstützt.');
- if(!/\\(?:numericTimeSignature\s*)?\\time\s+4\/4\b/.test(part))throw Error('Derzeit nur 4/4 unterstützt.');
+ if(!/(?:\\numericTimeSignature\s*)?\\time\s+4\/4\b/.test(part))throw Error('Derzeit nur 4/4 unterstützt.');
  const key=keyInfo(part);
  const mode=part.match(/\\(fixed|relative)\s+([a-g](?:is|es)?[',]*)\s*\{/);
  if(!mode)throw Error('Keine unterstützte \\fixed- oder \\relative-Stimme gefunden.');
@@ -103,7 +103,7 @@ function parsePart(part){
   bars.push(beamBar(bar));bar=[];duration=0;
  };
  for(const token of tokens){
-  if(token==='|'){pushBar();continue;}
+  if(token==='|'){if(duration===0&&!bar.length)continue;pushBar();continue;}
   const m=/^(<([^>]+)>|r|([a-g](?:is|es)?[',]*))(\d*)$/.exec(token);
   if(!m)throw Error('Nicht unterstütztes Notenereignis: '+token);
   const lilyLength=m[4]?Number(m[4]):lastLength;
