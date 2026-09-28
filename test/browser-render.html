@@ -5,23 +5,24 @@
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
 <script type="module">
 import {renderMusic,normalizeAbcForAbcjs} from '../src/music-view.js?v=0.6.14';
+import {abcToMusicXml} from '../src/abc-to-musicxml.js';
+import {normalizeMidiBinary,assertMidiFile,svgFileText} from '../src/export-core.js';
 try {
   const abc=await (await fetch('./fixtures/valse-melancolique.abc')).text();
   const normalized=normalizeAbcForAbcjs(abc);
   const visual=renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
   document.body.dataset.violinProgramDirective=String(normalized.includes('%%MIDI program 40'));
   const midi=ABCJS.synth.getMidiFile(normalized,{midiOutputType:'binary'});
-  let bytes;
-  const payload=Array.isArray(midi)&&midi.length===1?midi[0]:midi;
-  if(payload instanceof Uint8Array)bytes=payload;
-  else if(payload instanceof ArrayBuffer)bytes=new Uint8Array(payload);
-  else if(typeof payload==='string')bytes=Uint8Array.from(payload, ch=>ch.charCodeAt(0)&255);
-  else if(Array.isArray(payload))bytes=Uint8Array.from(payload);
-  else if(payload?.buffer instanceof ArrayBuffer)bytes=new Uint8Array(payload.buffer);
-  else throw new Error('Unbekanntes MIDI-Binärformat: '+Object.prototype.toString.call(payload));
+  const bytes=assertMidiFile(normalizeMidiBinary(midi));
   let violinProgram=false;
   for(let i=0;i<bytes.length-1;i++)if((bytes[i]&0xF0)===0xC0&&bytes[i+1]===40){violinProgram=true;break;}
   document.body.dataset.violinProgramMidi=String(violinProgram);
+  const musicXml=abcToMusicXml(normalized);
+  const svgText=svgFileText(document.querySelector('#paper svg'),'Valse');
+  document.body.dataset.abcExport=String(normalized.startsWith('X:1')&&normalized.includes('T:Valse mélancolique'));
+  document.body.dataset.midiExport=String(bytes.length>14&&String.fromCharCode(...bytes.slice(0,4))==='MThd');
+  document.body.dataset.musicxmlExport=String(musicXml.includes('<score-partwise')&&musicXml.includes('<part-name>Violine</part-name>')&&musicXml.includes('<part-name>Klavier</part-name>'));
+  document.body.dataset.svgExport=String(svgText.includes('<svg')&&svgText.length>1000);
   const svgCount=document.querySelectorAll('#paper svg').length;
   const noteCount=document.querySelectorAll('#paper .abcjs-note').length;
   document.body.dataset.svgCount=String(svgCount);
