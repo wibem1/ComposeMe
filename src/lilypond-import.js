@@ -161,8 +161,9 @@ function parsePart(item){
   return abcPitch(spec,octave);
  };
  const pushBar=()=>{
-  const need=meterUnits(currentMeter);
-  if(Math.abs(duration-need)>1e-9)throw Error('Takt hat nicht genau '+currentMeter+'.');
+  // LilyPond itself permits incomplete/irregular measures in valid input.
+  // Preserve the explicit bar structure instead of rejecting music solely
+  // because its summed durations do not exactly equal the current meter.
   bars.push({abc:beamBar(bar),meter:currentMeter});bar=[];duration=0;
  };
  for(const token of tokens){
