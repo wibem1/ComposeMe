@@ -37,10 +37,10 @@ function cleanMusicBody(body){
  x=x.replace(/[_^]\\markup\s*\{\s*\\italic\s*\{[^{}]*\}\s*\}/g,' ');
  x=x.replace(/[_^]?\s*\\(?:p{1,3}|f{1,3}|mf|mp|sfz|fermata)\b/g,' ');
  x=x.replace(/\\(?:>|<|!)/g,' ');
- x=x.replace(/\\tempo\s+(?:"[^"]+"\s*)?\d+\s*=\s*\d+/g,' ');
+ x=x.replace(/\\tempo\s+(?:"[^"]+"\s*)?\d+\.?\s*=\s*\d+/g,' ');
  x=x.replace(/\\clef\s+"?(?:treble|bass)"?/g,' ');
  x=x.replace(/\\key\s+[a-g](?:is|es)?\s+\\(?:major|minor)\b/g,' ');
- x=x.replace(/\\time\s+\d+\/\d+/g,' ');
+ x=x.replace(/\\time\s+(\d+)\/(\d+)/g,' @M$1/$2@ ');
  x=x.replace(/[\[\]()]/g,' ');
  return x;
 }
@@ -98,53 +98,76 @@ function directPianoStaves(text){
  return matches.map((m,i)=>({clef:i?'bass':'treble',name:i?'Klavier links':'Klavier rechts',part:blockFrom(text,m.index+m[0].length).body}));
 }
 function namedRelativePiano(text){
+ const blocks=namedBlocks(text),global=blocks.get('global')??'';
  const found=[],re=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:is|es)?[',]*)\s*\{/g;
  for(const m of text.matchAll(re)){
-  const b=blockFrom(text,m.index+m[0].length),whole=m[0]+b.body+'}';
+  const b=blockFrom(text,m.index+m[0].length),whole=(m[0]+b.body+'}').replace(/\\global\b/g,global);
   const clef=whole.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
   if(clef)found.push({clef,name:clef==='bass'?'Klavier links':'Klavier rechts',part:whole});
  }
  const treble=found.find(x=>x.clef==='treble'),bass=found.find(x=>x.clef==='bass');
  return treble&&bass?[treble,bass]:null;
 }
+function meterUnits(meter){
+ const m=/^(\d+)\/(\d+)$/.exec(meter);if(!m)throw Error('Ungültige Taktart: '+meter);
+ const units=Number(m[1])*8/Number(m[2]);
+ if(![6,8].includes(units)||!['6/8','4/4'].includes(meter))throw Error('Derzeit nur 4/4 und 6/8 unterstützt.');
+ return units;
+}
+function abcLength(length){
+ if(length===1)return '';
+ if(Number.isInteger(length))return String(length);
+ const doubled=Math.round(length*2);
+ return doubled%2===1?doubled+'/2':String(length);
+}
 function parsePart(item){
  const part=item.part,clef=part.match(/\\clef\s+"?(treble|bass)"?/)?.[1]??item.clef;
  if(!clef)throw Error('Nur Violin- und Bassschlüssel unterstützt.');
- if(!/(?:\\numericTimeSignature\s*)?\\time\s+4\/4\b/.test(part))throw Error('Derzeit nur 4/4 unterstützt.');
+ const firstMeter=part.match(/\\time\s+(\d+\/\d+)/)?.[1];
+ if(!firstMeter)throw Error('Keine unterstützte Taktart gefunden.');
+ meterUnits(firstMeter);
  const key=keyInfo(part),mode=part.match(/\\(fixed|relative)\s+([a-g](?:is|es)?[',]*)\s*\{/);
  let body,modeType,anchor;
  if(mode){const b=blockFrom(part,mode.index+mode[0].length);body=cleanMusicBody(b.body);modeType=mode[1];anchor=mode[2];}
  else{body=cleanMusicBody(part);modeType='absolute';anchor='c';}
- const tokens=body.match(/<[^>]+>\d*|r\d*|[a-g](?:is|es)?[',]*\d*|\|/g)??[];
+ const tokens=body.match(/@M\d+\/\d+@|<[^>]+>\d*\.?|r\d*\.?|[a-g](?:is|es)?[',]*\d*\.?|\|/g)??[];
  if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,''))throw Error('Nicht unterstützte LilyPond-Anweisung im Notenblock.');
  const beamBar=events=>{let out='';for(let i=0;i<events.length;i++){const e=events[i],prev=events[i-1];const join=prev&&prev.length===1&&e.length===1&&prev.start%2===0&&e.start===prev.start+1;out+=(i&&!join?' ':'')+e.abc;}return out;};
- let previous=absoluteAnchor(anchor),lastLength=null,bar=[],duration=0;const bars=[];
+ let previous=absoluteAnchor(anchor),lastLength=null,bar=[],duration=0,currentMeter=firstMeter;const bars=[];
  const convertPitch=token=>{
   const spec=pitchSpec(token),step='cdefgab'.indexOf(spec.letter);let octave;
   if(modeType==='fixed'||modeType==='absolute')octave=3+[...spec.marks].reduce((n,c)=>n+(c==="'"?1:-1),0);
   else{const prevStep=((previous%7)+7)%7;let delta=step-prevStep;while(delta>3)delta-=7;while(delta< -3)delta+=7;previous+=delta+7*[...spec.marks].reduce((n,c)=>n+(c==="'"?1:-1),0);octave=Math.floor(previous/7);}
   return abcPitch(spec,octave);
  };
- const pushBar=()=>{if(duration!==8)throw Error('Takt hat nicht genau vier Viertel.');bars.push(beamBar(bar));bar=[];duration=0;};
+ const pushBar=()=>{
+  const need=meterUnits(currentMeter);
+  if(Math.abs(duration-need)>1e-9)throw Error('Takt hat nicht genau '+currentMeter+'.');
+  bars.push({abc:beamBar(bar),meter:currentMeter});bar=[];duration=0;
+ };
  for(const token of tokens){
+  if(token.startsWith('@M')){
+   if(bar.length||duration)throw Error('Taktwechsel nur an Taktgrenzen unterstützt.');
+   const next=token.slice(2,-1);meterUnits(next);currentMeter=next;continue;
+  }
   if(token==='|'){if(!bar.length&&duration===0)continue;pushBar();continue;}
-  const m=/^(<([^>]+)>|r|([a-g](?:is|es)?[',]*))(\d*)$/.exec(token);
+  const m=/^(<([^>]+)>|r|([a-g](?:is|es)?[',]*))(\d*)(\.)?$/.exec(token);
   if(!m)throw Error('Nicht unterstütztes Notenereignis: '+token);
   const lilyLength=m[4]?Number(m[4]):lastLength;if(![1,2,4,8].includes(lilyLength))throw Error('Nicht unterstützter Notenwert.');
-  lastLength=lilyLength;const length=8/lilyLength,start=duration;duration+=length;
-  let abc;if(m[1]==='r')abc='z'+(length===1?'':length);
+  lastLength=lilyLength;let length=8/lilyLength;if(m[5])length*=1.5;const start=duration;duration+=length;
+  let abc;if(m[1]==='r')abc='z'+abcLength(length);
   else if(m[2]){
    const chordTokens=m[2].trim().split(/\s+/),notes=[];let firstReference=null;
    for(const chordToken of chordTokens){notes.push(convertPitch(chordToken));if(firstReference===null&&modeType==='relative')firstReference=previous;}
    if(firstReference!==null)previous=firstReference;
-   abc='['+notes.join('')+']'+(length===1?'':length);
+   abc='['+notes.join('')+']'+abcLength(length);
   }else{
-   abc=convertPitch(m[3])+(length===1?'':length);
+   abc=convertPitch(m[3])+abcLength(length);
   }
   bar.push({abc,length,start});
  }
  if(bar.length)pushBar();
- return {...item,clef,key,bars};
+ return {...item,clef,key,bars,firstMeter};
 }
 function safeName(name){return String(name||'').replace(/"/g,'').trim();}
 export function lilyToAbc(input){
@@ -154,14 +177,22 @@ export function lilyToAbc(input){
  let items=ensembleStaves(text)??contextVoiceStaves(text);
  if(!items&&text.includes('\\new PianoStaff'))items=directPianoStaves(text)??namedRelativePiano(text);
  if(!items)throw Error('Keine unterstützten Notensysteme gefunden.');
- const parsed=items.map(parsePart),key=parsed[0].key,bars=parsed[0].bars.length;
+ const parsed=items.map(parsePart),key=parsed[0].key,bars=parsed[0].bars.length,initialMeter=parsed[0].firstMeter;
  if(parsed.some(x=>x.key!==key))throw Error('Die Systeme verwenden unterschiedliche Tonarten.');
  if(parsed.some(x=>x.bars.length!==bars))throw Error('Die Systeme haben unterschiedlich viele Takte.');
- const tempo=Number(text.match(/\\tempo\s+(?:"[^"]+"\s*)?4\s*=\s*(\d+)/)?.[1]??80);
+ const meterMap=parsed[0].bars.map(x=>x.meter);
+ if(parsed.some(x=>x.firstMeter!==initialMeter||x.bars.some((b,i)=>b.meter!==meterMap[i])))throw Error('Die Systeme verwenden unterschiedliche Taktwechsel.');
+ const tempoMatch=text.match(/\\tempo\s+(?:"[^"]+"\s*)?(\d+)(\.)?\s*=\s*(\d+)/);
+ const tempoBeat=tempoMatch?(tempoMatch[1]+(tempoMatch[2]?'.':'')):'4',tempo=Number(tempoMatch?.[3]??80);
+ const qBeat=tempoBeat==='4.'?'3/8':tempoBeat==='4'?'1/4':tempoBeat==='8.'?'3/16':'1/'+tempoBeat.replace('.','');
  const ids=parsed.length===2?['RH','LH']:parsed.map((_,i)=>'V'+(i+1));
  const score=parsed.length===2?'{RH LH}':parsed.length===3?'V1 {V2 V3}':ids.join(' ');
- const lines=['X:1','T:'+title,'M:4/4','L:1/8','Q:1/4='+tempo,'K:'+key,'%%barsperstaff 4','%%score '+score];
+ const lines=['X:1','T:'+title,'M:'+initialMeter,'L:1/8','Q:'+qBeat+'='+tempo,'K:'+key,'%%barsperstaff 4','%%score '+score];
  parsed.forEach((x,i)=>lines.push('V:'+ids[i]+' clef='+x.clef+' name="'+safeName(x.name)+'"'));
- parsed.forEach((x,i)=>lines.push('[V:'+ids[i]+'] '+x.bars.join(' | ')+' |]'));
+ parsed.forEach((x,i)=>{
+  let meter=initialMeter;
+  const rendered=x.bars.map((b,bi)=>{const prefix=bi>0&&b.meter!==meter?'[M:'+b.meter+'] ':'';meter=b.meter;return prefix+b.abc;});
+  lines.push('[V:'+ids[i]+'] '+rendered.join(' | ')+' |]');
+ });
  return lines.join('\n');
 }
