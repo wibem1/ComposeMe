@@ -102,8 +102,10 @@ function namedRelativePiano(text){
  const found=[],re=/\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*\\(relative|fixed)\s+([a-g](?:is|es)?[',]*)\s*\{/g;
  for(const m of text.matchAll(re)){
   const b=blockFrom(text,m.index+m[0].length),whole=(m[0]+b.body+'}').replace(/\\global\b/g,global);
-  const clef=whole.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
-  if(clef)found.push({clef,name:clef==='bass'?'Klavier links':'Klavier rechts',part:whole});
+  const explicit=whole.match(/\\clef\s+"?(treble|bass)"?/)?.[1];
+  const inferred=/^(?:upper|right|rechts)$/i.test(m[1])?'treble':/^(?:lower|left|links)$/i.test(m[1])?'bass':null;
+  const clef=explicit??inferred;
+  if(clef)found.push({clef,name:clef==='bass'?'Klavier links':'Klavier rechts',part:(explicit?'':'\\clef '+clef+' ')+whole});
  }
  const treble=found.find(x=>x.clef==='treble'),bass=found.find(x=>x.clef==='bass');
  return treble&&bass?[treble,bass]:null;
