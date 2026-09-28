@@ -32,7 +32,7 @@ export function alignScoreVoiceLines(abc){
     const measures=[];const ends=[];let total=0;
     for(const line of voiceLines){
       // Leave repeat bars, embedded directives, chord annotations containing barlines etc. alone.
-      if(/\|:|:\||\|\||\[\||\"[^\"]*\|[^\"]*\"/.test(line))return abc;
+      if(/\|:|:\||\|\||\[\|/.test(line)||(line.match(/"[^"]*"/g)??[]).some(q=>q.includes("|")))return abc;
       const chunks=line.match(/[^|]*\|\]?/g);
       if(!chunks||chunks.join('')!==line.replace(/\s+/g,'')){
         // Whitespace in notes is harmless, but must remain unchanged.
