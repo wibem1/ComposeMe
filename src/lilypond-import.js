@@ -133,7 +133,12 @@ function parsePart(item){
  if(mode){const b=blockFrom(part,mode.index+mode[0].length);body=cleanMusicBody(b.body);modeType=mode[1];anchor=mode[2];}
  else{body=cleanMusicBody(part);modeType='absolute';anchor='c';}
  const tokens=body.match(/@M\d+\/\d+@|<[^>]+>\d*\.?|r\d*\.?|[a-g](?:is|es)?[',]*\d*\.?|\|/g)??[];
- if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,''))throw Error('Nicht unterstützte LilyPond-Anweisung im Notenblock.');
+ if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,'')){
+  let rest=body;
+  for(const token of tokens)rest=rest.replace(token,' ');
+  const fragment=rest.replace(/\s+/g,' ').trim().slice(0,120);
+  throw Error('Nicht unterstützte LilyPond-Anweisung im Notenblock: '+fragment);
+ }
  const beamBar=events=>{let out='';for(let i=0;i<events.length;i++){const e=events[i],prev=events[i-1];const join=prev&&prev.length===1&&e.length===1&&prev.start%2===0&&e.start===prev.start+1;out+=(i&&!join?' ':'')+e.abc;}return out;};
  let previous=absoluteAnchor(anchor),lastLength=null,bar=[],duration=0,currentMeter=firstMeter;const bars=[];
  const convertPitch=token=>{
