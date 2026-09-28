@@ -1,0 +1,24 @@
+X:1
+T:Abendlicht
+C:Originalstück
+M:4/4
+L:1/8
+Q:1/4=84
+K:Am
+%%score { RH LH }
+V:RH clef=treble
+V:LH clef=bass
+
+[V:RH] "Am"E2 A2 c2 B2 | "F"A2 F2 E2 D2 | "C"E2 G2 c2 G2 | "G"B2 A2 G4 |
+       "Am"E2 A2 c2 e2 | "Dm"d2 c2 A2 F2 | "E7"^G2 B2 e2 d2 | "Am"c2 B2 A4 |
+       "C"G2 c2 e2 d2 | "G"B2 d2 g2 f2 | "Am"e2 c2 A2 c2 | "F"A2 c2 f2 e2 |
+       "Dm"d2 A2 F2 A2 | "Am"c2 e2 a2 g2 | "E7"f2 e2 d2 ^G2 | "Am"A4 E2 A2 |]
+
+[V:LH] A,, E, A, C E C A, E, | F,, C, F, A, C A, F, C, |
+       C, G, C E G E C G, | G,, D, G, B, D B, G, D, |
+       A,, E, A, C E C A, E, | D, A, D F A F D A, |
+       E, B, E ^G B G E B, | A,, E, A, C E C A, E, |
+       C, G, C E G E C G, | G,, D, G, B, D B, G, D, |
+       A,, E, A, C E C A, E, | F,, C, F, A, C A, F, C, |
+       D, A, D F A F D A, | A,, E, A, C E C A, E, |
+       E, B, E ^G B G E B, | A,, E, A, C E C A, A,, |]
