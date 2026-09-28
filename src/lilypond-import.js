@@ -12,6 +12,7 @@ export function lilyToAbc(input){
   if(depth)throw Error('Unvollständiges Staff-System.');
   return text.slice(m.index+m[0].length,end-1);
  });
+ const beamBar=(events)=>{let output='';for(let i=0;i<events.length;i++){const e=events[i],prev=events[i-1];const pair=prev&&prev.length===1&&e.length===1&&prev.start%2===0&&e.start===prev.start+1;output+=(i&&!pair?' ':'')+e.abc;}return output;};
  const parse=(part)=>{
   const clef=part.match(/\\clef\s+(treble|bass)\b/)?.[1];
   if(!clef)throw Error('Nur Violin- und Bassschlüssel unterstützt.');
@@ -31,15 +32,15 @@ export function lilyToAbc(input){
   const pitch=(p)=>{const m=p.match(/^([a-g])('{0,2}|,{1,2})$/);if(!m)throw Error('Ungültige Tonhöhe: '+p);const marks=m[2];const octave=3+(marks.startsWith("'")?marks.length:-marks.length);const letter=m[1].toUpperCase();if(octave===4)return letter;if(octave>4)return letter.toLowerCase()+"'".repeat(octave-5);return letter+','.repeat(4-octave);};
   const bars=[];let bar=[],duration=0;
   for(const token of tokens){
-   if(token==='|'){if(duration!==8)throw Error('Takt hat nicht genau vier Viertel.');bars.push(bar.join(' '));bar=[];duration=0;continue;}
+   if(token==='|'){if(duration!==8)throw Error('Takt hat nicht genau vier Viertel.');bars.push(beamBar(bar));bar=[];duration=0;continue;}
    const match=token.match(/^(<([^>]+)>|([a-g][',]*))(\d+)$/);
    if(!match)throw Error('Nicht unterstütztes Notenereignis: '+token);
    const length=Number(match[4]);if(![1,2,4,8].includes(length))throw Error('Nicht unterstützter Notenwert.');
    const abcLength=8/length;duration+=abcLength;
    const notes=match[2]?match[2].trim().split(/\s+/).map(pitch):[pitch(match[3])];
-   bar.push((notes.length>1?'['+notes.join('')+']':notes[0])+(abcLength===1?'':abcLength));
+   bar.push({abc:(notes.length>1?'['+notes.join('')+']':notes[0])+(abcLength===1?'':abcLength),length:abcLength,start:duration-abcLength});
   }
-  if(bar.length){if(duration!==8)throw Error('Letzter Takt unvollständig.');bars.push(bar.join(' '));}
+  if(bar.length){if(duration!==8)throw Error('Letzter Takt unvollständig.');bars.push(beamBar(bar));}
   return {clef,bars};
  };
  const [top,bottom]=parts.map(parse);
