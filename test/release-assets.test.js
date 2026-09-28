@@ -24,8 +24,8 @@ test('production keeps ABC rendering and adds LilyPond pass-through only',()=>{
   const text=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
   assert.doesNotMatch(text,/lilyToAbc/i,file+' must not convert LilyPond musically');
  }
- assert.match(html,/vollständige, gültige ABC-Notation/);
- assert.match(html,/abcjs 6\.5\.2/);
+ assert.match(html,/<textarea id="additional" rows="9"><\/textarea>/);
+ assert.doesNotMatch(html,/AUSGABEFORMAT:/);
  assert.match(html,/Ausgabe als Datei speichern/);
  assert.match(html,/In Hacklily öffnen/);
  assert.match(html,/Ausgabe in Eingabe kopieren/);
