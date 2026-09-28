@@ -132,7 +132,7 @@ function parseMeasure(body,{unitWhole,keyAlter,divisions,staff}){
    notes.forEach((n,k)=>events.push(noteXml({pitch:pitchData(n,keyAlter,accidentalState),durationWhole:whole,divisions,staff,chord:k>0})));
    total+=whole;i=j;continue;
   }
-  const tokenRe=new RegExp('^((?:\\^\\^|\\^|__|_|=)?[A-Ga-g][,\\']*|[zZx])('+lenPattern+')');
+  const tokenRe=new RegExp("^((?:\\^\\^|\\^|__|_|=)?[A-Ga-g][,\']*|[zZx])("+lenPattern+")");
   const m=tokenRe.exec(body.slice(i));
   if(!m)throw Error('MusicXML: nicht unterstützte ABC-Syntax bei „'+body.slice(i,i+24)+'“.');
   const whole=parseLen(m[2]||'',unitWhole),rest=/^[zZx]$/.test(m[1]);
