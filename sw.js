@@ -1,4 +1,4 @@
-const CACHE='composeme-0.6.2';
+const CACHE='composeme-0.6.3';
 const SHELL=['./','./index.html','./style.css','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',event=>{
