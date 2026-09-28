@@ -15,7 +15,7 @@ function refresh(){
 button?.addEventListener('click',()=>{
   const source=(result?.value??'').trim();
   if(!source)return;
-  task.value='Setze die folgende bereits entstandene Komposition vollständig in eine direkt darstellbare Musiknotation um. Verwende ABC oder LilyPond. Bewahre alle konkret angegebenen musikalischen Entscheidungen; ergänze nur, was für eine vollständige Notation unvermeidbar ist. Antworte ausschließlich mit der vollständigen Notation, ohne Kommentar oder Erläuterung.\n\nAUSGANGSKOMPOSITION:\n'+source;
+  task.value='Setze die folgende bereits entstandene Komposition vollständig in eine direkt darstellbare Musiknotation um. Verwende ausschließlich ABC-Notation. Bewahre alle konkret angegebenen musikalischen Entscheidungen; ergänze nur, was für eine vollständige Notation unvermeidbar ist. Antworte ausschließlich mit der vollständigen ABC-Notation, ohne Kommentar oder Erläuterung.\n\nAUSGANGSKOMPOSITION:\n'+source;
   additional.value='';
   button.hidden=true;
   form.requestSubmit();
