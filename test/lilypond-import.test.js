@@ -219,3 +219,15 @@ test('double sharps such as fisis are imported',()=>{
  assert.match(abc,/\^\^f/);
  assert.match(abc,/K:C#m/);
 });
+
+
+test('exact Éclats d’Ombre fixture converts without importer error',async()=>{
+ const source=await (await import('node:fs/promises')).readFile(new URL('./fixtures/eclats-dombre.ly',import.meta.url),'utf8');
+ const abc=lilyToAbc(source);
+ assert.match(abc,/T:Éclats d’Ombre/);
+ assert.match(abc,/M:6\/8/);
+ assert.match(abc,/Q:3\/8=76/);
+ assert.match(abc,/K:C#m/);
+ assert.match(abc,/\[M:4\/4\]/);
+ assert.match(abc,/\[M:6\/8\]/);
+});
