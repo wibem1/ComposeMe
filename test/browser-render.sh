@@ -23,3 +23,6 @@ grep -q 'data-midi-export="true"' /tmp/composeme-render-dom.html
 grep -q 'data-musicxml-export="true"' /tmp/composeme-render-dom.html
 grep -q 'data-svg-export="true"' /tmp/composeme-render-dom.html
 grep -q 'data-print-export="true"' /tmp/composeme-render-dom.html
+
+grep -q 'data-abendlicht-lines="4"' /tmp/composeme-render-dom.html
+grep -q 'data-abendlicht-paired="true"' /tmp/composeme-render-dom.html
