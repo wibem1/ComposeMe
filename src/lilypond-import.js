@@ -23,7 +23,7 @@ function abcPitch(spec,octave){
  return accidental+base;
 }
 function keyInfo(part){
- const m=part.match(/\\key\s+([a-g](?:is|es)?)\s+\\(major|minor)\b/);
+ const m=part.match(/\\key\s+([a-g](?:isis|eses|is|es)?)\s+\\(major|minor)\b/);
  if(!m)throw Error('Keine unterstützte Tonart gefunden.');
  const names={c:'C',d:'D',e:'E',f:'F',g:'G',a:'A',b:'B',fis:'F#',cis:'C#',gis:'G#',dis:'D#',ais:'A#',bes:'Bb',ees:'Eb',aes:'Ab',des:'Db',ges:'Gb'};
  const tonic=names[m[1]];if(!tonic)throw Error('Tonart derzeit nicht unterstützt: '+m[1]);
@@ -49,7 +49,7 @@ function cleanMusicBody(body){
  x=x.replace(/\\~|~/g,' ');
  x=x.replace(/-\.|->|--/g,' ');
  x=x.replace(/\\clef\s+"?(?:treble|bass)"?/g,' ');
- x=x.replace(/\\key\s+[a-g](?:is|es)?\s+\\(?:major|minor)\b/g,' ');
+ x=x.replace(/\\key\s+[a-g](?:isis|eses|is|es)?\s+\\(?:major|minor)\b/g,' ');
  x=x.replace(/\\time\s+(\d+)\/(\d+)/g,' @M$1/$2@ ');
  x=x.replace(/[\[\]()]/g,' ');
  return x;
@@ -142,13 +142,16 @@ function parsePart(item){
  let body,modeType,anchor;
  if(mode){const b=blockFrom(part,mode.index+mode[0].length);body=cleanMusicBody(b.body);modeType=mode[1];anchor=mode[2];}
  else{body=cleanMusicBody(part);modeType='absolute';anchor='c';}
- const tokens=body.match(/@M\d+\/\d+@|@T\d+\/\d+@|@E@|<[^>]+>\d*\.?|q\d*\.?|r\d*\.?|[a-g](?:isis|eses|is|es)?[',]*\d*\.?|\|/g)??[];
- if(tokens.join('').replace(/\s/g,'')!==body.replace(/\s/g,'')){
-  let rest=body;
-  for(const token of tokens)rest=rest.replace(token,' ');
-  const fragment=rest.replace(/\s+/g,' ').trim().slice(0,120);
-  throw Error('Nicht unterstützte LilyPond-Anweisung im Notenblock: '+fragment);
+ const tokenRe=/@M\d+\/\d+@|@T\d+\/\d+@|@E@|<[^>]+>\d*\.?|q\d*\.?|r\d*\.?|[a-g](?:isis|eses|is|es)?[',]*\d*\.?|\|/g;
+ const matches=[...body.matchAll(tokenRe)],tokens=matches.map(m=>m[0]);
+ let cursor=0,unsupported='';
+ for(const m of matches){
+  const gap=body.slice(cursor,m.index);
+  if(gap.trim()){unsupported=gap.trim();break;}
+  cursor=m.index+m[0].length;
  }
+ if(!unsupported&&body.slice(cursor).trim())unsupported=body.slice(cursor).trim();
+ if(unsupported)throw Error('Nicht unterstützte LilyPond-Anweisung im Notenblock: '+unsupported.replace(/\s+/g,' ').slice(0,120));
  const beamBar=events=>{let out='';for(let i=0;i<events.length;i++){const e=events[i],prev=events[i-1];const join=prev&&prev.length===1&&e.length===1&&prev.start%2===0&&e.start===prev.start+1;out+=(i&&!join?' ':'')+e.abc;}return out;};
  let previous=absoluteAnchor(anchor),lastLength=null,lastChord=null,bar=[],duration=0,currentMeter=firstMeter,tupletFactor=1,pendingTuplet='';const bars=[];
  const convertPitch=token=>{
