@@ -4,7 +4,7 @@
 <div id="paper"></div><div id="audio"></div>
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
 <script type="module">
-import {renderMusic} from '../src/music-view.js?v=0.6.12';
+import {renderMusic} from '../src/music-view.js?v=0.6.13';
 try {
   const abc=await (await fetch('./fixtures/valse-melancolique.abc')).text();
   const visual=renderMusic({abc,ABCJS:window.ABCJS,paper:document.getElementById('paper'),audio:document.getElementById('audio')});
