@@ -211,7 +211,9 @@ export function lilyToAbc(input){
  if(parsed.some(x=>x.key!==key))throw Error('Die Systeme verwenden unterschiedliche Tonarten.');
  if(parsed.some(x=>x.bars.length!==bars))throw Error('Die Systeme haben unterschiedlich viele Takte.');
  const meterMap=parsed[0].bars.map(x=>x.meter);
- if(parsed.some(x=>x.firstMeter!==initialMeter||x.bars.some((b,i)=>b.meter!==meterMap[i])))throw Error('Die Systeme verwenden unterschiedliche Taktwechsel.');
+ // In LilyPond a time-signature command can appear in only one staff while visually governing the score.
+ // Use the first staff as the score-level meter map; other staves keep the same bar boundaries.
+ if(parsed.some(x=>x.firstMeter!==initialMeter))throw Error('Die Systeme beginnen mit unterschiedlichen Taktarten.');
  const tempoMatch=text.match(/\\tempo\s+(?:"[^"]+"\s*)?(\d+)(\.)?\s*=\s*(\d+)/);
  const tempoBeat=tempoMatch?(tempoMatch[1]+(tempoMatch[2]?'.':'')):'4',tempo=Number(tempoMatch?.[3]??80);
  const qBeat=tempoBeat==='4.'?'3/8':tempoBeat==='4'?'1/4':tempoBeat==='8.'?'3/16':'1/'+tempoBeat.replace('.','');
@@ -221,7 +223,7 @@ export function lilyToAbc(input){
  parsed.forEach((x,i)=>lines.push('V:'+ids[i]+' clef='+x.clef+' name="'+safeName(x.name)+'"'));
  parsed.forEach((x,i)=>{
   let meter=initialMeter;
-  const rendered=x.bars.map((b,bi)=>{const prefix=bi>0&&b.meter!==meter?'[M:'+b.meter+'] ':'';meter=b.meter;return prefix+b.abc;});
+  const rendered=x.bars.map((b,bi)=>{const scoreMeter=meterMap[bi]??meter;const prefix=bi>0&&scoreMeter!==meter?'[M:'+scoreMeter+'] ':'';meter=scoreMeter;return prefix+b.abc;});
   lines.push('[V:'+ids[i]+'] '+rendered.join(' | ')+' |]');
  });
  return lines.join('\n');
