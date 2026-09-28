@@ -46,6 +46,47 @@ export function normalizeAbcForAbcjs(abc){
  }
  return kept.join('\n').trim();
 }
+
+function abcPitchToMidi(token){
+ const m=/^(?:\^{1,2}|_{1,2}|=)?([A-Ga-g])([,']*)/.exec(token);
+ if(!m)return null;
+ const pc={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1].toUpperCase()];
+ let midi=(m[1]===m[1].toLowerCase()?72:60)+pc;
+ for(const ch of m[2])midi+=ch==="'"?12:-12;
+ return midi;
+}
+export function analyzeInstrumentRanges(abc){
+ if(typeof abc!=='string'||!abc.trim())return [];
+ const lines=abc.replace(/\r\n?/g,'\n').split('\n');
+ const labels=new Map();
+ for(const line of lines){
+  const m=/^V\s*:\s*([^\s]+)(.*)$/.exec(line.trim());
+  if(m)labels.set(m[1],(m[1]+' '+m[2]).toLowerCase());
+ }
+ const pitches=new Map();
+ for(const line of lines){
+  const vm=/^\[V:([^\]]+)\]\s*(.*)$/.exec(line.trim());
+  if(!vm)continue;
+  const id=vm[1],label=labels.get(id)??id.toLowerCase();
+  if(!/violin|violine|vln/.test(label))continue;
+  const clean=vm[2].replace(/"[^"]*"/g,' ').replace(/![^!]*!/g,' ').replace(/%.*$/,' ');
+  const tokens=clean.match(/(?:\^{1,2}|_{1,2}|=)?[A-Ga-g][,']*/g)??[];
+  for(const token of tokens){
+   const midi=abcPitchToMidi(token);
+   if(midi!=null)(pitches.get(id)??(pitches.set(id,[]),pitches.get(id))).push(midi);
+  }
+ }
+ const warnings=[];
+ for(const [id,vals] of pitches){
+  if(vals.length<4)continue;
+  const sorted=[...vals].sort((a,b)=>a-b);
+  const median=sorted[Math.floor(sorted.length/2)],max=sorted[sorted.length-1];
+  if(median>=84&&max>=96){
+   warnings.push({voice:id,type:'suspicious-high-register',median,max,message:'Auffällige Violinenlage: Die Stimme liegt überwiegend sehr hoch. Bitte ABC-Oktavierung prüfen.'});
+  }
+ }
+ return warnings;
+}
 export function extractAbc(text){if(typeof text!=='string')return '';const cleaned=text.replace(/^\s*\`\`\`(?:abc)?\s*/i,'').replace(/\s*\`\`\`\s*$/,'').trim();const start=cleaned.search(/^X\s*:/m);return start<0?'':cleaned.slice(start).trim();}
 function tempoFromAbc(abc){const m=abc.match(/^Q:\s*(?:1\/4\s*=\s*)?(\d+)/m);return m?Number(m[1]):null;}
 function createCursorControl(paper){
@@ -84,4 +125,4 @@ function addTempoHint(audio,abc){
  audio.addEventListener('input',event=>{if(event.target instanceof HTMLInputElement&&event.target.type==='number')update();});
  audio.addEventListener('change',event=>{if(event.target instanceof HTMLInputElement&&event.target.type==='number')update();});
 }
-export function renderMusic({abc,ABCJS,paper,audio}){paper.replaceChildren();audio.replaceChildren();if(!abc)return null;if(!ABCJS?.renderAbc)throw new Error('Notenmodul nicht geladen.');const normalized=normalizeAbcForAbcjs(abc);const visual=ABCJS.renderAbc(paper,normalized,{responsive:'resize',add_classes:true});if(!visual?.[0])throw new Error('ABC konnte nicht dargestellt werden.');if(ABCJS.synth?.supportsAudio?.()){const cursorControl=createCursorControl(paper);const control=new ABCJS.synth.SynthController();control.load(audio,cursorControl,{displayRestart:true,displayPlay:true,displayProgress:true,displayWarp:true});control.setTune(visual[0],false,{chordsOff:true});addTempoHint(audio,normalized);}return visual[0];}
+export function renderMusic({abc,ABCJS,paper,audio}){paper.replaceChildren();audio.replaceChildren();if(!abc)return null;if(!ABCJS?.renderAbc)throw new Error('Notenmodul nicht geladen.');const normalized=normalizeAbcForAbcjs(abc);const visual=ABCJS.renderAbc(paper,normalized,{responsive:'resize',add_classes:true});if(!visual?.[0])throw new Error('ABC konnte nicht dargestellt werden.');const rangeWarnings=analyzeInstrumentRanges(normalized);for(const item of rangeWarnings){const warning=document.createElement('div');warning.className='notation-warning';warning.setAttribute('role','status');warning.textContent=item.message;paper.append(warning);}if(ABCJS.synth?.supportsAudio?.()){const cursorControl=createCursorControl(paper);const control=new ABCJS.synth.SynthController();control.load(audio,cursorControl,{displayRestart:true,displayPlay:true,displayProgress:true,displayWarp:true});control.setTune(visual[0],false,{chordsOff:true});addTempoHint(audio,normalized);}return visual[0];}
