@@ -15,8 +15,8 @@ frame.addEventListener('load',async()=>{
  const prompt=first.value;
  if(!prompt.includes('Stelle dir das verlangte Musikstück zunächst ausschließlich')||!prompt.endsWith(task))
   throw Error('Historischer Originalprompt wurde nicht geladen.');
- if(!d.getElementById('provider').disabled||!d.getElementById('model').disabled)
-  throw Error('Historisches Modell nicht fixiert.');
+ if(d.getElementById('provider').disabled||d.getElementById('model').disabled)
+  throw Error('Provider/Modell sind im Zweistufenmodus fälschlich deaktiviert.');
  const requests=[];
  const stage1='Eine frei erfundene Klangvorstellung, die aus einem Motiv wächst.';
  const score={t:'Integrations-Teststück',b:112,m:[4,4],v:[
@@ -60,6 +60,7 @@ frame.addEventListener('load',async()=>{
  document.body.dataset.historySaved='true';
  document.body.dataset.midiSource='original';
  document.body.dataset.noAbcPlayer='true';
+ document.body.dataset.modelSelectable='true';
  }catch(e){
  document.body.dataset.historicalReady='false';document.body.dataset.error=e?.stack||String(e);
  }
