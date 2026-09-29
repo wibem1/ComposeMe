@@ -1,45 +1,120 @@
-// The original MIDI score remains canonical. This is only a preview player.
-export function createHistoricalPlayer(){
- let active=null;
- function stop(){
-  if(!active)return;
-  const old=active;active=null;
-  for(const osc of old.oscillators)try{osc.stop()}catch{}
-  old.ctx.close().catch(()=>{});
- }
- async function play(score){
-  stop();
-  if(!score?.tracks?.length)throw new Error('Keine historische Komposition geladen.');
-  const Ctx=window.AudioContext||window.webkitAudioContext;
-  if(!Ctx)throw new Error('Audiowiedergabe in diesem Browser nicht verfügbar.');
-  const ctx=new Ctx(),spb=60/(Number(score.bpm)||120),t0=ctx.currentTime+.05,oscillators=[];
-  await ctx.resume();
-  for(const [ti,tr] of score.tracks.entries())for(const n of tr.notes||[]){
-   if(!Array.isArray(n)||n.length<4)continue;
-   const start=t0+Number(n[0])*spb,dur=Math.max(.03,Number(n[1])*spb);
-   const freq=440*Math.pow(2,(Number(n[2])-69)/12),vel=Math.max(.02,Math.min(1,Number(n[3])/127));
-   const o=ctx.createOscillator(),g=ctx.createGain();
-   o.type=ti%3===1?'triangle':'sine';o.frequency.value=freq;
-   g.gain.setValueAtTime(.0001,start);
-   g.gain.exponentialRampToValueAtTime(.13*vel,start+.015);
-   g.gain.setValueAtTime(.13*vel,Math.max(start+.02,start+dur-.05));
-   g.gain.exponentialRampToValueAtTime(.0001,start+dur);
-   o.connect(g).connect(ctx.destination);o.start(start);o.stop(start+dur+.02);
-   oscillators.push(o);
+// MIDI player whose ONLY musical source is the original MIDI byte stream.
+// Audio is synthesized locally by WebAudio; timing, pitches, velocities, programs and channels
+// are read from the MIDI file rather than reconstructed from ABC.
+function readU16(b,o){return (b[o]<<8)|b[o+1];}
+function readU32(b,o){return ((b[o]<<24)>>>0)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3];}
+function readVlq(b,o){let v=0,i=o,x;do{if(i>=b.length)throw Error('Defekte MIDI-VLQ.');x=b[i++];v=(v<<7)|(x&127);}while(x&128);return [v,i];}
+function ascii(b,o,n){return String.fromCharCode(...b.slice(o,o+n));}
+export function parseMidi(bytes){
+ const b=bytes instanceof Uint8Array?bytes:Uint8Array.from(bytes||[]);
+ if(b.length<14||ascii(b,0,4)!=='MThd')throw Error('Ungültige MIDI-Datei.');
+ const hlen=readU32(b,4),format=readU16(b,8),ntrks=readU16(b,10),division=readU16(b,12);
+ if(division&0x8000)throw Error('SMPTE-MIDI wird noch nicht unterstützt.');
+ const ppq=division;let off=8+hlen,events=[],programs=new Array(16).fill(0),trackNames=[];
+ for(let ti=0;ti<ntrks;ti++){
+  if(ascii(b,off,4)!=='MTrk')throw Error('MIDI-Track fehlt.');
+  const len=readU32(b,off+4),end=off+8+len;let p=off+8,tick=0,running=null;
+  while(p<end){
+   let d;[d,p]=readVlq(b,p);tick+=d;
+   let status=b[p++];if(status<0x80){if(running==null)throw Error('Ungültiger Running Status.');p--;status=running;}else if(status<0xF0)running=status;
+   if(status===0xFF){
+    const type=b[p++];let l;[l,p]=readVlq(b,p);const data=b.slice(p,p+l);p+=l;
+    if(type===0x51&&l===3)events.push({tick,type:'tempo',mpqn:(data[0]<<16)|(data[1]<<8)|data[2]});
+    if(type===0x03)trackNames[ti]=new TextDecoder().decode(data);
+    continue;
+   }
+   if(status===0xF0||status===0xF7){let l;[l,p]=readVlq(b,p);p+=l;continue;}
+   const kind=status&0xF0,ch=status&15;
+   if(kind===0xC0||kind===0xD0){
+    const a=b[p++];if(kind===0xC0){programs[ch]=a;events.push({tick,type:'program',channel:ch,program:a});}
+    continue;
+   }
+   const a=b[p++],c=b[p++];
+   if(kind===0x90)events.push({tick,type:c===0?'off':'on',channel:ch,pitch:a,velocity:c,track:ti});
+   else if(kind===0x80)events.push({tick,type:'off',channel:ch,pitch:a,velocity:c,track:ti});
   }
-  active={ctx,oscillators};
+  off=end;
  }
- return {play,stop};
+ events.sort((a,b)=>a.tick-b.tick||order(a)-order(b));
+ const tempos=events.filter(e=>e.type==='tempo');if(!tempos.length||tempos[0].tick!==0)tempos.unshift({tick:0,type:'tempo',mpqn:500000});
+ let lastTick=0,lastSec=0,lastMpqn=tempos[0].mpqn;const tempoPoints=[{tick:0,seconds:0,mpqn:lastMpqn}];
+ for(const t of tempos){
+  if(t.tick===0){lastMpqn=t.mpqn;tempoPoints[0].mpqn=t.mpqn;continue;}
+  lastSec+=(t.tick-lastTick)*lastMpqn/(1e6*ppq);lastTick=t.tick;lastMpqn=t.mpqn;tempoPoints.push({tick:t.tick,seconds:lastSec,mpqn:lastMpqn});
+ }
+ const tickToSec=tick=>{
+  let point=tempoPoints[0];for(const p of tempoPoints){if(p.tick>tick)break;point=p;}
+  return point.seconds+(tick-point.tick)*point.mpqn/(1e6*ppq);
+ };
+ const currentPrograms=new Array(16).fill(0),active=new Map(),notes=[];let duration=0;
+ for(const e of events){
+  if(e.type==='program'){currentPrograms[e.channel]=e.program;continue;}
+  if(e.type==='on'){
+   const key=e.track+'|'+e.channel+'|'+e.pitch;
+   const stack=active.get(key)||[];stack.push({...e,program:currentPrograms[e.channel],startSec:tickToSec(e.tick)});active.set(key,stack);
+  }else if(e.type==='off'){
+   const key=e.track+'|'+e.channel+'|'+e.pitch,stack=active.get(key);if(!stack?.length)continue;
+   const on=stack.shift(),endSec=tickToSec(e.tick);notes.push({start:on.startSec,end:Math.max(on.startSec+.01,endSec),pitch:on.pitch,velocity:on.velocity,channel:on.channel,program:on.program,track:on.track});
+   duration=Math.max(duration,endSec);
+  }
+ }
+ return {format,ppq,notes,duration,trackNames,tempoPoints};
 }
-
+function order(e){return e.type==='tempo'?0:e.type==='program'?1:e.type==='off'?2:3;}
+function oscType(program){
+ const p=Number(program)||0;
+ if(p>=40&&p<=47)return 'sawtooth'; // strings
+ if(p>=0&&p<=7)return 'triangle'; // pianos
+ if(p>=72&&p<=79)return 'square'; // winds
+ return 'sine';
+}
+function envelope(ctx,dest,n,start,end,oscillators){
+ const o=ctx.createOscillator(),g=ctx.createGain(),vel=Math.max(.02,Math.min(1,n.velocity/127));
+ const dur=Math.max(.03,end-start),isPiano=n.program>=0&&n.program<=7;
+ o.type=oscType(n.program);o.frequency.value=440*Math.pow(2,(n.pitch-69)/12);
+ const peak=(isPiano?.11:.075)*vel;
+ g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(peak,start+.008);
+ if(isPiano){
+  g.gain.exponentialRampToValueAtTime(Math.max(.0002,peak*.25),Math.min(end,start+Math.max(.08,dur*.55)));
+ }else{
+  g.gain.setValueAtTime(peak,Math.max(start+.01,end-.04));
+ }
+ g.gain.exponentialRampToValueAtTime(.0001,end);
+ o.connect(g).connect(dest);o.start(start);o.stop(end+.03);oscillators.push(o);
+}
+export function createMidiPlayer(record,{onState=()=>{}}={}){
+ const midi=Uint8Array.from(record?.historicalMidi||[]),parsed=parseMidi(midi);
+ let ctx=null,oscillators=[],position=0,startedAt=0,raf=0,playing=false;
+ const Ctx=()=>window.AudioContext||window.webkitAudioContext;
+ const current=()=>playing?Math.min(parsed.duration,position+(ctx.currentTime-startedAt)):position;
+ function cancelAudio(){
+  cancelAnimationFrame(raf);raf=0;for(const o of oscillators)try{o.stop()}catch{}oscillators=[];
+  if(ctx){ctx.close().catch(()=>{});ctx=null;}
+ }
+ function tick(){if(!playing)return;position=current();onState({playing,position,duration:parsed.duration});if(position>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,position,duration:parsed.duration});return;}raf=requestAnimationFrame(tick);}
+ async function play(){
+  if(playing)return;const Klass=Ctx();if(!Klass)throw Error('AudioContext ist nicht verfügbar.');
+  ctx=new Klass();await ctx.resume();playing=true;startedAt=ctx.currentTime;
+  const t0=ctx.currentTime+.04;
+  for(const n of parsed.notes){
+   if(n.end<=position)continue;
+   const start=t0+Math.max(0,n.start-position),end=t0+Math.max(.02,n.end-position);
+   envelope(ctx,ctx.destination,n,start,end,oscillators);
+  }
+  onState({playing,position,duration:parsed.duration});raf=requestAnimationFrame(tick);
+ }
+ function pause(){if(!playing)return;position=current();playing=false;cancelAudio();onState({playing,position,duration:parsed.duration});}
+ function stop(){playing=false;position=0;cancelAudio();onState({playing,position,duration:parsed.duration});}
+ async function seek(seconds){
+  const was=playing;if(was)pause();position=Math.max(0,Math.min(parsed.duration,Number(seconds)||0));onState({playing:false,position,duration:parsed.duration});if(was)await play();
+ }
+ return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed};
+}
 export function downloadOriginalMidi(record){
  if(!Array.isArray(record?.historicalMidi))throw new Error('Keine originale MIDI-Datei vorhanden.');
  const midi=Uint8Array.from(record.historicalMidi);
  if(String.fromCharCode(...midi.subarray(0,4))!=='MThd')throw new Error('Ungültige MIDI-Daten.');
- const name=String(record.title||'Komposition').normalize('NFKD')
-  .replace(/[^A-Za-z0-9_-]/g,'_').replace(/_+/g,'_').slice(0,65)||'Komposition';
- const url=URL.createObjectURL(new Blob([midi],{type:'audio/midi'}));
- const link=document.createElement('a');link.href=url;link.download=name+'.mid';
- document.body.append(link);link.click();link.remove();
- setTimeout(()=>URL.revokeObjectURL(url),30000);
+ const name=String(record.title||'Komposition').normalize('NFKD').replace(/[^A-Za-z0-9_-]/g,'_').replace(/_+/g,'_').slice(0,65)||'Komposition';
+ const url=URL.createObjectURL(new Blob([midi],{type:'audio/midi'})),link=document.createElement('a');
+ link.href=url;link.download=name+'.mid';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
