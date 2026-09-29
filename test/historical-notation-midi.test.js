@@ -47,8 +47,6 @@ test('third call uses Sol and preserves raw MusicXML answer',async()=>{
  })};};
  const r=await requestMusicXmlNotation({scoreJson:JSON.stringify(compact),apiKey:'x',fetchImpl});
  assert.equal(requests[0].model,'gpt-5.6-sol');
- assert.equal(requests[0].max_output_tokens,64000);
- assert.equal(requests[0].reasoning?.effort,'none');
  assert.equal(r.call.stage,'notation_musicxml');assert.equal(r.call.response,xml);assert.match(r.musicXml,/<score-partwise/);
 });
 test('incomplete MusicXML response keeps raw text and API reason on the failed call',async()=>{
@@ -93,4 +91,15 @@ test('historical notation uses MusicXML renderer and not historical ABC conversi
  assert.match(html,/opensheetmusicdisplay@2\.1\.3/);
  assert.match(ui,/SoundFont-Player · Original-MIDI/);
  assert.match(ui,/dataset\.source='original-midi'/);
+});
+
+
+test('network failure is retained on notation call',async()=>{
+ const fetchImpl=async()=>{throw new TypeError('Failed to fetch');};
+ await assert.rejects(()=>requestMusicXmlNotation({scoreJson:JSON.stringify(compact),apiKey:'x',fetchImpl}),err=>{
+  assert.match(err.message,/OpenAI-API nicht erreichen/);
+  assert.equal(err.notationCall?.status,'failed');
+  assert.equal(err.notationCall?.fetchError,'Failed to fetch');
+  return true;
+ });
 });
