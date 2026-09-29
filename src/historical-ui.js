@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.10';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.10';
+import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.11';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.11';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -39,14 +39,14 @@ export function initHistoricalControls(){
   if(c2?.prompt)second.value=c2.prompt;
  }
  function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
- async function run({apiKey,taskText,providerName,modelName,onProgress}){
+ async function run({apiKey,taskText,providerName,modelName,onStage1,onProgress}){
   const engine=baseEngine();if(!engine)throw new Error('Historische Engine fehlt. Bitte die App vollständig neu laden.');
   const expected=originalHistoricalPrompts(engine,taskText).musicalDraft;
   if(!firstWasEdited)first.value=expected;concept.value='';
   const firstPrompt=first.value===expected?null:first.value;
   secondAwaiter=null;proceed.disabled=true;
   return runHistoricalComposition({
-   engine,task:taskText,provider:providerName,model:modelName,apiKey,firstPrompt,onProgress,
+   engine,task:taskText,provider:providerName,model:modelName,apiKey,firstPrompt,onStage1,onProgress,
    onConcept:async({concept:idea,proposal})=>{
     concept.value=idea;second.value=proposal;
     if(!pause.checked)return null;
