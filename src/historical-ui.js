@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
 
 export function initHistoricalControls(){
- const select=$('composition-process'),section=$('historical-controls'),
+ const select=$('composition-process'),section=$('historical-controls'),reset=$('historical-reset'),
   first=$('historical-first-prompt'),second=$('historical-second-prompt'),
   concept=$('historical-concept'),pause=$('historical-pause'),
   proceed=$('historical-proceed'),task=$('task'),additional=$('additional'),
@@ -36,6 +36,7 @@ export function initHistoricalControls(){
  select.addEventListener('change',refresh);
  task.addEventListener('input',()=>{if(select.value==='historical'&&!secondAwaiter)initial();});
  first.addEventListener('input',()=>{firstWasEdited=true;});
+ reset.addEventListener('click',()=>{firstWasEdited=false;initial();});
  proceed.addEventListener('click',()=>{
   if(!secondAwaiter)return;
   const resume=secondAwaiter;secondAwaiter=null;proceed.disabled=true;
@@ -48,7 +49,7 @@ export function initHistoricalControls(){
   concept.value=record.concept||'';
   const c1=record.historicalCalls?.find(c=>c.stage==='sound_concept');
   const c2=record.historicalCalls?.find(c=>c.stage==='score_realization');
-  if(c1?.prompt){first.value=c1.prompt;firstWasEdited=true;}
+  if(c1?.prompt){first.value=c1.prompt;firstWasEdited=c1.prompt!==originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;}
   if(c2?.prompt)second.value=c2.prompt;
  }
  function abortWait(){
@@ -96,5 +97,5 @@ export function renderHistoricalScore({record,paper,audio}){
  play.addEventListener('click',async()=>{try{await player.play(score);}catch(e){note.textContent='Wiedergabefehler: '+e.message;}});
  stop.addEventListener('click',()=>player.stop());
  midi.addEventListener('click',()=>downloadOriginalMidi(record));
- audio.append(play,stop,midi);
+ audio.classList.add('historical-midi-controls');audio.append(play,stop,midi);
 }
