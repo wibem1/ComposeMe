@@ -1,6 +1,6 @@
 // MIDI player whose ONLY musical source is the original MIDI byte stream.
-// Audio uses WebAudioFont SoundFont presets; timing, pitches, velocities, programs and channels
-// are read from the original MIDI file rather than reconstructed from ABC.
+// Audio uses the same FluidR3 GM SoundFont preset family as the historical MinimalComposer player.
+// Timing, pitches, velocities, programs and channels are still read from the original MIDI file.
 function readU16(b,o){return (b[o]<<8)|b[o+1];}
 function readU32(b,o){return ((b[o]<<24)>>>0)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3];}
 function readVlq(b,o){let v=0,i=o,x;do{if(i>=b.length)throw Error('Defekte MIDI-VLQ.');x=b[i++];v=(v<<7)|(x&127);}while(x&128);return [v,i];}
@@ -70,14 +70,21 @@ function waitForLoader(player){
   }catch(err){clearTimeout(timer);reject(err);}
  });
 }
+function fluidR3Info(program){
+ const p=Math.max(0,Math.min(127,Math.round(Number(program)||0)));
+ const code=String(p).padStart(3,'0')+'0';
+ return {
+  program:p,
+  variable:'_tone_'+code+'_FluidR3_GM_sf2_file',
+  url:'https://surikov.github.io/webaudiofontdata/sound/'+code+'_FluidR3_GM_sf2_file.js'
+ };
+}
 async function loadSoundFonts(ctx,parsed,player){
  const melodic=[...new Set(parsed.notes.filter(n=>n.channel!==9).map(n=>n.program))];
  const drums=[...new Set(parsed.notes.filter(n=>n.channel===9).map(n=>n.pitch))];
  const presets=new Map(),drumPresets=new Map();
  for(const program of melodic){
-  const id=player.loader.findInstrument(program);
-  const info=player.loader.instrumentInfo(id);
-  if(!info)throw new Error('Kein SoundFont-Instrument für GM-Programm '+program+'.');
+  const info=fluidR3Info(program);
   player.loader.startLoad(ctx,info.url,info.variable);
   presets.set(program,info);
  }
@@ -89,18 +96,21 @@ async function loadSoundFonts(ctx,parsed,player){
   drumPresets.set(pitch,info);
  }
  await waitForLoader(player);
- for(const info of presets.values())if(!window[info.variable])throw new Error('SoundFont konnte nicht geladen werden: '+info.title);
+ for(const info of presets.values()){
+  if(!window[info.variable])throw new Error('FluidR3-SoundFont konnte nicht geladen werden: GM '+info.program);
+  try{player.loader.decodeAfterLoading(ctx,info.variable);}catch(_){}
+ }
  return {presets,drumPresets};
 }
 function scheduleSoundFontNote(player,ctx,dest,n,start,end,presets,drumPresets){
- const duration=Math.max(.03,end-start),volume=Math.max(.02,Math.min(.95,n.velocity/127*.8));
+ const duration=Math.max(.03,end-start),volume=Math.max(.02,Math.min(1,n.velocity/127));
  if(n.channel===9){
   const info=drumPresets.get(n.pitch);if(!info||!window[info.variable])return;
   player.queueWaveTable(ctx,dest,window[info.variable],start,n.pitch,duration,volume);
   return;
  }
  const info=presets.get(n.program);
- if(!info||!window[info.variable])throw new Error('SoundFont-Preset fehlt für GM-Programm '+n.program+'.');
+ if(!info||!window[info.variable])throw new Error('FluidR3-Preset fehlt für GM-Programm '+n.program+'.');
  player.queueWaveTable(ctx,dest,window[info.variable],start,n.pitch,duration,volume);
 }
 export function createMidiPlayer(record,{onState=()=>{}}={}){
