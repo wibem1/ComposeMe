@@ -1,8 +1,11 @@
-import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js';
-import {createHistoricalPlayer,downloadOriginalMidi} from './historical-player.js';
+import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.1';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.1';
+import {historicalScoreToAbc,auditHistoricalAbc} from './historical-abc.js?v=0.8.1';
+import {normalizeAbcForAbcjs} from './music-view.js?v=0.8.1';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
+const activePlayers=new WeakMap();
 
 export function initHistoricalControls(){
  const select=$('composition-process'),section=$('historical-controls'),reset=$('historical-reset'),
@@ -53,10 +56,7 @@ export function initHistoricalControls(){
   if(c2?.prompt)second.value=c2.prompt;
  }
  function abortWait(){
-  if(secondAwaiter){
-   // Do not silently send an edited stage-2 prompt after navigation.
-   secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;
-  }
+  if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}
  }
  async function run({apiKey,taskText,onProgress}){
   const engine=baseEngine();
@@ -67,12 +67,10 @@ export function initHistoricalControls(){
   const firstPrompt=first.value===expected?null:first.value;
   secondAwaiter=null;proceed.disabled=true;
   return runHistoricalComposition({
-    engine,task:taskText,apiKey,firstPrompt,
-    onProgress,
+    engine,task:taskText,apiKey,firstPrompt,onProgress,
     onConcept:async({concept:idea,proposal})=>{
-      concept.value=idea;
-      second.value=proposal;
-      if(!pause.checked)return null; // Exact historical auto mode: no prompt change.
+      concept.value=idea;second.value=proposal;
+      if(!pause.checked)return null;
       onProgress('Klangvorstellung fertig. Zweite Anfrage prüfen und „Komposition fortsetzen“ drücken.');
       return new Promise(resolve=>{secondAwaiter=resolve;proceed.disabled=false;});
     }
@@ -80,22 +78,70 @@ export function initHistoricalControls(){
  }
  return {run,showRecord,refresh,abortWait,isHistorical:()=>select.value==='historical'};
 }
+
+function formatTime(sec){const s=Math.max(0,Math.round(Number(sec)||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function renderMidiControls(record,audio,note){
+ const old=activePlayers.get(audio);old?.stop?.();
+ const holder=document.createElement('div');holder.className='midi-player';holder.dataset.source='original-midi';
+ const title=document.createElement('strong');title.textContent='MIDI-Player · Original-MIDI';
+ const play=document.createElement('button');play.type='button';play.textContent='▶ Abspielen';
+ const stop=document.createElement('button');stop.type='button';stop.textContent='■ Stopp';
+ const range=document.createElement('input');range.type='range';range.min='0';range.max='1000';range.value='0';range.step='1';range.setAttribute('aria-label','MIDI-Wiedergabeposition');
+ const time=document.createElement('span');time.className='midi-time';
+ const midi=document.createElement('button');midi.type='button';midi.textContent='Original-MIDI speichern';
+ let player;
+ try{
+  player=createMidiPlayer(record,{onState:s=>{
+   play.textContent=s.playing?'❚❚ Pause':'▶ Abspielen';
+   range.value=s.duration?String(Math.round(1000*s.position/s.duration)):'0';
+   time.textContent=formatTime(s.position)+' / '+formatTime(s.duration);
+  }});
+  time.textContent='0:00 / '+formatTime(player.duration);
+ }catch(e){
+  note.textContent='MIDI-Player: '+e.message;play.disabled=true;stop.disabled=true;range.disabled=true;
+ }
+ play.addEventListener('click',async()=>{if(!player)return;try{if(player.parsed&&play.textContent.includes('Pause'))player.pause();else await player.play();}catch(e){note.textContent='MIDI-Wiedergabefehler: '+e.message;}});
+ stop.addEventListener('click',()=>player?.stop());
+ range.addEventListener('input',async()=>{if(!player)return;await player.seek(player.duration*Number(range.value)/1000);});
+ midi.addEventListener('click',()=>downloadOriginalMidi(record));
+ holder.append(title,play,stop,range,time,midi);audio.replaceChildren(holder);
+ if(player)activePlayers.set(audio,player);
+}
+
+function renderHistoricalNotation(record,paper,note){
+ const score=record?.historicalScore;if(!score)return null;
+ const abc=historicalScoreToAbc(score),audit=auditHistoricalAbc(score,abc);
+ const normalized=normalizeAbcForAbcjs(abc);
+ if(!window.ABCJS?.renderAbc)throw new Error('ABC-Notenmodul nicht geladen.');
+ const visual=window.ABCJS.renderAbc(paper,normalized,{responsive:'resize',add_classes:true,staffwidth:900});
+ if(!visual?.[0])throw new Error('ABC konnte nicht dargestellt werden.');
+ const source=document.createElement('small');source.className='notation-source';
+ source.textContent='Notenansicht: technisch aus derselben JSON-Partitur erzeugtes ABC. Wiedergabequelle bleibt ausschließlich das Original-MIDI.';
+ paper.append(source);
+ if(!audit.ok){
+  const warning=document.createElement('div');warning.className='notation-warning';
+  warning.textContent='Notationsprüfung: Die ABC-Projektion konnte nicht vollständig bestätigt werden. Das Original-MIDI bleibt unverändert.';
+  paper.append(warning);
+ }
+ record.historicalAbc=abc;
+ record.historicalAbcAudit=audit;
+ return {abc,audit,visual:visual[0]};
+}
+
 export function renderHistoricalScore({record,paper,audio}){
  const score=record?.historicalScore;
+ activePlayers.get(audio)?.stop?.();activePlayers.delete(audio);
  paper.replaceChildren();audio.replaceChildren();
  if(!score)return;
+ const heading=document.createElement('div');heading.className='historical-score-heading';
  const title=document.createElement('h3');title.textContent=score.title||'Ohne Titel';
  const description=document.createElement('p');
- description.textContent=`${record.bars||'?'} Takte · ${score.bpm||'?'} BPM · ${score.tracks?.length||0} Spuren · Originale MIDI-Partitur`;
- const note=document.createElement('p');
- note.textContent='Die originale MIDI-Datei bleibt unverändert. Für eine hochwertige Klavierwiedergabe bitte MIDI exportieren und in einer DAW abspielen. Das ABC-Notenmodul verarbeitet diese Partitur noch nicht verlustfrei.';
- paper.append(title,description,note);
- const player=createHistoricalPlayer();
- const play=document.createElement('button');play.type='button';play.textContent='Anhören';
- const stop=document.createElement('button');stop.type='button';stop.textContent='Stopp';
- const midi=document.createElement('button');midi.type='button';midi.textContent='Original-MIDI speichern';
- play.addEventListener('click',async()=>{try{await player.play(score);}catch(e){note.textContent='Wiedergabefehler: '+e.message;}});
- stop.addEventListener('click',()=>player.stop());
- midi.addEventListener('click',()=>downloadOriginalMidi(record));
- audio.classList.add('historical-midi-controls');audio.append(play,stop,midi);
+ description.textContent=`${record.bars||'?'} Takte · ${score.bpm||'?'} BPM · ${score.tracks?.length||0} Originalspuren`;
+ const note=document.createElement('p');note.className='historical-score-note';
+ note.textContent='MIDI und Notenansicht stammen aus derselben unveränderten Komposition. Der MIDI-Player liest die originale MIDI-Datei; ABC wird nur für das Notenbild erzeugt.';
+ heading.append(title,description,note);paper.append(heading);
+ try{renderHistoricalNotation(record,paper,note);}catch(e){
+  const warning=document.createElement('div');warning.className='notation-warning';warning.textContent='Notenansicht: '+e.message;paper.append(warning);
+ }
+ renderMidiControls(record,audio,note);
 }

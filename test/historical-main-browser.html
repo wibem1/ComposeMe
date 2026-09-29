@@ -46,8 +46,14 @@ frame.addEventListener('load',async()=>{
  const text=d.getElementById('protocol').textContent;
  if(!text.includes(stage1)||!text.includes('TATSÄCHLICHE KI-ANFRAGE'))
   throw Error('Historischer Kommunikationsverlauf fehlt.');
- if(!d.getElementById('paper').textContent.includes('Integrations-Teststück'))
-  throw Error('MIDI-Score ist im ComposeMe-Player nicht verfügbar.');
+ const paper=d.getElementById('paper'),audio=d.getElementById('audio');
+ if(!paper.querySelector('svg'))throw Error('ABC-Notenbild wurde nicht gerendert.');
+ if(!paper.textContent.includes('Wiedergabequelle bleibt ausschließlich das Original-MIDI'))
+  throw Error('Trennung von Notenansicht und Wiedergabequelle fehlt.');
+ const midiPlayer=audio.querySelector('.midi-player[data-source="original-midi"]');
+ if(!midiPlayer)throw Error('Original-MIDI-Player fehlt.');
+ if(audio.querySelector('.abcjs-inline-audio'))throw Error('Historischer Modus darf keinen ABC-Player verwenden.');
+ if(!midiPlayer.textContent.includes('Original-MIDI'))throw Error('MIDI-Quelle ist nicht sichtbar bezeichnet.');
  const hist=d.getElementById('history');
  if(![...hist.options].some(x=>x.textContent.includes('Integrations-Teststück')))
   throw Error('Historische Komposition nicht im bestehenden Verlauf gespeichert.');
@@ -55,6 +61,9 @@ frame.addEventListener('load',async()=>{
  document.body.dataset.promptUnchanged='true';
  document.body.dataset.calls='2';
  document.body.dataset.historySaved='true';
+ document.body.dataset.notationSvg='true';
+ document.body.dataset.midiSource='original';
+ document.body.dataset.noAbcPlayer='true';
  }catch(e){
  document.body.dataset.historicalReady='false';document.body.dataset.error=e?.stack||String(e);
  }
