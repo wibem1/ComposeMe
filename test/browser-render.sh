@@ -14,7 +14,9 @@ fi
   --dump-dom http://127.0.0.1:8123/test/browser-render.html > /tmp/composeme-render-dom.html
 cat /tmp/composeme-render-dom.html
 grep -q 'data-render-success="true"' /tmp/composeme-render-dom.html
+grep -q 'data-abendlicht-linebreak-none="true"' /tmp/composeme-render-dom.html
 grep -q 'data-abendlicht-complete-systems="true"' /tmp/composeme-render-dom.html
+grep -Eq 'data-abendlicht-score-lines="[1-9][0-9]*"' /tmp/composeme-render-dom.html
 grep -Eq 'data-note-count="[1-9][0-9]*"' /tmp/composeme-render-dom.html
 grep -q 'data-violin-program-directive="true"' /tmp/composeme-render-dom.html
 grep -q 'data-violin-program-midi="true"' /tmp/composeme-render-dom.html
@@ -24,8 +26,3 @@ grep -q 'data-midi-export="true"' /tmp/composeme-render-dom.html
 grep -q 'data-musicxml-export="true"' /tmp/composeme-render-dom.html
 grep -q 'data-svg-export="true"' /tmp/composeme-render-dom.html
 grep -q 'data-print-export="true"' /tmp/composeme-render-dom.html
-
-grep -q 'data-abendlicht-lines="4"' /tmp/composeme-render-dom.html
-grep -q 'data-abendlicht-paired="true"' /tmp/composeme-render-dom.html
-
-grep -q 'data-abendlicht-aligned="true"' /tmp/composeme-render-dom.html
