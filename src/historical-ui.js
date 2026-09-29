@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.11';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.11';
+import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.12';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.12';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -35,13 +35,16 @@ export function initHistoricalControls(){
   select.value='historical';refresh();concept.value=record.concept||'';
   const c1=record.historicalCalls?.find(c=>c.stage==='sound_concept');
   const c2=record.historicalCalls?.find(c=>c.stage==='score_realization');
-  if(c1?.prompt){first.value=c1.prompt;firstWasEdited=c1.prompt!==originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;}
+  // Historical prompts are displayed for inspection, never implicitly reused as the next experiment's inputs.
+  first.value=c1?.prompt||originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;
+  firstWasEdited=false;
   if(c2?.prompt)second.value=c2.prompt;
  }
  function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
  async function run({apiKey,taskText,providerName,modelName,onStage1,onProgress}){
   const engine=baseEngine();if(!engine)throw new Error('Historische Engine fehlt. Bitte die App vollständig neu laden.');
   const expected=originalHistoricalPrompts(engine,taskText).musicalDraft;
+  // A new run uses the canonical prompt unless the user explicitly edits the field after loading a record.
   if(!firstWasEdited)first.value=expected;concept.value='';
   const firstPrompt=first.value===expected?null:first.value;
   secondAwaiter=null;proceed.disabled=true;

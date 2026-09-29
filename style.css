@@ -35,3 +35,11 @@
 .midi-player strong{white-space:nowrap}.midi-player button{width:auto;margin:0}.midi-player input[type="range"]{min-width:180px;padding:0}.midi-time{font-variant-numeric:tabular-nums;white-space:nowrap}.notation-source{display:block;margin:8px 0;opacity:.78}.historical-score-note{font-size:.92rem;opacity:.82}
 @media(max-width:700px){.midi-player{grid-template-columns:1fr 1fr}.midi-player strong,.midi-player input[type="range"],.midi-time{grid-column:1/-1}.midi-player input[type="range"]{width:100%}}
 
+
+/* Make section titles and collapsible rubrics more legible, including on tablets. */
+main h2{font-size:1.45rem;line-height:1.3}
+main details>summary{font-size:1.17rem;line-height:1.45;padding:5px 0}
+#diagnosis-section{border:1px solid #999;border-radius:9px;padding:14px;margin:22px 0}
+#diagnosis-section h2{margin:0 0 12px}
+#diagnostic-save{width:auto;max-width:100%;margin:0}
+#diagnosis-section p{margin:10px 0 0;opacity:.8}

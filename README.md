@@ -1,4 +1,4 @@
-# ComposeMe 0.8.11
+# ComposeMe 0.8.12
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,7 +16,7 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Historischer Zweistufenmodus (0.8.11):** Der Ablauf endet nach Klangvorstellung und Komposition. Danach stehen Original-MIDI, SoundFont-Wiedergabe, Verlauf und vollständiges Kommunikationsprotokoll zur Verfügung. Es gibt keinen dritten KI-Aufruf und keine interne MusicXML- oder ABC-Erzeugung für diesen Modus. Notensatz ist bewusst ausgelagert; die direkte alte ComposeMe-Funktion mit ABC/abcjs bleibt unverändert.
+**Historischer Zweistufenmodus (0.8.12):** Der Ablauf endet nach Klangvorstellung und Komposition. Danach stehen Original-MIDI, SoundFont-Wiedergabe, Verlauf und vollständiges Kommunikationsprotokoll zur Verfügung. Es gibt keinen dritten KI-Aufruf und keine interne MusicXML- oder ABC-Erzeugung für diesen Modus. Notensatz ist bewusst ausgelagert; die direkte alte ComposeMe-Funktion mit ABC/abcjs bleibt unverändert.
 
 ## Historische Quellen
 
@@ -31,7 +31,11 @@ Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst edit
 Die bisherige Direktkomposition und bestehende Experimente werden nicht gelöscht oder migriert.
 
 
-### 0.8.11 – Entschlackung\nDer historische Modus wurde auf die zwei musikalisch relevanten KI-Aufrufe zurückgeführt. Alte MusicXML-/ABC-Daten in bestehenden Verlaufseinträgen bleiben als gespeicherte Alt-Daten erhalten, werden aber nicht mehr ausgeführt oder dargestellt.\n
+### 0.8.12 – Entschlackung\nDer historische Modus wurde auf die zwei musikalisch relevanten KI-Aufrufe zurückgeführt. Alte MusicXML-/ABC-Daten in bestehenden Verlaufseinträgen bleiben als gespeicherte Alt-Daten erhalten, werden aber nicht mehr ausgeführt oder dargestellt.\n
 
-### 0.8.11 – Modellauswahl
+### 0.8.12 – Modellauswahl
 Provider und Modell sind im Zweistufenmodus wieder frei wählbar. Fest bleibt nur der Ablauf „Klangvorstellung → Komposition“; die Auswahl wird tatsächlich für beide KI-Aufrufe verwendet und im Kommunikationsprotokoll gespeichert.
+
+
+### 0.8.12 – Experimentisolation und Diagnose
+Geladene historische Versuche zeigen ihre alten Prompts nur zur Einsicht. Ein neuer Versuch verwendet wieder die vollständige erste Originalanweisung, sofern diese nicht nach dem Laden ausdrücklich bearbeitet wurde. Diagnose-Export ist eine separate Rubrik und darf Key-Speicher nicht verändern; beim Start löscht ein leeres Key-Eingabefeld keinen gespeicherten Schlüssel mehr. Größere Rubriktitel.
