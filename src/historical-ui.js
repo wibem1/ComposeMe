@@ -20,14 +20,9 @@ export function initHistoricalControls(){
  };
  function refresh(){
   section.hidden=select.value!=='historical';
-  if(!section.hidden){
-   if(provider.value!=='openai')provider.value='openai';
-   provider.dispatchEvent(new Event('change'));
-   const known=[...model.options].find(x=>x.value==='gpt-5.6-sol');
-   if(known)model.value=known.value;
-   model.disabled=true;provider.disabled=true;additional.disabled=true;
-   initial();
-  }else{model.disabled=false;provider.disabled=false;additional.disabled=false;}
+  model.disabled=false;provider.disabled=false;
+  additional.disabled=!section.hidden;
+  if(!section.hidden)initial();
  }
  select.addEventListener('change',refresh);
  task.addEventListener('input',()=>{if(select.value==='historical'&&!secondAwaiter)initial();});
@@ -44,14 +39,14 @@ export function initHistoricalControls(){
   if(c2?.prompt)second.value=c2.prompt;
  }
  function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
- async function run({apiKey,taskText,onProgress}){
+ async function run({apiKey,taskText,providerName,modelName,onProgress}){
   const engine=baseEngine();if(!engine)throw new Error('Historische Engine fehlt. Bitte die App vollständig neu laden.');
   const expected=originalHistoricalPrompts(engine,taskText).musicalDraft;
   if(!firstWasEdited)first.value=expected;concept.value='';
   const firstPrompt=first.value===expected?null:first.value;
   secondAwaiter=null;proceed.disabled=true;
   return runHistoricalComposition({
-   engine,task:taskText,apiKey,firstPrompt,onProgress,
+   engine,task:taskText,provider:providerName,model:modelName,apiKey,firstPrompt,onProgress,
    onConcept:async({concept:idea,proposal})=>{
     concept.value=idea;second.value=proposal;
     if(!pause.checked)return null;
