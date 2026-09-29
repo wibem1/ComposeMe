@@ -5,9 +5,9 @@
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
 
-export function originalHistoricalPrompts(engine,task,concept='') {
+export function originalHistoricalPrompts(engine,task,concept='',provider='openai',model='gpt-5.6-sol') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
-  const snapshot={visibleTask:String(task).trim(),provider:'openai',model:'gpt-5.6-sol'};
+  const snapshot={visibleTask:String(task).trim(),provider,model};
   return engine.createPrompts(snapshot,concept);
 }
 
@@ -17,7 +17,7 @@ const stageLabel=stage=>stage==='sound_concept'?'=== 1. KLANGVORSTELLUNG ===':'=
 export function formatHistoricalProtocol(record){
  const calls=compositionCalls(record);
  const lines=['VERFAHREN: Zweistufiger historischer Ablauf aus Minimal Composer 0.5.99.',
-  'NUTZERAUFTRAG: '+(record.userInput||''),'PROVIDER / MODELL: OpenAI / '+(record.model||'')];
+  'NUTZERAUFTRAG: '+(record.userInput||''),'PROVIDER / MODELL: '+(record.provider||'')+' / '+(record.model||'')];
  for(const call of calls){
   lines.push('',stageLabel(call.stage),
    'TATSÄCHLICHE KI-ANFRAGE (vollständig):',call.prompt,
@@ -34,24 +34,24 @@ function sumUsage(calls){
  total:a.total+(c.usage?.total||0),cached:a.cached+(c.usage?.cached||0)}),{input:0,output:0,total:0,cached:0});
 }
 
-function newPartial({task,model,calls,concept='',error=''}) {
+function newPartial({task,provider,model,calls,concept='',error=''}) {
  const musicalCalls=calls.filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
  const usage=sumUsage(musicalCalls);
  return {mode:'historical',historicalVersion:'1.4.0-experiment',userInput:task,appAdditions:'',
- provider:'openai',model,actualRequest:musicalCalls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
+ provider,model,actualRequest:musicalCalls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
  historicalCalls:musicalCalls,concept,technicalRecovery:'',historicalScore:null,historicalMidi:null,
  historicalScoreJson:'',usage,estimatedCost:estimateCost(model,usage),error};
 }
 
 export async function runHistoricalComposition({
- engine,task,model='gpt-5.6-sol',apiKey,
+ engine,task,provider='openai',model='gpt-5.6-sol',apiKey,
  firstPrompt=null,secondPrompt=null,
  onConcept=async()=>null,onProgress=()=>{},fetchImpl=fetch
 }){
  const cleanTask=String(task||'').trim();
  if(!cleanTask||!apiKey)throw new Error('Auftrag und API-Key fehlen.');
  if(!engine?.compose||!engine?.createPrompts)throw new Error('Die historische Engine fehlt.');
- const snapshot={visibleTask:cleanTask,provider:'openai',model};
+ const snapshot={visibleTask:cleanTask,provider,model};
  const calls=[];
  let concept='',scoreJson='';
  const requestModel=async({snapshot,key,promptText,stage})=>{
@@ -101,7 +101,7 @@ export async function runHistoricalComposition({
    snapshot,key:apiKey,runId:'composeme-'+Date.now(),now:()=>new Date().toISOString(),
    requestModel,usedTitles:[]
   });
-  const record=newPartial({task:cleanTask,model,calls,concept});
+  const record=newPartial({task:cleanTask,provider,model,calls,concept});
   record.aiResponse=calls.find(c=>c.stage==='score_realization')?.response??'';
   record.historicalScore=output.run.score;
   record.historicalMidi=Array.from(output.midiBytes);
@@ -112,7 +112,7 @@ export async function runHistoricalComposition({
   onProgress('Komposition fertig.');
   return record;
  }catch(error){
-  error.partialRecord=newPartial({task:cleanTask,model,calls,concept,error:error.message});
+  error.partialRecord=newPartial({task:cleanTask,provider,model,calls,concept,error:error.message});
   throw error;
  }
 }
