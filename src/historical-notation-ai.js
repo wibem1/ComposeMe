@@ -45,10 +45,10 @@ export async function requestMusicXmlNotation({
 }){
  const prompt=buildMusicXmlNotationPrompt(scoreJson,instruction);
  if(!apiKey)throw new Error('OpenAI-API-Key fehlt.');
- const body={model,input:[{role:'user',content:[{type:'input_text',text:prompt}]}],store:false};
+ const body={model,input:[{role:'user',content:[{type:'input_text',text:prompt}]}],store:false,max_output_tokens:64000,reasoning:{effort:'none'}};
  const call={stage:'notation_musicxml',prompt,response:'',usage:null,status:'started',recovery:null};
  onProgress('Noten werden als MusicXML gesetzt …');
- const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),180000),started=Date.now();
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),300000),started=Date.now();
  let data,raw;
  try{
   const res=await fetchImpl('https://api.openai.com/v1/responses',{
@@ -61,10 +61,30 @@ export async function requestMusicXmlNotation({
   if(typeof data.output_text==='string')parts.push(data.output_text);
   else for(const item of data.output||[])for(const c of item.content||[])if(typeof c.text==='string')parts.push(c.text);
   raw=parts.join('\n');
-  if(!raw.trim())throw new Error('Die KI hat keinen MusicXML-Text zurückgegeben.');
+  call.response=raw||'';
+  call.elapsedMs=Date.now()-started;
+  call.usage=extractUsage('openai',data);
+  call.apiStatus=data?.status||'unknown';
+  call.incompleteDetails=data?.incomplete_details||null;
+  if(!raw.trim()){
+   call.status='failed';
+   const err=new Error('Die KI hat keinen MusicXML-Text zurückgegeben.');
+   err.notationCall=call;throw err;
+  }
+  if(data?.status==='incomplete'){
+   call.status='failed';
+   const reason=data?.incomplete_details?.reason||'unbekannter Grund';
+   const err=new Error('MusicXML-Antwort unvollständig ('+reason+').');
+   err.notationCall=call;throw err;
+  }
  }finally{clearTimeout(timeout);}
- call.response=raw;call.status='completed';call.elapsedMs=Date.now()-started;
- call.usage=extractUsage('openai',data);
- const musicXml=extractMusicXmlOnly(raw);
- return {musicXml,call,estimatedCost:estimateCost(model,call.usage)};
+ try{
+  const musicXml=extractMusicXmlOnly(raw);
+  call.status='completed';
+  return {musicXml,call,estimatedCost:estimateCost(model,call.usage)};
+ }catch(err){
+  call.status='failed';
+  err.notationCall=call;
+  throw err;
+ }
 }

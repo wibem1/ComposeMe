@@ -1,4 +1,4 @@
-# ComposeMe 0.8.4
+# ComposeMe 0.8.5
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,9 +16,9 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Wiedergabe und Notenansicht (0.8.4):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in MusicXML 4.0. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom MusicXML. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
+**Wiedergabe und Notenansicht (0.8.5):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in MusicXML 4.0. Der Notationsaufruf erhält ein eigenes großes Ausgabebudget und läuft ohne zusätzliche Reasoning-Stufe, damit lange XML-Partituren nicht unnötig abgeschnitten werden. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom MusicXML. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
 
-Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXML durch KI erzeugen“**. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die MusicXML-Partitur wird mit **OpenSheetMusicDisplay** gerendert. Der bisherige direkte ComposeMe-Modus bleibt unverändert und benutzt weiterhin ABC/abcjs.
+Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXML durch KI erzeugen“**. Auch eine unvollständige oder ungültige KI-Antwort wird jetzt mit Rohantwort, API-Status und Fehler im Verlauf erhalten, statt still verloren zu gehen. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die MusicXML-Partitur wird mit **OpenSheetMusicDisplay** gerendert. Der bisherige direkte ComposeMe-Modus bleibt unverändert und benutzt weiterhin ABC/abcjs.
 
 ## Historische Quellen
 
