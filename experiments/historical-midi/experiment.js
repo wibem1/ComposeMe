@@ -25,7 +25,7 @@ $('test').addEventListener('submit',async e=>{
   $('go').disabled=false;
   if(state){
    $('diagnosis').disabled=false;
-   $('protocol').textContent=state.calls.map(c=>'STUFE: '+c.stage+'\\nPROMPT:\\n'+c.prompt+'\\n\\nROHANTWORT:\\n'+c.response).join('\\n\\n──────────\\n\\n');
+   $('protocol').textContent=state.calls.map(c=>'STUFE: '+c.stage+'\nPROMPT:\n'+c.prompt+'\n\nROHANTWORT:\n'+c.response).join('\n\n──────────\n\n');
    const costs=state.calls.map(c=>c.estimatedCost);$('usage').textContent=state.calls.length+' KI-Aufrufe; '+(costs.every(Number.isFinite)?'geschätzte Kosten '+costs.reduce((a,b)=>a+b,0).toFixed(4)+' USD':'Kosten nicht vollständig berechenbar');
   }
  }
