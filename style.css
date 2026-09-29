@@ -36,3 +36,6 @@
 @media(max-width:700px){.midi-player{grid-template-columns:1fr 1fr}.midi-player strong,.midi-player input[type="range"],.midi-time{grid-column:1/-1}.midi-player input[type="range"]{width:100%}}
 
 .historical-notate-button{width:auto;margin:8px 0}.notation-warning{margin:10px 0;padding:8px;border:1px solid #b88;border-radius:5px}
+
+/* MusicXML notation in the historical workflow. */
+.historical-score-meta{font-weight:600;margin:4px 0 2px}.musicxml-score{width:100%;min-height:120px;overflow-x:auto;margin-top:12px}.musicxml-score svg{max-width:100%;height:auto}.musicxml-score canvas{max-width:100%}.notation-source{position:static;clear:both;margin-top:10px}

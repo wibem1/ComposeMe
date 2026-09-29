@@ -4,7 +4,7 @@
  */
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
-import {requestAbcNotation,ABC_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.3';
+import {requestMusicXmlNotation,MUSICXML_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.4';
 
 export function originalHistoricalPrompts(engine,task,concept='') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
@@ -16,7 +16,7 @@ const stageLabel=stage=>stage==='sound_concept'
  ?'=== 1. KLANGVORSTELLUNG ==='
  :stage==='score_realization'
   ?'=== 2. KOMPOSITION ==='
-  :'=== 3. NOTATION: JSON → ABC ===';
+  :'=== 3. NOTATION: JSON → MusicXML ===';
 
 export function formatHistoricalProtocol(record){
  const lines=['VERFAHREN: Historische Composition Engine 1.4.0-experiment; die beiden musikalischen KI-Aufrufe bleiben unverändert.',
@@ -43,7 +43,7 @@ function newPartial({task,model,calls,concept='',error=''}) {
  return {mode:'historical',historicalVersion:'1.4.0-experiment',userInput:task,appAdditions:'',
  provider:'openai',model,actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
  historicalCalls:calls,concept,technicalRecovery:'',historicalScore:null,historicalMidi:null,
- historicalScoreJson:'',historicalAbc:'',historicalNotationInstruction:ABC_NOTATION_INSTRUCTION,
+ historicalScoreJson:'',historicalMusicXml:'',historicalNotationInstruction:MUSICXML_NOTATION_INSTRUCTION,
  notationError:'',usage,estimatedCost:estimateCost(model,usage),error};
 }
 
@@ -52,26 +52,26 @@ function recoveredScoreJson(raw){
  return {text:repair.text,recovery:repair.repaired?repair.explanation:''};
 }
 
-export async function addHistoricalAbcNotation({
- record,apiKey,model='gpt-5.6-sol',instruction=ABC_NOTATION_INSTRUCTION,
+export async function addHistoricalMusicXmlNotation({
+ record,apiKey,model='gpt-5.6-sol',instruction=MUSICXML_NOTATION_INSTRUCTION,
  fetchImpl=fetch,onProgress=()=>{}
 }){
  if(!record?.historicalScore)throw new Error('Keine fertige historische Komposition vorhanden.');
- const existing=(record.historicalCalls||[]).filter(c=>c.stage!=='notation_abc');
+ const existing=(record.historicalCalls||[]).filter(c=>c.stage!=='notation_abc'&&c.stage!=='notation_musicxml');
  const source=record.historicalScoreJson?.trim()
   ?{text:record.historicalScoreJson,recovery:''}
   :recoveredScoreJson(record.aiResponse||existing.find(c=>c.stage==='score_realization')?.response||'');
- const result=await requestAbcNotation({scoreJson:source.text,apiKey,model,instruction,fetchImpl,onProgress});
+ const result=await requestMusicXmlNotation({scoreJson:source.text,apiKey,model,instruction,fetchImpl,onProgress});
  const calls=[...existing,result.call],usage=sumUsage(calls);
- return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalAbc:result.abc,
-  historicalNotationInstruction:instruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
+ return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:result.musicXml,
+  historicalAbc:'',historicalNotationInstruction:instruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
   usage,estimatedCost:estimateCost(model,usage)};
 }
 
 export async function runHistoricalComposition({
  engine,task,model='gpt-5.6-sol',apiKey,
  firstPrompt=null,secondPrompt=null,
- notationInstruction=ABC_NOTATION_INSTRUCTION,createNotation=true,
+ notationInstruction=MUSICXML_NOTATION_INSTRUCTION,createNotation=true,
  onConcept=async()=>null,onProgress=()=>{},fetchImpl=fetch
 }){
  const cleanTask=String(task||'').trim();
@@ -137,12 +137,12 @@ export async function runHistoricalComposition({
   record.bars=output.run.profile?.barCount;
   if(createNotation){
    try{
-    record=await addHistoricalAbcNotation({record,apiKey,model,instruction:notationInstruction,fetchImpl,onProgress});
+    record=await addHistoricalMusicXmlNotation({record,apiKey,model,instruction:notationInstruction,fetchImpl,onProgress});
    }catch(err){
     record.notationError=err.message;
     record.usage=sumUsage(record.historicalCalls||[]);
     record.estimatedCost=estimateCost(model,record.usage);
-    onProgress('Komposition fertig; ABC-Notation konnte nicht erzeugt werden.');
+    onProgress('Komposition fertig; MusicXML-Notation konnte nicht erzeugt werden.');
    }
   }
   return record;
