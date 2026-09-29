@@ -8,7 +8,7 @@ const context={window:{},crypto:crypto.webcrypto,TextEncoder};
 vm.runInNewContext(historical,context);
 const e=context.window.CompositionEngine;
 test('historical engine source keeps unchanged original Git blob SHA',()=>{
- const pre=`blob ${Buffer.byteLength(historical,'utf8')}\\0`;
+ const pre='blob '+Buffer.byteLength(historical,'utf8')+String.fromCharCode(0);
  const sha=crypto.createHash('sha1').update(pre).update(historical).digest('hex');
  assert.equal(sha,'f40b809e1cfe8b2bd18db348a35859be3932e0fa');
 });
