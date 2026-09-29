@@ -55,6 +55,27 @@ test('selected OpenAI model is used for both two-stage requests and stored trans
  assert.match(formatHistoricalProtocol(rec),/openai \/ gpt-5\.6-pro/);
 });
 
+
+test('stage one snapshot is complete before optional pause and contains only first call',async()=>{
+ const requests=[],concept='Eine merkwürdige Rückfrage statt Klangvorstellung';
+ let snapshot=null;
+ const rec=await runHistoricalComposition({engine,task,apiKey:'test',
+  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore())],requests),
+  onStage1:partial=>{snapshot=structuredClone(partial);},
+  onConcept:async()=>null});
+ assert.ok(snapshot);
+ assert.equal(snapshot.runStatus,'stage1_completed');
+ assert.equal(snapshot.historicalCalls.length,1);
+ assert.equal(snapshot.historicalCalls[0].stage,'sound_concept');
+ assert.equal(snapshot.historicalCalls[0].response,concept);
+ assert.equal(snapshot.provider,'openai');
+ assert.equal(snapshot.model,'gpt-5.6-sol');
+ assert.equal(snapshot.userInput,task);
+ assert.equal(snapshot.usage.total,300);
+ assert.equal(rec.runStatus,'completed');
+ assert.equal(rec.historicalCalls.length,2);
+});
+
 test('optional manual pause sees EXACT completed stage-two prompt and records user edit transparently',async()=>{
  const requests=[],concept='Neue freie Vorstellung',changed='Meine bewusst geänderte zweite Anfrage';
  const rec=await runHistoricalComposition({engine,task,apiKey:'test',
