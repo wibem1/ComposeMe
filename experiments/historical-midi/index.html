@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ComposeMe · Historischer Kompositionsversuch</title><link rel="stylesheet" href="../../style.css">
+<style>main{max-width:940px;margin:auto;padding:1.5rem}.notice{border-left:4px solid #50ae78;background:rgba(70,165,105,.10);padding:.8rem;margin:1rem 0}label{display:block;margin:.8rem 0}input,textarea,select{display:block;width:100%;padding:.6rem;margin-top:.3rem}input[type=password]{max-width:560px}textarea{min-height:90px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem}button{padding:.6rem;margin:.3rem .5rem .3rem 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}section{margin:1.5rem 0}#melody{margin:.8rem 0}@media(max-width:600px){.pair{grid-template-columns:1fr}}</style></head><body><main>
+<h1>ComposeMe · Historischer Kompositionsversuch</h1><p>Teststand 0.1 · eigenständige Versuchsumgebung</p>
+<div class="notice">Die normalen Apps bleiben unverändert. <strong>Historischer Modus</strong> verwendet die beiden musikalisch entscheidenden Anfragen aus Minimal Composer 0.4.24 wortgleich und erzeugt wie damals MIDI-JSON. <strong>Direkter Modus</strong> erzeugt dasselbe MIDI-Format ohne vorangehenden Entwurf. So lassen sich beide Ergebnisse mit demselben Kontrollklang und im selben MIDI-Player vergleichen.</div>
+<a href="../../">Normales ComposeMe öffnen</a>
+<form id="test">
+<div class="pair"><label>Provider<select id="provider"><option value="openai">OpenAI</option><option value="google">Google</option><option value="anthropic">Anthropic</option></select></label><label>Modell<input id="model" value="gpt-5.6-sol" spellcheck="false" required></label></div>
+<label>API-Schlüssel (wird nicht gespeichert)<input id="key" type="password" autocomplete="off" spellcheck="false" required></label>
+<label>Kompositionsauftrag<textarea id="task" required>Komponiere ein eigenständiges Klavierstück.</textarea></label>
+<label>Versuchsmodus<select id="mode"><option value="historical">Historisch: freier Entwurf, dann MIDI-Ausarbeitung (2 Aufrufe)</option><option value="direct">Direkt: ohne vorherigen Entwurf (1 Aufruf)</option></select></label>
+<button type="submit" id="go">Versuch starten</button><small>Aufrufe verursachen API-Kosten. Ein Modus wird jeweils nur auf ausdrücklichen Klick ausgeführt; keine automatischen Versuchs-Wiederholungen.</small></form>
+<p role="status" id="status" aria-live="polite">Bereit.</p><p id="usage"></p>
+<section><h2>Musikalischer Entwurf</h2><pre id="draft">Noch keiner.</pre></section>
+<section><h2>Ergebnis anhören und sichern</h2><p id="title"></p>
+<button id="play" type="button" disabled>Kontrollklang abspielen</button><button id="stop" type="button" disabled>Stopp</button><button id="midi" type="button" disabled>MIDI speichern</button><button id="diagnosis" type="button" disabled>Vollständige Diagnose speichern</button>
+<p><small>Der Browser-Kontrollklang ist ein einfacher Sinus-/Dreieck-Synthesizer, keine hochwertige Klavierwiedergabe. Für eine musikalische Beurteilung beide MIDI-Dateien mit demselben Instrument in Reaper oder einem anderen Player hören.</small></p></section>
+<details><summary>Originalantwort und exakt versendete Anfragen</summary><pre id="protocol">Noch keine Daten.</pre></details>
+<section><p>Vergleichsregel: denselben Auftrag und dasselbe Modell in beiden Modi verwenden. Alle Prompts, Rohantworten und Token-/Kostenschätzungen sind in der Diagnose enthalten. Ein einzelner gelungener Versuch beweist keine zuverlässige Qualitätssteigerung.</p></section>
+</main><script type="module" src="./experiment.js?v=0.1"></script></body></html>
