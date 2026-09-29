@@ -40,6 +40,9 @@ try {
   document.body.dataset.abendlichtLines=String(piano?.lines?.length??0);
   document.body.dataset.abendlichtPaired=String(piano?.lines?.length===4 && piano.lines.every(line=>line.staff?.length===2));
   document.body.dataset.abendlichtWarnings=String(piano?.warnings?.length??0);
+  const beamed=normalizeAbcForAbcjs(abendlicht);
+  document.body.dataset.abendlichtBeaming=String(beamed.includes('A,,E, A,C EC A,E,'));
+  document.body.dataset.abendlichtBassBeamCount=String(document.querySelectorAll('#abendlicht-paper .abcjs-beam-elem.abcjs-v1').length);
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
