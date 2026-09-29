@@ -23,7 +23,8 @@ a{color:inherit}details{margin:14px 0}
 <label for="task">Kompositionsauftrag</label><textarea id="task" rows="3" required>Komponiere ein Klavierstück von 32 Takten im Stil von Beethoven.</textarea>
 <p><small>Fest eingestellt: GPT-5.6 Sol · Klangvorstellung → Komposition als kompaktes JSON → unveränderte MIDI-Erzeugung. Keine verdeckten Zusatzanweisungen.</small></p>
 <div class="actions"><button class="primary" type="submit" id="go">Historischen Test ausführen</button></div>
-</form><p id="status" aria-live="polite"></p>
+</form><div class="actions"><button id="recover-diagnosis" type="button">Vorhandene Fehlerdiagnose retten (ohne KI-Kosten)</button><input id="recover-file" type="file" accept=".json,application/json" hidden></div>
+<p id="status" aria-live="polite"></p>
 </div>
 <div class="panel"><label for="history">Testverlauf (getrennt von ComposeMe)</label><select id="history"><option value="">Gespeicherte Versuche</option></select>
 <h2 id="summary">Noch kein Ergebnis</h2>
