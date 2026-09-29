@@ -71,7 +71,9 @@ keyBackupSave.addEventListener('click',()=>{const stamp=new Date().toISOString()
 keyBackupLoad.addEventListener('click',()=>{keyBackupFile.value='';keyBackupFile.click();});
 keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files?.[0];if(!file)return;try{const backup=JSON.parse(await file.text());restoreKeyBackup(localStorage,backup);loadAllKeys();status.textContent='Keys geladen.';}catch(err){status.textContent='Key-Backup-Fehler: '+err.message;}});
 diagnosticSave.addEventListener('click',()=>{try{
- // Diagnostic export is read-only: never mutate or re-save key storage when making a download.
+ // Preserve nonempty visible keys first (including credentials filled by the browser without an input event).
+ // Never clear a stored key just because its field is temporarily empty.
+ for(const [name,input] of Object.entries(keyInputs)){const visible=input.value.trim();if(visible)keys.set(name,visible);}
  const notation=recognizeNotation(result.value??'');
  const diagnostic=createDiagnostic({appVersion:'0.8.12',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
