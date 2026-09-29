@@ -48,7 +48,7 @@ test('historical UI explicitly separates ABC notation from original MIDI playbac
  const ui=fs.readFileSync('src/historical-ui.js','utf8');
  assert.match(ui,/historicalScoreToAbc/);
  assert.match(ui,/createMidiPlayer/);
- assert.match(ui,/data\.source='original-midi'/);
+ assert.match(ui,/dataset\.source='original-midi'/);
  assert.doesNotMatch(ui,/SynthController/);
  assert.match(ui,/Wiedergabequelle bleibt ausschließlich das Original-MIDI/);
 });
