@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ComposeMe Klangexperiment 0.1</title><link rel="stylesheet" href="../../style.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/abcjs-audio.css">
+<style>
+main{max-width:1000px;margin:auto;padding:1.2rem} .note{border-left:4px solid #4b9b76;padding:.6rem 1rem;margin:1rem 0;background:rgba(84,180,129,.12)}
+input,textarea,select{width:100%;margin:.3rem 0 1rem;padding:.6rem}input[type=password]{max-width:600px}
+button{margin:.3rem .5rem .3rem 0;padding:.65rem 1rem}textarea{min-height:95px}.full{min-height:260px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}section{margin:1rem 0}#paper{overflow-x:auto}small{display:block}
+@media(max-width:600px){.row2{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>ComposeMe · Klangexperiment <small>0.1 · 29.09.2026</small></h1>
+<div class="note"><strong>Getrennter Versuch, keine Änderung an ComposeMe.</strong>
+Wir prüfen die historische MinimalComposer-Idee: erst eine freie musikalische Vorstellung, danach kreative Umsetzung als spielbare ABC-Partitur. Die Original-Komposition „Nachtlicht“ wird nicht als Vorlage eingespeist. Diese Seite speichert keine API-Schlüssel und verändert weder ComposeMe noch Minimal Composer.</div>
+<p><a href="../../">Normales ComposeMe zum Vergleich öffnen</a></p>
+<form id="experiment">
+<div class="row2"><label>Provider<select id="provider"><option value="openai">OpenAI</option><option value="google">Google</option><option value="anthropic">Anthropic</option></select></label><label>Modell<input id="model" value="gpt-5.6-sol" spellcheck="false" required></label></div>
+<label>API-Schlüssel (nur für diesen Versuch im Arbeitsspeicher)<input type="password" id="key" required autocomplete="off" spellcheck="false"></label>
+<label>Kompositionsauftrag<textarea id="task" required>Komponiere ein eigenständiges Klavierstück.</textarea></label>
+<button id="start" type="submit">Historischen Ansatz testen (2 KI-Aufrufe)</button>
+<small>Es entstehen Kosten für zwei KI-Aufrufe. Beim Vergleich mit regulärem ComposeMe bitte denselben Auftrag und dasselbe Modell verwenden.</small></form>
+<p id="status" role="status" aria-live="polite">Bereit.</p><p id="cost"></p>
+<section><h2>1 · Freier musikalischer Entwurf</h2><pre id="draft">Noch kein Entwurf.</pre></section>
+<section><h2>2 · Technische Umsetzung</h2><div id="paper"></div><div id="audio"></div><div id="warning"></div>
+<details><summary>Original-Antwort der zweiten KI-Stufe</summary><pre id="realization"></pre></details>
+<button id="save-abc" type="button" disabled>ABC speichern</button><button id="save-diagnosis" type="button" disabled>Vollständige Versuchsdaten speichern</button></section>
+<details><summary>Die tatsächlich versendeten Anweisungen</summary><pre id="prompts"></pre></details>
+</main><script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
+<script type="module" src="./experiment.js?v=0.1"></script></body></html>
