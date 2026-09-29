@@ -40,6 +40,13 @@ try {
   document.body.dataset.abendlichtLines=String(piano?.lines?.length??0);
   document.body.dataset.abendlichtPaired=String(piano?.lines?.length===4 && piano.lines.every(line=>line.staff?.length===2));
   document.body.dataset.abendlichtWarnings=String(piano?.warnings?.length??0);
+  const uneven=await(await fetch('./fixtures/abendlicht-uneven-voices.abc')).text();
+  const unevenPaper=document.createElement('div'),unevenAudio=document.createElement('div');
+  document.body.append(unevenPaper,unevenAudio);
+  const unevenVisual=renderMusic({abc:uneven,ABCJS:window.ABCJS,paper:unevenPaper,audio:unevenAudio});
+  const staffCounts=(unevenVisual?.lines??[]).map(line=>(line.staff??[]).filter(Boolean).length);
+  document.body.dataset.abendlichtStaffCounts=staffCounts.join(',');
+  document.body.dataset.abendlichtAligned=String(staffCounts.length===4&&staffCounts.every(n=>n===2));
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
