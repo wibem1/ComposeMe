@@ -36,7 +36,7 @@ test('historical parser and MIDI builder accept compact 32 bar scores',()=>{
 test('isolated browser script is syntactically valid and page contains separate controls',()=>{
  execFileSync(process.execPath,['--check','experiments/sound-concept-149/app.js']);
  const html=fs.readFileSync('experiments/sound-concept-149/index.html','utf8');
- assert.match(html,/historical-engine\\.js/);
- assert.match(html,/id="diagnosis"/);
- assert.doesNotMatch(html,/src="\\.\\.\\/\\.\\.\\/src\\/app\\.js"/);
+ assert.ok(html.includes('historical-engine.js'));
+ assert.ok(html.includes('id="diagnosis"'));
+ assert.ok(!html.includes('src="../../src/app.js"'));
 });
