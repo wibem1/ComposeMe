@@ -53,17 +53,33 @@ export async function requestMusicXmlNotation({
 }){
  const prompt=buildMusicXmlNotationPrompt(scoreJson,instruction);
  if(!apiKey)throw new Error('OpenAI-API-Key fehlt.');
- const body={model,input:[{role:'user',content:[{type:'input_text',text:prompt}]}],store:false,max_output_tokens:64000,reasoning:{effort:'none'}};
+ const body={model,input:[{role:'user',content:[{type:'input_text',text:prompt}]}],store:false};
  const call={stage:'notation_musicxml',prompt,response:'',usage:null,status:'started',recovery:null};
  onProgress('Noten werden als MusicXML gesetzt …');
  const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),300000),started=Date.now();
  let data,raw;
  try{
-  const res=await fetchImpl('https://api.openai.com/v1/responses',{
-   method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-   body:JSON.stringify(body),signal:abort.signal
-  });
-  if(!res.ok)throw new Error('API '+res.status+': '+(await res.text()).slice(0,450));
+  let res;
+  try{
+   res=await fetchImpl('https://api.openai.com/v1/responses',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify(body),signal:abort.signal
+   });
+  }catch(fetchErr){
+   call.status='failed';
+   call.elapsedMs=Date.now()-started;
+   call.fetchError=String(fetchErr?.message||fetchErr);
+   const err=new Error('MusicXML-Aufruf konnte die OpenAI-API nicht erreichen: '+call.fetchError);
+   err.notationCall=call;throw err;
+  }
+  if(!res.ok){
+   call.status='failed';
+   call.elapsedMs=Date.now()-started;
+   const detail=(await res.text()).slice(0,1200);
+   call.httpStatus=res.status;call.httpError=detail;
+   const err=new Error('API '+res.status+': '+detail);
+   err.notationCall=call;throw err;
+  }
   data=await res.json();
   const parts=[];
   if(typeof data.output_text==='string')parts.push(data.output_text);
