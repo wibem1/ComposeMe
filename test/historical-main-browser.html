@@ -85,7 +85,13 @@ frame.addEventListener('load',async()=>{
   throw Error('Diagnoseknopf befindet sich noch innerhalb von Technisches.');
  if(!d.getElementById('diagnosis-section').contains(diagnosticButton))
   throw Error('Eigenständige Rubrik Diagnose fehlt.');
+ // Also simulate browser autofill: a visible key may not have fired an input event yet.
+ const autofilled='autofilled-without-input-event';
+ d.getElementById('api-key-google').value=autofilled;
  diagnosticButton.click();
+ if(w.localStorage.getItem('minimal-composer-next:key:google')!==autofilled)
+  throw Error('Browser-autofilled key was not persisted before diagnostic download.');
+ savedKeys.google=autofilled;
  for(const [name,value] of Object.entries(savedKeys)){
   if(w.localStorage.getItem('minimal-composer-next:key:'+name)!==value)
    throw Error('Diagnoseexport hat gespeicherten '+name+'-Key verändert.');
