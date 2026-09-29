@@ -4,7 +4,7 @@
  */
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
-import {requestMusicXmlNotation,MUSICXML_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.4';
+import {requestMusicXmlNotation,MUSICXML_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.5';
 
 export function originalHistoricalPrompts(engine,task,concept='') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
@@ -61,11 +61,20 @@ export async function addHistoricalMusicXmlNotation({
  const source=record.historicalScoreJson?.trim()
   ?{text:record.historicalScoreJson,recovery:''}
   :recoveredScoreJson(record.aiResponse||existing.find(c=>c.stage==='score_realization')?.response||'');
- const result=await requestMusicXmlNotation({scoreJson:source.text,apiKey,model,instruction,fetchImpl,onProgress});
- const calls=[...existing,result.call],usage=sumUsage(calls);
- return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:result.musicXml,
-  historicalAbc:'',historicalNotationInstruction:instruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
-  usage,estimatedCost:estimateCost(model,usage)};
+ try{
+  const result=await requestMusicXmlNotation({scoreJson:source.text,apiKey,model,instruction,fetchImpl,onProgress});
+  const calls=[...existing,result.call],usage=sumUsage(calls);
+  return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:result.musicXml,
+   historicalAbc:'',historicalNotationInstruction:instruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
+   usage,estimatedCost:estimateCost(model,usage)};
+ }catch(err){
+  const failedCall=err.notationCall;
+  const calls=failedCall?[...existing,failedCall]:existing;
+  const usage=sumUsage(calls);
+  return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:'',
+   historicalAbc:'',historicalNotationInstruction:instruction,notationError:err.message,
+   actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),usage,estimatedCost:estimateCost(model,usage)};
+ }
 }
 
 export async function runHistoricalComposition({
