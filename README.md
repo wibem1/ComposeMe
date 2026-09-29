@@ -1,4 +1,4 @@
-# ComposeMe 0.8.2
+# ComposeMe 0.8.3
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,7 +16,7 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Wiedergabe und Notenansicht (0.8.2):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in ABC-Notation. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der MIDI-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom ABC.
+**Wiedergabe und Notenansicht (0.8.3):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in ABC-Notation. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom ABC. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
 
 Für ältere zweistufige Verlaufseinträge ohne KI-ABC gibt es **„ABC durch KI erzeugen“**. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die bisherige direkte ComposeMe-Komposition bleibt unverändert und benutzt weiterhin ihren bisherigen ABC-Player.
 
