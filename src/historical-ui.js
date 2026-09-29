@@ -1,6 +1,6 @@
-import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalMusicXmlNotation} from './historical-compose.js?v=0.8.7';
-import {MUSICXML_NOTATION_INSTRUCTION,normalizeMusicXmlInstruction} from './historical-notation-ai.js?v=0.8.7';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.7';
+import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalMusicXmlNotation} from './historical-compose.js?v=0.8.8';
+import {MUSICXML_NOTATION_INSTRUCTION,normalizeMusicXmlInstruction} from './historical-notation-ai.js?v=0.8.8';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.8';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
