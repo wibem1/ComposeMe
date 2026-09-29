@@ -45,3 +45,26 @@ K:Am
 [V:Vln] e3 | a3 | g f e | d2 e |`;
  assert.equal(analyzeInstrumentRanges(abc).length,0);
 });
+
+
+test('multivoice ABC ignores source line breaks so staves stay synchronized',()=>{
+ const abc=`X:1
+T:Abendlicht
+M:4/4
+L:1/8
+Q:1/4=84
+K:Am
+%%score { RH LH }
+V:RH clef=treble
+V:LH clef=bass
+[V:RH] E2 A2 c2 B2 | A2 F2 E2 D2 | E2 G2 c2 G2 | B2 A2 G4 |
+E2 A2 c2 e2 | d2 c2 A2 F2 | ^G2 B2 e2 d2 | c2 B2 A4 |
+[V:LH] A,, E, A, C E C A, E, | F,, C, F, A, C A, F, C, |
+C, G, C E G E C G, | G,, D, G, B, D B, G, D, |
+A,, E, A, C E C A, E, | D, A, D F A F D A, |
+E, B, E ^G B G E B, | A,, E, A, C E C A, E, |`;
+ const normalized=normalizeAbcForAbcjs(abc);
+ assert.match(normalized,/I:linebreak <none>/);
+ assert.equal((normalized.match(/\[V:RH\]/g)??[]).length,1);
+ assert.equal((normalized.match(/\[V:LH\]/g)??[]).length,1);
+});
