@@ -1,4 +1,4 @@
-# ComposeMe 0.8.6
+# ComposeMe 0.8.7
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,7 +16,7 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Wiedergabe und Notenansicht (0.8.6):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in MusicXML 4.0. Der Notationsaufruf erhält ein eigenes großes Ausgabebudget und läuft ohne zusätzliche Reasoning-Stufe, damit lange XML-Partituren nicht unnötig abgeschnitten werden. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom MusicXML. Für die Instrumentklänge werden jetzt exakt dieselben **FluidR3_GM_sf2_file**-Presets wie im historischen MinimalComposer-Player geladen; auch die MIDI-Velocity wird wieder unverändert auf 0…1 abgebildet. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
+**Wiedergabe und Notenansicht (0.8.7):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in MusicXML 4.0. Der Notationsaufruf erhält ein eigenes großes Ausgabebudget und läuft ohne zusätzliche Reasoning-Stufe, damit lange XML-Partituren nicht unnötig abgeschnitten werden. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom MusicXML. Für die Instrumentklänge werden jetzt exakt dieselben **FluidR3_GM_sf2_file**-Presets wie im historischen MinimalComposer-Player geladen; auch die MIDI-Velocity wird wieder unverändert auf 0…1 abgebildet. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
 
 Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXML durch KI erzeugen“**. Auch eine unvollständige oder ungültige KI-Antwort wird jetzt mit Rohantwort, API-Status und Fehler im Verlauf erhalten, statt still verloren zu gehen. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die MusicXML-Partitur wird mit **OpenSheetMusicDisplay** gerendert. Der bisherige direkte ComposeMe-Modus bleibt unverändert und benutzt weiterhin ABC/abcjs.
 
@@ -31,3 +31,7 @@ Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXM
 `npm run verify` führt statische, Unit- und Smoke-Tests aus, einschließlich exakter historischer Anfragen, des zweistufigen Ablaufs, des optionalen manuellen Halts, unveränderter Original-MIDI-Daten, MIDI-Parsing, JSON→MusicXML-Notation, MusicXML-Ausgabe und technischer Fehlerbehandlung. GitHub Actions führt zusätzlich echte Browser-Smoke-Tests aus, die beide historischen KI-Aufrufe mit einer **simulierten** API-Antwort und die Speicherung im regulären Verlauf prüfen. Die Tests verursachen keine kostenpflichtigen API-Aufrufe und stellen **keinen musikalischen Hörtest** dar; die musikalische Qualität einer neuen echten Sol-Komposition muss beim Anwender beurteilt werden.
 
 Die bisherige Direktkomposition und bestehende Experimente werden nicht gelöscht oder migriert.
+
+
+### 0.8.7 – Migration alter Notationsanweisungen
+Alte historische Verlaufseinträge aus der ABC-Phase können noch eine gespeicherte ABC-Notationsanweisung enthalten. Beim Laden und beim MusicXML-Aufruf wird diese alte Standardanweisung nun automatisch durch die aktuelle MusicXML-Anweisung ersetzt. Eigene MusicXML-Anweisungen bleiben unverändert.

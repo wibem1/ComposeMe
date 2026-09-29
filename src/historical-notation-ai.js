@@ -17,10 +17,18 @@ WICHTIG:
 JSON-PARTITUR:
 `;
 
+
+export function normalizeMusicXmlInstruction(instruction){
+ const text=String(instruction||'').trim();
+ if(!text)return MUSICXML_NOTATION_INSTRUCTION;
+ const legacyAbc=/Erzeuge ABC, das von abcjs dargestellt werden kann\.|beginnend mit X:1|saubere, gut lesbare ABC-Notation/i.test(text);
+ return legacyAbc?MUSICXML_NOTATION_INSTRUCTION:text;
+}
+
 export function buildMusicXmlNotationPrompt(scoreJson,instruction=MUSICXML_NOTATION_INSTRUCTION){
  const json=String(scoreJson||'').trim();
  if(!json)throw new Error('JSON-Partitur für die Notation fehlt.');
- const head=String(instruction||'').trim();
+ const head=normalizeMusicXmlInstruction(instruction);
  if(!head)throw new Error('Notationsanweisung ist leer.');
  return head+'\n\n'+json;
 }

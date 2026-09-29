@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
-import {buildMusicXmlNotationPrompt,extractMusicXmlOnly,MUSICXML_NOTATION_INSTRUCTION,requestMusicXmlNotation} from '../src/historical-notation-ai.js';
+import {buildMusicXmlNotationPrompt,extractMusicXmlOnly,MUSICXML_NOTATION_INSTRUCTION,normalizeMusicXmlInstruction,requestMusicXmlNotation} from '../src/historical-notation-ai.js';
 import {parseMidi} from '../src/historical-player.js';
 
 const ctx={window:{},crypto:crypto.webcrypto,TextEncoder,structuredClone,Uint8Array,ArrayBuffer};
@@ -24,6 +24,17 @@ test('MusicXML notation prompt contains full finished JSON and forbids musical c
  assert.ok(prompt.endsWith(json));
  assert.equal(MUSICXML_NOTATION_INSTRUCTION.includes('MusicXML'),true);
 });
+
+test('legacy stored ABC notation instruction is migrated to MusicXML',()=>{
+ const legacy='Übertrage die folgende bereits fertig komponierte JSON-Partitur ausschließlich in saubere, gut lesbare ABC-Notation.\nErzeuge ABC, das von abcjs dargestellt werden kann.\nAntworte beginnend mit X:1.';
+ assert.equal(normalizeMusicXmlInstruction(legacy),MUSICXML_NOTATION_INSTRUCTION);
+ const custom='Erzeuge MusicXML 4.0 mit besonders sorgfältiger Stimmenaufteilung.';
+ assert.equal(normalizeMusicXmlInstruction(custom),custom);
+ const prompt=buildMusicXmlNotationPrompt(JSON.stringify(compact),legacy);
+ assert.match(prompt,/MusicXML 4\.0/);
+ assert.doesNotMatch(prompt,/Erzeuge ABC/);
+});
+
 test('AI notation response is reduced to complete MusicXML only',()=>{
  const out=extractMusicXmlOnly('Hier ist die Datei:\n'+xml);
  assert.match(out,/^<\?xml/);assert.match(out,/<score-partwise/);assert.doesNotMatch(out,/Hier ist/);

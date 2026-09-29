@@ -1,6 +1,6 @@
-import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalMusicXmlNotation} from './historical-compose.js?v=0.8.6';
-import {MUSICXML_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.6';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.6';
+import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalMusicXmlNotation} from './historical-compose.js?v=0.8.7';
+import {MUSICXML_NOTATION_INSTRUCTION,normalizeMusicXmlInstruction} from './historical-notation-ai.js?v=0.8.7';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.7';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -57,7 +57,7 @@ export function initHistoricalControls(){
   const c2=record.historicalCalls?.find(c=>c.stage==='score_realization');
   if(c1?.prompt){first.value=c1.prompt;firstWasEdited=c1.prompt!==originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;}
   if(c2?.prompt)second.value=c2.prompt;
-  notationInstruction.value=record.historicalNotationInstruction||MUSICXML_NOTATION_INSTRUCTION;
+  notationInstruction.value=normalizeMusicXmlInstruction(record.historicalNotationInstruction);
  }
  function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
  async function run({apiKey,taskText,onProgress}){

@@ -4,7 +4,7 @@
  */
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
-import {requestMusicXmlNotation,MUSICXML_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.6';
+import {requestMusicXmlNotation,MUSICXML_NOTATION_INSTRUCTION,normalizeMusicXmlInstruction} from './historical-notation-ai.js?v=0.8.7';
 
 export function originalHistoricalPrompts(engine,task,concept='') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
@@ -58,21 +58,22 @@ export async function addHistoricalMusicXmlNotation({
 }){
  if(!record?.historicalScore)throw new Error('Keine fertige historische Komposition vorhanden.');
  const existing=(record.historicalCalls||[]).filter(c=>c.stage!=='notation_abc'&&c.stage!=='notation_musicxml');
+ const effectiveInstruction=normalizeMusicXmlInstruction(instruction);
  const source=record.historicalScoreJson?.trim()
   ?{text:record.historicalScoreJson,recovery:''}
   :recoveredScoreJson(record.aiResponse||existing.find(c=>c.stage==='score_realization')?.response||'');
  try{
-  const result=await requestMusicXmlNotation({scoreJson:source.text,apiKey,model,instruction,fetchImpl,onProgress});
+  const result=await requestMusicXmlNotation({scoreJson:source.text,apiKey,model,instruction:effectiveInstruction,fetchImpl,onProgress});
   const calls=[...existing,result.call],usage=sumUsage(calls);
   return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:result.musicXml,
-   historicalAbc:'',historicalNotationInstruction:instruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
+   historicalAbc:'',historicalNotationInstruction:effectiveInstruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
    usage,estimatedCost:estimateCost(model,usage)};
  }catch(err){
   const failedCall=err.notationCall;
   const calls=failedCall?[...existing,failedCall]:existing;
   const usage=sumUsage(calls);
   return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:'',
-   historicalAbc:'',historicalNotationInstruction:instruction,notationError:err.message,
+   historicalAbc:'',historicalNotationInstruction:effectiveInstruction,notationError:err.message,
    actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),usage,estimatedCost:estimateCost(model,usage)};
  }
 }
