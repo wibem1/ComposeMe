@@ -30,8 +30,7 @@ grep -q 'data-abendlicht-beaming="true"' /tmp/composeme-render-dom.html
 grep -q 'data-abendlicht-bass-beam-count="64"' /tmp/composeme-render-dom.html
 
 # Exercise real ComposeMe UI with the original two-stage engine, without paid API calls.
-"$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=11000 \\
- --dump-dom http://127.0.0.1:8123/test/historical-main-browser.html > /tmp/composeme-historical-dom.html
-cat /tmp/composeme-historical-dom.html | grep -o 'data-historical-ready="[^"]*"\|data-error="[^"]*"' | head -2
+"$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=11000 --dump-dom http://127.0.0.1:8123/test/historical-main-browser.html > /tmp/composeme-historical-dom.html
+cat /tmp/composeme-historical-dom.html | grep -o 'data-historical-ready="[^"]*"\\|data-error="[^"]*"' | head -2
 grep -q 'data-historical-ready="true"' /tmp/composeme-historical-dom.html
 grep -q 'data-history-saved="true"' /tmp/composeme-historical-dom.html
