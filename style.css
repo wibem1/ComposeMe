@@ -16,3 +16,16 @@
 .cost-summary{font-size:.88rem;opacity:.78;margin:4px 0 14px;line-height:1.45}
 
 .answer-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.answer-actions button{width:auto}
+
+/* Transparent original two-stage workflow: separate from the existing direct mode. */
+.historical-controls{border:1px solid #44836a;border-radius:9px;padding:14px;margin:14px 0}
+.historical-controls>p{line-height:1.5}
+.historical-controls details{margin:14px 0}
+.historical-controls textarea{width:100%;min-height:100px;font:inherit;font-size:.93rem;line-height:1.5}
+.historical-controls textarea[readonly]{background:color-mix(in srgb, Canvas 87%, #44836a 13%)}
+.historical-pause-label{display:flex;gap:10px;align-items:center;justify-content:flex-start;line-height:1.4}
+.historical-pause-label input{width:auto;flex:0 0 auto;margin:0}
+#historical-proceed{width:auto;margin:8px 0}
+#historical-controls[hidden]{display:none}
+.historical-midi-controls{display:flex;flex-wrap:wrap;gap:8px}
+.historical-midi-controls button{width:auto;margin:4px 0}
