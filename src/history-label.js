@@ -10,7 +10,7 @@ export function compositionTitle(text){
   return 'Ohne Titel';
 }
 export function historyLabel(item,locale='de-DE'){
-  const title=compositionTitle(item?.aiResponse);
+  const title=item?.mode==='historical'?(item.title||item.historicalScore?.title||'Klangvorstellung (unvollständig)'):compositionTitle(item?.aiResponse);
   const model=String(item?.model??item?.provider??'KI').trim()||'KI';
   const date=item?.savedAt?new Date(item.savedAt).toLocaleDateString(locale):'';
   return [title,model,date].filter(Boolean).join(' · ');
