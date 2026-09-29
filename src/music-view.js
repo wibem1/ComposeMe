@@ -12,6 +12,11 @@ export function normalizeAbcForAbcjs(abc){
  }
  const newK=kept.findIndex(line=>/^K\s*:/.test(line.trim()));
  if(movable.length)kept.splice(newK,0,...movable);
+ const voiceIds=new Set(kept.map(line=>/^V\s*:\s*([^\s]+)/.exec(line.trim())?.[1]).filter(Boolean));
+ if(voiceIds.size>1&&!kept.some(line=>/^I\s*:\s*linebreak\b/i.test(line.trim()))){
+  const k=kept.findIndex(line=>/^K\s*:/.test(line.trim()));
+  kept.splice(k,0,'I:linebreak <none>');
+ }
  const voices=new Map();
  for(const line of kept){
   const m=/^V\s*:\s*([^\s]+)(.*)$/.exec(line.trim());
