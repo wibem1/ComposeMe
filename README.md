@@ -1,4 +1,4 @@
-# ComposeMe 0.8.1
+# ComposeMe 0.8.2
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,9 +16,9 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Wiedergabe und Notenansicht (0.8.1):** Der zweistufige historische Modus trennt beides strikt. Die Wiedergabe liest ausschließlich die von der historischen Engine erzeugten **Original-MIDI-Bytes**. Der neue MIDI-Player wertet daraus Tempo, Note-On/Off, Velocity, Kanal und Programm aus; ABC ist nicht seine Quelle. Parallel wird dieselbe JSON-Partitur rein technisch in ABC projiziert und mit abcjs **nur als Notenbild** dargestellt. Dadurch kann ein Fehler in der ABC-Darstellung die gehörte Komposition nicht verändern. Das Original-MIDI bleibt weiterhin separat speicherbar.
+**Wiedergabe und Notenansicht (0.8.2):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in ABC-Notation. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der MIDI-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom ABC.
 
-Die JSON→ABC-Projektion verändert keine Tonhöhen, Startzeiten oder Dauern. Klaviernoten werden für den Notensatz lediglich nach Register auf Violin- und Basssystem verteilt; Töne über Taktstriche werden mit Bindebögen aufgeteilt. Die bisherige direkte ComposeMe-Komposition bleibt unverändert und benutzt weiterhin ihren bisherigen ABC-Player.
+Für ältere zweistufige Verlaufseinträge ohne KI-ABC gibt es **„ABC durch KI erzeugen“**. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die bisherige direkte ComposeMe-Komposition bleibt unverändert und benutzt weiterhin ihren bisherigen ABC-Player.
 
 ## Historische Quellen
 
