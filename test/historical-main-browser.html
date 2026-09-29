@@ -7,6 +7,11 @@ frame.addEventListener('load',async()=>{
  try {
  const w=frame.contentWindow,d=frame.contentDocument;
  await new Promise(resolve=>setTimeout(resolve,800));
+ w.opensheetmusicdisplay={OpenSheetMusicDisplay:class{
+   constructor(target){this.target=target;}
+   async load(xml){if(!xml.includes('<score-partwise'))throw Error('MusicXML stub received invalid score');this.xml=xml;}
+   render(){const svg=d.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('data-osmd-stub','true');this.target.append(svg);}
+ }};
  const mode=d.getElementById('composition-process'),first=d.getElementById('historical-first-prompt');
  if(!mode||!first)throw Error('Neue UI fehlt oder App konnte nicht starten.');
  const task='Komponiere ein Klavierstück von 32 Takten im Stil von Beethoven.';
@@ -22,12 +27,12 @@ frame.addEventListener('load',async()=>{
  const score={t:'Integrations-Teststück',b:112,m:[4,4],v:[
  ['Klavier RH',0,0,[[1,0,1,60,92],[1,1,2,67,74],[32,0,4,72,61]]],
  ['Klavier LH',0,1,[[1,0,4,36,65],[32,0,4,36,60]]]]};
- const abc='X:1\nT:Integrations-Teststück\nM:4/4\nL:1/4\nQ:1/4=112\nK:C\nV:RH clef=treble name="Klavier RH"\nV:LH clef=bass name="Klavier LH"\n%%score { RH LH }\n[V:RH] C D z2 |\n[V:LH] C,4 |';
+ const musicxml='<?xml version="1.0" encoding="UTF-8"?><score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Klavier</part-name></score-part></part-list><part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves><clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes><note><rest/><duration>4</duration><voice>1</voice><type>whole</type><staff>1</staff></note></measure></part></score-partwise>';
  w.fetch=async(_url,options)=>{
    const body=JSON.parse(options.body);
    requests.push(body);
    return new w.Response(JSON.stringify({
-      output:[{type:'message',content:[{type:'output_text',text:requests.length===1?stage1:requests.length===2?JSON.stringify(score):abc}]}],
+      output:[{type:'message',content:[{type:'output_text',text:requests.length===1?stage1:requests.length===2?JSON.stringify(score):musicxml}]}],
       usage:{input_tokens:100,output_tokens:200,total_tokens:300}
    }),{status:200,headers:{'Content-Type':'application/json'}});
  };
@@ -51,9 +56,10 @@ frame.addEventListener('load',async()=>{
  if(!text.includes(stage1)||!text.includes('TATSÄCHLICHE KI-ANFRAGE'))
   throw Error('Historischer Kommunikationsverlauf fehlt.');
  const paper=d.getElementById('paper'),audio=d.getElementById('audio');
- if(!paper.querySelector('svg'))throw Error('ABC-Notenbild wurde nicht gerendert.');
- if(!paper.textContent.includes('dritter KI-Aufruf JSON → ABC'))
-  throw Error('KI-Notationsquelle wird nicht ausgewiesen.');
+ for(let i=0;i<20&&!paper.querySelector('svg');i++)await new Promise(resolve=>setTimeout(resolve,50));
+ if(!paper.querySelector('svg'))throw Error('MusicXML-Notenbild wurde nicht gerendert.');
+ if(!paper.textContent.includes('dritter KI-Aufruf JSON → MusicXML'))
+  throw Error('MusicXML-Notationsquelle wird nicht ausgewiesen.');
  const midiPlayer=audio.querySelector('.midi-player[data-source="original-midi"]');
  if(!midiPlayer)throw Error('Original-MIDI-Player fehlt.');
  if(audio.querySelector('.abcjs-inline-audio'))throw Error('Historischer Modus darf keinen ABC-Player verwenden.');
@@ -69,6 +75,7 @@ frame.addEventListener('load',async()=>{
  document.body.dataset.midiSource='original';
  document.body.dataset.noAbcPlayer='true';
  document.body.dataset.aiNotation='true';
+ document.body.dataset.musicxmlRenderer='true';
  }catch(e){
  document.body.dataset.historicalReady='false';document.body.dataset.error=e?.stack||String(e);
  }
