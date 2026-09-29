@@ -27,25 +27,30 @@ test('default integrated Sol procedure sends both ORIGINAL historical prompts, n
  const concept='Frei erfundene klingende Vorstellung, ohne einzelne ausnotierte Noten.';
  const requests=[];
  const res=await runHistoricalComposition({engine,task,apiKey:'test',
-  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore())],requests)});
- assert.equal(requests.length,2);
- assert.deepEqual(requests.map(x=>x.model),['gpt-5.6-sol','gpt-5.6-sol']);
+  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore()),'X:1\nT:Eigener Kompositionsversuch\nM:4/4\nL:1/4\nK:C\nC D E F |'],requests)});
+ assert.equal(requests.length,3);
+ assert.deepEqual(requests.map(x=>x.model),['gpt-5.6-sol','gpt-5.6-sol','gpt-5.6-sol']);
  const original=originalHistoricalPrompts(engine,task,concept);
  assert.equal(requests[0].input[0].content[0].text,original.musicalDraft);
  assert.equal(requests[1].input[0].content[0].text,original.midiTranslation);
  assert.equal(res.concept,concept);
  assert.equal(res.title,'Eigener Kompositionsversuch');
  assert.equal(res.bars,32);
- assert.equal(res.usage.total,600);
+ assert.equal(res.usage.total,900);
  assert.equal(String.fromCharCode(...res.historicalMidi.slice(0,4)),'MThd');
  assert.equal(res.historicalScore.tracks[0].notes[0][3],101);
  assert.equal(res.historicalCalls[1].response,JSON.stringify(compactScore()));
+ assert.equal(res.historicalCalls[2].stage,'notation_abc');
+ assert.match(res.historicalCalls[2].prompt,/JSON-PARTITUR:/);
+ assert.match(res.historicalCalls[2].prompt,/Eigener Kompositionsversuch/);
+ assert.match(res.historicalAbc,/^X:1/m);
  assert.match(formatHistoricalProtocol(res),/TATSÄCHLICHE KI-ANFRAGE/);
 });
 test('optional manual pause sees EXACT completed stage-two prompt and records user edit transparently',async()=>{
  const requests=[],concept='Neue freie Vorstellung',changed='Meine bewusst geänderte zweite Anfrage';
  const rec=await runHistoricalComposition({engine,task,apiKey:'test',
   fetchImpl:fakeTransport([concept,JSON.stringify(compactScore())],requests),
+  createNotation:false,
   onConcept:async({concept:seen,proposal})=>{
    assert.equal(seen,concept);
    assert.equal(proposal,originalHistoricalPrompts(engine,task,concept).midiTranslation);
@@ -61,7 +66,7 @@ test('single missing closing bracket only recovers technical JSON and retains OR
  const broken=valid.replace(/\]\]\]\]}$/,']]]}');
  const requests=[];
  const rec=await runHistoricalComposition({engine,task,apiKey:'test',
-  fetchImpl:fakeTransport(['Klangidee',broken],requests)});
+  createNotation:false,fetchImpl:fakeTransport(['Klangidee',broken],requests)});
  assert.equal(rec.historicalCalls[1].response,broken);
  assert.match(rec.technicalRecovery,/Klammer/);
  assert.equal(rec.historicalScore.tracks[0].notes[2][2],72);

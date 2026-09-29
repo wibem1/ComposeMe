@@ -1,7 +1,7 @@
-import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.1';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.1';
-import {historicalScoreToAbc,auditHistoricalAbc} from './historical-abc.js?v=0.8.1';
-import {normalizeAbcForAbcjs} from './music-view.js?v=0.8.1';
+import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalAbcNotation} from './historical-compose.js?v=0.8.2';
+import {ABC_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.2';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.2';
+import {normalizeAbcForAbcjs} from './music-view.js?v=0.8.2';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -10,10 +10,13 @@ const activePlayers=new WeakMap();
 export function initHistoricalControls(){
  const select=$('composition-process'),section=$('historical-controls'),reset=$('historical-reset'),
   first=$('historical-first-prompt'),second=$('historical-second-prompt'),
+  notationInstruction=$('historical-notation-instruction'),
+  notationReset=$('historical-notation-reset'),
   concept=$('historical-concept'),pause=$('historical-pause'),
   proceed=$('historical-proceed'),task=$('task'),additional=$('additional'),
   model=$('model'),provider=$('provider');
  let firstWasEdited=false,secondAwaiter=null;
+ if(notationInstruction&&!notationInstruction.value)notationInstruction.value=ABC_NOTATION_INSTRUCTION;
  const initial=()=>{
   const engine=baseEngine();
   if(!engine)return;
@@ -40,6 +43,7 @@ export function initHistoricalControls(){
  task.addEventListener('input',()=>{if(select.value==='historical'&&!secondAwaiter)initial();});
  first.addEventListener('input',()=>{firstWasEdited=true;});
  reset.addEventListener('click',()=>{firstWasEdited=false;initial();});
+ notationReset?.addEventListener('click',()=>{notationInstruction.value=ABC_NOTATION_INSTRUCTION;});
  proceed.addEventListener('click',()=>{
   if(!secondAwaiter)return;
   const resume=secondAwaiter;secondAwaiter=null;proceed.disabled=true;
@@ -54,10 +58,9 @@ export function initHistoricalControls(){
   const c2=record.historicalCalls?.find(c=>c.stage==='score_realization');
   if(c1?.prompt){first.value=c1.prompt;firstWasEdited=c1.prompt!==originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;}
   if(c2?.prompt)second.value=c2.prompt;
+  notationInstruction.value=record.historicalNotationInstruction||ABC_NOTATION_INSTRUCTION;
  }
- function abortWait(){
-  if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}
- }
+ function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
  async function run({apiKey,taskText,onProgress}){
   const engine=baseEngine();
   if(!engine)throw new Error('Historische Engine fehlt. Bitte die App vollständig neu laden.');
@@ -68,6 +71,7 @@ export function initHistoricalControls(){
   secondAwaiter=null;proceed.disabled=true;
   return runHistoricalComposition({
     engine,task:taskText,apiKey,firstPrompt,onProgress,
+    notationInstruction:notationInstruction.value,
     onConcept:async({concept:idea,proposal})=>{
       concept.value=idea;second.value=proposal;
       if(!pause.checked)return null;
@@ -76,7 +80,10 @@ export function initHistoricalControls(){
     }
   });
  }
- return {run,showRecord,refresh,abortWait,isHistorical:()=>select.value==='historical'};
+ async function notateRecord({record,apiKey,onProgress}){
+  return addHistoricalAbcNotation({record,apiKey,instruction:notationInstruction.value,onProgress});
+ }
+ return {run,notateRecord,showRecord,refresh,abortWait,isHistorical:()=>select.value==='historical'};
 }
 
 function formatTime(sec){const s=Math.max(0,Math.round(Number(sec)||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
@@ -97,10 +104,8 @@ function renderMidiControls(record,audio,note){
    time.textContent=formatTime(s.position)+' / '+formatTime(s.duration);
   }});
   time.textContent='0:00 / '+formatTime(player.duration);
- }catch(e){
-  note.textContent='MIDI-Player: '+e.message;play.disabled=true;stop.disabled=true;range.disabled=true;
- }
- play.addEventListener('click',async()=>{if(!player)return;try{if(player.parsed&&play.textContent.includes('Pause'))player.pause();else await player.play();}catch(e){note.textContent='MIDI-Wiedergabefehler: '+e.message;}});
+ }catch(e){note.textContent='MIDI-Player: '+e.message;play.disabled=true;stop.disabled=true;range.disabled=true;}
+ play.addEventListener('click',async()=>{if(!player)return;try{if(play.textContent.includes('Pause'))player.pause();else await player.play();}catch(e){note.textContent='MIDI-Wiedergabefehler: '+e.message;}});
  stop.addEventListener('click',()=>player?.stop());
  range.addEventListener('input',async()=>{if(!player)return;await player.seek(player.duration*Number(range.value)/1000);});
  midi.addEventListener('click',()=>downloadOriginalMidi(record));
@@ -108,27 +113,19 @@ function renderMidiControls(record,audio,note){
  if(player)activePlayers.set(audio,player);
 }
 
-function renderHistoricalNotation(record,paper,note){
- const score=record?.historicalScore;if(!score)return null;
- const abc=historicalScoreToAbc(score),audit=auditHistoricalAbc(score,abc);
- const normalized=normalizeAbcForAbcjs(abc);
+function renderHistoricalNotation(record,paper){
+ if(!record?.historicalAbc?.trim())return false;
+ const abc=normalizeAbcForAbcjs(record.historicalAbc);
  if(!window.ABCJS?.renderAbc)throw new Error('ABC-Notenmodul nicht geladen.');
- const visual=window.ABCJS.renderAbc(paper,normalized,{responsive:'resize',add_classes:true,staffwidth:900});
- if(!visual?.[0])throw new Error('ABC konnte nicht dargestellt werden.');
+ const visual=window.ABCJS.renderAbc(paper,abc,{responsive:'resize',add_classes:true});
+ if(!visual?.[0])throw new Error('KI-ABC konnte nicht dargestellt werden.');
  const source=document.createElement('small');source.className='notation-source';
- source.textContent='Notenansicht: technisch aus derselben JSON-Partitur erzeugtes ABC. Wiedergabequelle bleibt ausschließlich das Original-MIDI.';
+ source.textContent='Notenansicht: dritter KI-Aufruf JSON → ABC. Die Wiedergabe bleibt unabhängig davon beim Original-MIDI.';
  paper.append(source);
- if(!audit.ok){
-  const warning=document.createElement('div');warning.className='notation-warning';
-  warning.textContent='Notationsprüfung: Die ABC-Projektion konnte nicht vollständig bestätigt werden. Das Original-MIDI bleibt unverändert.';
-  paper.append(warning);
- }
- record.historicalAbc=abc;
- record.historicalAbcAudit=audit;
- return {abc,audit,visual:visual[0]};
+ return true;
 }
 
-export function renderHistoricalScore({record,paper,audio}){
+export function renderHistoricalScore({record,paper,audio,onRequestNotation=null}){
  const score=record?.historicalScore;
  activePlayers.get(audio)?.stop?.();activePlayers.delete(audio);
  paper.replaceChildren();audio.replaceChildren();
@@ -138,10 +135,21 @@ export function renderHistoricalScore({record,paper,audio}){
  const description=document.createElement('p');
  description.textContent=`${record.bars||'?'} Takte · ${score.bpm||'?'} BPM · ${score.tracks?.length||0} Originalspuren`;
  const note=document.createElement('p');note.className='historical-score-note';
- note.textContent='MIDI und Notenansicht stammen aus derselben unveränderten Komposition. Der MIDI-Player liest die originale MIDI-Datei; ABC wird nur für das Notenbild erzeugt.';
+ note.textContent='Die Komposition und Wiedergabe beruhen auf dem Original-MIDI. ABC ist nur eine nachgelagerte Notationsfassung.';
  heading.append(title,description,note);paper.append(heading);
- try{renderHistoricalNotation(record,paper,note);}catch(e){
+ let rendered=false;
+ try{rendered=renderHistoricalNotation(record,paper);}catch(e){
   const warning=document.createElement('div');warning.className='notation-warning';warning.textContent='Notenansicht: '+e.message;paper.append(warning);
+ }
+ if(!rendered){
+  const info=document.createElement('p');info.className='notation-warning';
+  info.textContent=record.notationError?'KI-Notation fehlgeschlagen: '+record.notationError:'Für dieses Stück liegt noch keine KI-ABC-Notation vor.';
+  paper.append(info);
+  if(onRequestNotation){
+   const btn=document.createElement('button');btn.type='button';btn.className='historical-notate-button';btn.textContent='ABC durch KI erzeugen';
+   btn.addEventListener('click',()=>onRequestNotation(record,btn));
+   paper.append(btn);
+  }
  }
  renderMidiControls(record,audio,note);
 }
