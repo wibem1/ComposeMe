@@ -10,6 +10,7 @@ frame.addEventListener('load',async()=>{
  const mode=d.getElementById('composition-process'),first=d.getElementById('historical-first-prompt');
  if(!mode||!first)throw Error('Neue UI fehlt oder App konnte nicht starten.');
  if(!d.body.textContent.includes('Originalantwort der KI'))throw Error('Modellneutrale Überschrift für KI-Antwort fehlt.');
+ w.localStorage.removeItem('minimal-composer-next:experiments');
  const task='Komponiere ein Klavierstück von 32 Takten im Stil von Beethoven.';
  d.getElementById('task').value=task;
  mode.value='historical';mode.dispatchEvent(new w.Event('change',{bubbles:true}));
