@@ -23,34 +23,29 @@ function compactScore(){
   v:[['RH',0,0,[[1,0,1,60,101],[1,1,0.5,63,83],[32,3,1,72,96]]],
      ['LH',0,1,[[1,0,4,36,70],[32,0,4,36,75]]]]};
 }
-test('default integrated Sol procedure preserves two musical prompts and adds non-composing MusicXML notation',async()=>{
+test('default integrated Sol procedure uses exactly two musical calls',async()=>{
  const concept='Frei erfundene klingende Vorstellung, ohne einzelne ausnotierte Noten.';
  const requests=[];
  const res=await runHistoricalComposition({engine,task,apiKey:'test',
-  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore()),'\<?xml version="1.0" encoding="UTF-8"?><score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Klavier</part-name></score-part></part-list><part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes><note><rest/><duration>4</duration><type>whole</type></note></measure></part></score-partwise>'],requests)});
- assert.equal(requests.length,3);
- assert.deepEqual(requests.map(x=>x.model),['gpt-5.6-sol','gpt-5.6-sol','gpt-5.6-sol']);
+  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore())],requests)});
+ assert.equal(requests.length,2);
+ assert.deepEqual(requests.map(x=>x.model),['gpt-5.6-sol','gpt-5.6-sol']);
  const original=originalHistoricalPrompts(engine,task,concept);
  assert.equal(requests[0].input[0].content[0].text,original.musicalDraft);
  assert.equal(requests[1].input[0].content[0].text,original.midiTranslation);
  assert.equal(res.concept,concept);
  assert.equal(res.title,'Eigener Kompositionsversuch');
  assert.equal(res.bars,32);
- assert.equal(res.usage.total,900);
+ assert.equal(res.usage.total,600);
  assert.equal(String.fromCharCode(...res.historicalMidi.slice(0,4)),'MThd');
  assert.equal(res.historicalScore.tracks[0].notes[0][3],101);
  assert.equal(res.historicalCalls[1].response,JSON.stringify(compactScore()));
- assert.equal(res.historicalCalls[2].stage,'notation_musicxml');
- assert.match(res.historicalCalls[2].prompt,/JSON-PARTITUR:/);
- assert.match(res.historicalCalls[2].prompt,/Eigener Kompositionsversuch/);
- assert.match(res.historicalMusicXml,/<score-partwise/);
  assert.match(formatHistoricalProtocol(res),/TATSÄCHLICHE KI-ANFRAGE/);
 });
 test('optional manual pause sees EXACT completed stage-two prompt and records user edit transparently',async()=>{
  const requests=[],concept='Neue freie Vorstellung',changed='Meine bewusst geänderte zweite Anfrage';
  const rec=await runHistoricalComposition({engine,task,apiKey:'test',
   fetchImpl:fakeTransport([concept,JSON.stringify(compactScore())],requests),
-  createNotation:false,
   onConcept:async({concept:seen,proposal})=>{
    assert.equal(seen,concept);
    assert.equal(proposal,originalHistoricalPrompts(engine,task,concept).midiTranslation);
