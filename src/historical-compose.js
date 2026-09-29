@@ -34,19 +34,19 @@ function sumUsage(calls){
  total:a.total+(c.usage?.total||0),cached:a.cached+(c.usage?.cached||0)}),{input:0,output:0,total:0,cached:0});
 }
 
-function newPartial({task,provider,model,calls,concept='',error=''}) {
+function newPartial({task,provider,model,calls,concept='',error='',runStatus='partial'}) {
  const musicalCalls=calls.filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
  const usage=sumUsage(musicalCalls);
  return {mode:'historical',historicalVersion:'1.4.0-experiment',userInput:task,appAdditions:'',
  provider,model,actualRequest:musicalCalls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
  historicalCalls:musicalCalls,concept,technicalRecovery:'',historicalScore:null,historicalMidi:null,
- historicalScoreJson:'',usage,estimatedCost:estimateCost(model,usage),error};
+ historicalScoreJson:'',usage,estimatedCost:estimateCost(model,usage),error,runStatus};
 }
 
 export async function runHistoricalComposition({
  engine,task,provider='openai',model='gpt-5.6-sol',apiKey,
  firstPrompt=null,secondPrompt=null,
- onConcept=async()=>null,onProgress=()=>{},fetchImpl=fetch
+ onConcept=async()=>null,onStage1=()=>{},onProgress=()=>{},fetchImpl=fetch
 }){
  const cleanTask=String(task||'').trim();
  if(!cleanTask||!apiKey)throw new Error('Auftrag und API-Key fehlen.');
@@ -61,7 +61,9 @@ export async function runHistoricalComposition({
    if(firstPrompt!=null)finalPrompt=firstPrompt;
   }else if(stage==='score_realization'){
    const proposal=secondPrompt ?? originalPrompt;
-   finalPrompt=await onConcept({concept,proposal,original:originalPrompt});
+   const stage1Record=newPartial({task:cleanTask,provider,model,calls,concept,runStatus:'stage1_completed'});
+   onStage1(stage1Record);
+   finalPrompt=await onConcept({concept,proposal,original:originalPrompt,partialRecord:stage1Record});
    if(finalPrompt==null)finalPrompt=proposal;
   }
   if(typeof finalPrompt!=='string'||!finalPrompt.trim())throw new Error('Leere KI-Anweisung.');
@@ -101,7 +103,7 @@ export async function runHistoricalComposition({
    snapshot,key:apiKey,runId:'composeme-'+Date.now(),now:()=>new Date().toISOString(),
    requestModel,usedTitles:[]
   });
-  const record=newPartial({task:cleanTask,provider,model,calls,concept});
+  const record=newPartial({task:cleanTask,provider,model,calls,concept,runStatus:'completed'});
   record.aiResponse=calls.find(c=>c.stage==='score_realization')?.response??'';
   record.historicalScore=output.run.score;
   record.historicalMidi=Array.from(output.midiBytes);
