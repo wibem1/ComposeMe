@@ -1,6 +1,6 @@
 // MIDI player whose ONLY musical source is the original MIDI byte stream.
-// Audio is synthesized locally by WebAudio; timing, pitches, velocities, programs and channels
-// are read from the MIDI file rather than reconstructed from ABC.
+// Audio uses WebAudioFont SoundFont presets; timing, pitches, velocities, programs and channels
+// are read from the original MIDI file rather than reconstructed from ABC.
 function readU16(b,o){return (b[o]<<8)|b[o+1];}
 function readU32(b,o){return ((b[o]<<24)>>>0)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3];}
 function readVlq(b,o){let v=0,i=o,x;do{if(i>=b.length)throw Error('Defekte MIDI-VLQ.');x=b[i++];v=(v<<7)|(x&127);}while(x&128);return [v,i];}
@@ -61,54 +61,84 @@ export function parseMidi(bytes){
  return {format,ppq,notes,duration,trackNames,tempoPoints};
 }
 function order(e){return e.type==='tempo'?0:e.type==='program'?1:e.type==='off'?2:3;}
-function oscType(program){
- const p=Number(program)||0;
- if(p>=40&&p<=47)return 'sawtooth'; // strings
- if(p>=0&&p<=7)return 'triangle'; // pianos
- if(p>=72&&p<=79)return 'square'; // winds
- return 'sine';
+function waitForLoader(player){
+ return new Promise((resolve,reject)=>{
+  let done=false;
+  const timer=setTimeout(()=>{if(!done){done=true;reject(new Error('SoundFont-Laden hat zu lange gedauert.'));}},30000);
+  try{
+   player.loader.waitLoad(()=>{if(done)return;done=true;clearTimeout(timer);resolve();});
+  }catch(err){clearTimeout(timer);reject(err);}
+ });
 }
-function envelope(ctx,dest,n,start,end,oscillators){
- const o=ctx.createOscillator(),g=ctx.createGain(),vel=Math.max(.02,Math.min(1,n.velocity/127));
- const dur=Math.max(.03,end-start),isPiano=n.program>=0&&n.program<=7;
- o.type=oscType(n.program);o.frequency.value=440*Math.pow(2,(n.pitch-69)/12);
- const peak=(isPiano?.11:.075)*vel;
- g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(peak,start+.008);
- if(isPiano){
-  g.gain.exponentialRampToValueAtTime(Math.max(.0002,peak*.25),Math.min(end,start+Math.max(.08,dur*.55)));
- }else{
-  g.gain.setValueAtTime(peak,Math.max(start+.01,end-.04));
+async function loadSoundFonts(ctx,parsed,player){
+ const melodic=[...new Set(parsed.notes.filter(n=>n.channel!==9).map(n=>n.program))];
+ const drums=[...new Set(parsed.notes.filter(n=>n.channel===9).map(n=>n.pitch))];
+ const presets=new Map(),drumPresets=new Map();
+ for(const program of melodic){
+  const id=player.loader.findInstrument(program);
+  const info=player.loader.instrumentInfo(id);
+  if(!info)throw new Error('Kein SoundFont-Instrument für GM-Programm '+program+'.');
+  player.loader.startLoad(ctx,info.url,info.variable);
+  presets.set(program,info);
  }
- g.gain.exponentialRampToValueAtTime(.0001,end);
- o.connect(g).connect(dest);o.start(start);o.stop(end+.03);oscillators.push(o);
+ for(const pitch of drums){
+  const id=player.loader.findDrum(pitch);
+  const info=player.loader.drumInfo(id);
+  if(!info)continue;
+  player.loader.startLoad(ctx,info.url,info.variable);
+  drumPresets.set(pitch,info);
+ }
+ await waitForLoader(player);
+ for(const info of presets.values())if(!window[info.variable])throw new Error('SoundFont konnte nicht geladen werden: '+info.title);
+ return {presets,drumPresets};
+}
+function scheduleSoundFontNote(player,ctx,dest,n,start,end,presets,drumPresets){
+ const duration=Math.max(.03,end-start),volume=Math.max(.02,Math.min(.95,n.velocity/127*.8));
+ if(n.channel===9){
+  const info=drumPresets.get(n.pitch);if(!info||!window[info.variable])return;
+  player.queueWaveTable(ctx,dest,window[info.variable],start,n.pitch,duration,volume);
+  return;
+ }
+ const info=presets.get(n.program);
+ if(!info||!window[info.variable])throw new Error('SoundFont-Preset fehlt für GM-Programm '+n.program+'.');
+ player.queueWaveTable(ctx,dest,window[info.variable],start,n.pitch,duration,volume);
 }
 export function createMidiPlayer(record,{onState=()=>{}}={}){
  const midi=Uint8Array.from(record?.historicalMidi||[]),parsed=parseMidi(midi);
- let ctx=null,oscillators=[],position=0,startedAt=0,raf=0,playing=false;
+ let ctx=null,soundfont=null,position=0,startedAt=0,raf=0,playing=false,loading=false,presets=null,drumPresets=null;
  const Ctx=()=>window.AudioContext||window.webkitAudioContext;
  const current=()=>playing?Math.min(parsed.duration,position+(ctx.currentTime-startedAt)):position;
  function cancelAudio(){
-  cancelAnimationFrame(raf);raf=0;for(const o of oscillators)try{o.stop()}catch{}oscillators=[];
+  cancelAnimationFrame(raf);raf=0;
+  try{if(soundfont&&ctx)soundfont.cancelQueue(ctx);}catch{}
   if(ctx){ctx.close().catch(()=>{});ctx=null;}
+  soundfont=null;presets=null;drumPresets=null;loading=false;
  }
- function tick(){if(!playing)return;const now=current();onState({playing,position:now,duration:parsed.duration});if(now>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,position,duration:parsed.duration});return;}raf=requestAnimationFrame(tick);}
+ function tick(){if(!playing)return;const now=current();onState({playing,loading:false,position:now,duration:parsed.duration,engine:'soundfont'});if(now>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,loading:false,position,duration:parsed.duration,engine:'soundfont'});return;}raf=requestAnimationFrame(tick);}
  async function play(){
-  if(playing)return;const Klass=Ctx();if(!Klass)throw Error('AudioContext ist nicht verfügbar.');
-  ctx=new Klass();await ctx.resume();playing=true;startedAt=ctx.currentTime;
-  const t0=ctx.currentTime+.04;
+  if(playing||loading)return;
+  const Klass=Ctx();if(!Klass)throw Error('AudioContext ist nicht verfügbar.');
+  if(typeof window.WebAudioFontPlayer!=='function')throw Error('SoundFont-Engine wurde nicht geladen.');
+  ctx=new Klass();await ctx.resume();soundfont=new window.WebAudioFontPlayer();loading=true;
+  onState({playing:false,loading:true,position,duration:parsed.duration,engine:'soundfont'});
+  try{
+   ({presets,drumPresets}=await loadSoundFonts(ctx,parsed,soundfont));
+  }catch(err){cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});throw err;}
+  loading=false;playing=true;startedAt=ctx.currentTime;
+  const t0=ctx.currentTime+.06;
   for(const n of parsed.notes){
    if(n.end<=position)continue;
-   const start=t0+Math.max(0,n.start-position),end=t0+Math.max(.02,n.end-position);
-   envelope(ctx,ctx.destination,n,start,end,oscillators);
+   const start=t0+Math.max(0,n.start-position),end=t0+Math.max(.03,n.end-position);
+   scheduleSoundFontNote(soundfont,ctx,ctx.destination,n,start,end,presets,drumPresets);
   }
-  onState({playing,position,duration:parsed.duration});raf=requestAnimationFrame(tick);
+  onState({playing,loading:false,position,duration:parsed.duration,engine:'soundfont'});raf=requestAnimationFrame(tick);
  }
- function pause(){if(!playing)return;position=current();playing=false;cancelAudio();onState({playing,position,duration:parsed.duration});}
- function stop(){playing=false;position=0;cancelAudio();onState({playing,position,duration:parsed.duration});}
+ function pause(){if(!playing&&!loading)return;position=playing?current():position;playing=false;cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});}
+ function stop(){playing=false;position=0;cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});}
  async function seek(seconds){
-  const was=playing;if(was)pause();position=Math.max(0,Math.min(parsed.duration,Number(seconds)||0));onState({playing:false,position,duration:parsed.duration});if(was)await play();
+  const was=playing;if(was)pause();position=Math.max(0,Math.min(parsed.duration,Number(seconds)||0));onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});if(was)await play();
  }
- return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed};
+ return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed,engine:'soundfont'};
 }
 export function downloadOriginalMidi(record){
  if(!Array.isArray(record?.historicalMidi))throw new Error('Keine originale MIDI-Datei vorhanden.');

@@ -42,11 +42,22 @@ test('original MIDI parser still reproduces every canonical note event',()=>{
  assert.equal(parsed.notes.find(n=>n.channel===0)?.program,40);
  assert.equal(parsed.notes.find(n=>n.channel===1)?.program,0);
 });
+test('SoundFont player keeps original MIDI as source and has no oscillator fallback',()=>{
+ const player=fs.readFileSync('src/historical-player.js','utf8'),html=fs.readFileSync('index.html','utf8');
+ assert.match(player,/WebAudioFontPlayer/);
+ assert.match(player,/findInstrument\(program\)/);
+ assert.match(player,/queueWaveTable/);
+ assert.match(player,/cancelQueue/);
+ assert.doesNotMatch(player,/createOscillator/);
+ assert.match(html,/WebAudioFontPlayer\.js/);
+});
+
 test('historical UI no longer invokes the mechanical JSON-to-ABC converter',()=>{
  const ui=fs.readFileSync('src/historical-ui.js','utf8');
  assert.doesNotMatch(ui,/historicalScoreToAbc/);
  assert.match(ui,/record\.historicalAbc/);
  assert.match(ui,/createMidiPlayer/);
+ assert.match(ui,/SoundFont-Player · Original-MIDI/);
  assert.match(ui,/dataset\.source='original-midi'/);
  assert.match(ui,/dritter KI-Aufruf JSON → ABC/);
 });

@@ -4,7 +4,7 @@
  */
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
-import {requestAbcNotation,ABC_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.2';
+import {requestAbcNotation,ABC_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.3';
 
 export function originalHistoricalPrompts(engine,task,concept='') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
