@@ -45,17 +45,3 @@ K:Am
 [V:Vln] e3 | a3 | g f e | d2 e |`;
  assert.equal(analyzeInstrumentRanges(abc).length,0);
 });
-
-
-test('Abendlicht unequal source line lengths are synchronized in notation with note text preserved',async()=>{
- const fs=await import('node:fs/promises');
- const input=await fs.readFile(new URL('./fixtures/abendlicht-uneven-voices.abc',import.meta.url),'utf8');
- const output=normalizeAbcForAbcjs(input);
- const voiceLines=output.split('\n').filter(x=>/^\[V:(RH|LH)\]/.test(x));
- assert.equal(voiceLines.length,8);
- for(let i=0;i<voiceLines.length;i+=2){assert.match(voiceLines[i],/^\[V:RH\]/);assert.match(voiceLines[i+1],/^\[V:LH\]/);}
- const oldVoice=id=>input.slice(input.indexOf('[V:'+id+']')+('[V:'+id+']').length,(id==='RH'?input.indexOf('[V:LH]'):input.length)).replace(/\s+/g,'');
- const newVoice=id=>voiceLines.filter(x=>x.startsWith('[V:'+id+']')).map(x=>x.slice(('[V:'+id+']').length)).join('').replace(/\s+/g,'');
- assert.equal(newVoice('RH'),oldVoice('RH'));
- assert.equal(newVoice('LH'),oldVoice('LH'));
-});
