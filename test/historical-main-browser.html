@@ -28,7 +28,7 @@ frame.addEventListener('load',async()=>{
    const body=JSON.parse(options.body);
    requests.push(body);
    return new w.Response(JSON.stringify({
-      output:[{type:'message',content:[{type:'output_text',text:requests.length===1?stage1:JSON.stringify(score)}]}],
+      output:[{type:'message',content:[{type:'output_text',text:requests.length%2===1?stage1:JSON.stringify(score)}]}],
       usage:{input_tokens:100,output_tokens:200,total_tokens:300}
    }),{status:200,headers:{'Content-Type':'application/json'}});
  };
@@ -73,6 +73,47 @@ frame.addEventListener('load',async()=>{
  const hist=d.getElementById('history');
  if(![...hist.options].some(x=>x.textContent.includes('Integrations-Teststück')))
   throw Error('Historische Komposition nicht im bestehenden Verlauf gespeichert.');
+ // Regression: diagnostic export must not modify saved keys or the visible key inputs.
+ const savedKeys={openai:'browser-only-test-key',anthropic:'other-test-key',google:'third-test-key'};
+ for(const [name,value] of Object.entries(savedKeys)){
+  const input=d.getElementById('api-key-'+name);
+  input.value=value;
+  input.dispatchEvent(new w.Event('input',{bubbles:true}));
+ }
+ const diagnosticButton=d.getElementById('diagnostic-save');
+ if(d.getElementById('technical').contains(diagnosticButton))
+  throw Error('Diagnoseknopf befindet sich noch innerhalb von Technisches.');
+ if(!d.getElementById('diagnosis-section').contains(diagnosticButton))
+  throw Error('Eigenständige Rubrik Diagnose fehlt.');
+ diagnosticButton.click();
+ for(const [name,value] of Object.entries(savedKeys)){
+  if(w.localStorage.getItem('minimal-composer-next:key:'+name)!==value)
+   throw Error('Diagnoseexport hat gespeicherten '+name+'-Key verändert.');
+  if(d.getElementById('api-key-'+name).value!==value)
+   throw Error('Diagnoseexport hat sichtbaren '+name+'-Key verändert.');
+ }
+ // Regression: opening an archived customized prompt must not reuse it silently on next submit.
+ const oldPrompt='ALTE GEKÜRZTE HISTORISCHE ANWEISUNG, NICHT ERNEUT SENDEN';
+ const items=JSON.parse(w.localStorage.getItem('minimal-composer-next:experiments'));
+ const older={...items[0],id:'archived-customized-test',savedAt:'2026-09-01T12:00:00.000Z',
+  historicalCalls:[{...items[0].historicalCalls[0],prompt:oldPrompt},items[0].historicalCalls[1]]};
+ w.localStorage.setItem('minimal-composer-next:experiments',JSON.stringify([older,...items]));
+ const selectHistory=d.getElementById('history');
+ selectHistory.appendChild(new w.Option('alter bearbeiteter Versuch',older.id));
+ selectHistory.value=older.id;
+ selectHistory.dispatchEvent(new w.Event('change',{bubbles:true}));
+ if(first.value!==oldPrompt)throw Error('Historischer alter Prompt lässt sich nicht anzeigen.');
+ d.getElementById('historical-pause').checked=false;
+ d.getElementById('compose-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ for(let i=0;i<60;i++){
+  await new Promise(resolve=>setTimeout(resolve,100));
+  if(requests.length===4)break;
+ }
+ if(requests.length!==4)throw Error('Zweiter Testlauf hat nicht genau zwei weitere Modellanfragen erzeugt.');
+ if(requests[2].input[0].content[0].text!==prompt)
+  throw Error('ALTER HISTORISCHER PROMPT WURDE UNBEMERKT ÜBERNOMMEN.');
+ document.body.dataset.diagnosticKeysPreserved='true';
+ document.body.dataset.archivedPromptIsolated='true';
  document.body.dataset.historicalReady='true';
  document.body.dataset.promptUnchanged='true';
  document.body.dataset.calls='2';
