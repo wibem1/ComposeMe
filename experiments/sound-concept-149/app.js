@@ -1,3 +1,4 @@
+import {recoverSingleClosingBracket} from './technical-recovery.js';
 /* Isolated historical A/B baseline. Historical engine file is copied byte-for-byte from Minimal-Composer commit 37fa33d636. */
 const $=id=>document.getElementById(id);
 const engine=window.CompositionEngine;
@@ -55,6 +56,16 @@ async function performRequest({snapshot,key,promptText,stage,run,event},protocol
   rec.response.extractedModelText=text;
   if(!text.trim())throw new Error('Leere KI-Antwort in '+stage);
   event('ai_model_text_extracted',{stage,characters:text.length});
+  // This acts solely on the technical response AFTER the original AI call.
+  // RawBody and extractedModelText remain unchanged in the communication protocol.
+  if(stage==='score_realization'){
+    const checked=recoverSingleClosingBracket(text);
+    if(checked.repaired){
+      rec.technicalRecovery={explanation:checked.explanation,originalLength:text.length,correctedLength:checked.text.length};
+      event('technical_json_bracket_recovered',rec.technicalRecovery);
+      return checked.text;
+    }
+  }
   return text;
  }finally{clearTimeout(timer);}
 }
@@ -75,6 +86,33 @@ $('form').addEventListener('submit',async ev=>{
   showStatus('Versuch fehlgeschlagen: '+(e.message||String(e))+' · Das bisherige Protokoll kann gespeichert werden.',true);
   $('diagnosis').disabled=false;
  }finally{$('go').disabled=false;}
+});
+async function recoverUploadedDiagnostic(file){
+  const input=JSON.parse(await file.text());
+  if(!Array.isArray(input.protocol))throw new Error('Keine historischen KI-Aufrufe in dieser Datei.');
+  const concept=input.protocol.find(c=>c.stage==='sound_concept')?.response?.extractedModelText;
+  const scoreCall=input.protocol.find(c=>c.stage==='score_realization');
+  const original=scoreCall?.response?.extractedModelText;
+  if(!concept||!original)throw new Error('Klangvorstellung oder vollständige KI-Partitur fehlen.');
+  const fixed=recoverSingleClosingBracket(original);
+  const score=engine.findScore(engine.extractJson(fixed.text));
+  const bytes=engine.buildMidi(score);
+  const barBeats=Number(score.timeSignature[0])*4/Number(score.timeSignature[1]);
+  const end=Math.max(0,...score.tracks.flatMap(t=>t.notes.map(n=>Number(n[0])+Number(n[1]))));
+  const barCount=Math.ceil(end/barBeats);
+  const task=input.task||$('task').value;
+  const run={status:'ok',contextMode:'isolated-sound-concept-two-stage',input:{visibleTask:task,provider:'openai',model:'gpt-5.6-sol'},
+    soundConcept:concept,musicalDraft:concept,score,profile:{barCount},recoveredFromUploadedDiagnosis:true};
+  const record=safeRecord({run,rawScore:original,protocol:input.protocol,midiBytes:Array.from(bytes),
+    technicalRecovery:fixed.repaired?fixed.explanation:'Keine Korrektur nötig',recoveredFrom:input.recordedAt||'hochgeladene Diagnose'});
+  store(record);showRecord(record);
+  showStatus('Vorhandene Komposition gerettet: '+barCount+' Takte. Keine neuen KI-Aufrufe und keine musikalischen Änderungen.');
+}
+$('recover-diagnosis').addEventListener('click',()=>$('recover-file').click());
+$('recover-file').addEventListener('change',async()=>{
+ const file=$('recover-file').files?.[0];if(!file)return;
+ try{await recoverUploadedDiagnostic(file)}catch(e){showStatus('Wiederherstellung fehlgeschlagen: '+e.message,true);}
+ finally{$('recover-file').value='';}
 });
 $('midi').addEventListener('click',()=>{if(current?.midiBytes?.length)download(new Uint8Array(current.midiBytes),'composeme-historical-149.mid','audio/midi');});
 $('diagnosis').addEventListener('click',()=>{if(current){const {midiBytes,...r}=current;download(JSON.stringify(r,null,2)+'\n','composeme-historical-149-diagnose.json','application/json');}});
