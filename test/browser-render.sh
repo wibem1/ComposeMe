@@ -41,3 +41,5 @@ grep -q 'data-calls="2"' /tmp/composeme-historical-dom.html
 grep -q 'data-midi-source="original"' /tmp/composeme-historical-dom.html
 grep -q 'data-no-abc-player="true"' /tmp/composeme-historical-dom.html
 grep -q 'data-model-selectable="true"' /tmp/composeme-historical-dom.html
+grep -q 'data-diagnostic-keys-preserved="true"' /tmp/composeme-historical-dom.html
+grep -q 'data-archived-prompt-isolated="true"' /tmp/composeme-historical-dom.html
