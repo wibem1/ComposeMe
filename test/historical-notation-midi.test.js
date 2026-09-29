@@ -68,6 +68,8 @@ test('SoundFont player keeps original MIDI as source and has no oscillator fallb
  assert.match(player,/findInstrument\(program\)/);
  assert.match(player,/queueWaveTable/);
  assert.match(player,/cancelQueue/);
+ assert.match(player,/n\\.velocity\/127/);
+ assert.doesNotMatch(player,/velocity\/127\\*\\.8/);
  assert.doesNotMatch(player,/createOscillator/);
  assert.match(html,/WebAudioFontPlayer\.js/);
 });
