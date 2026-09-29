@@ -80,35 +80,29 @@ function partitionVoices(events){
  }
  return voices.map(v=>v.events);
 }
+function splitAtBarlines(events,bpb){
+ const segments=[];
+ for(const e of events){
+  let pos=e.start,remain=e.dur;
+  while(remain>1e-9){
+   const bar=Math.floor((pos+1e-9)/bpb),barEnd=(bar+1)*bpb;
+   const dur=Math.min(remain,barEnd-pos);
+   segments.push({...e,start:pos,dur,tied:remain>dur+1e-9});
+   pos+=dur;remain-=dur;
+  }
+ }
+ return segments.sort((a,b)=>a.start-b.start||a.dur-b.dur);
+}
 function voiceBody(events,bpb,bars){
- let out=[],idx=0;
+ const segments=splitAtBarlines(events,bpb);let out=[],idx=0;
  for(let bar=0;bar<bars;bar++){
   const bs=bar*bpb,be=bs+bpb;let cursor=bs,tokens=[];
-  while(idx<events.length&&events[idx].start<be-1e-9){
-   const e=events[idx];
-   if(e.start<bs-1e-9){idx++;continue;}
+  while(idx<segments.length&&segments[idx].start<be-1e-9){
+   const e=segments[idx++];
+   if(e.start<bs-1e-9)continue;
    if(e.start>cursor+1e-9)tokens.push(restToken(e.start-cursor));
-   let pos=e.start,remain=e.dur;
-   while(remain>1e-9){
-    const segment=Math.min(remain,be-pos),tied=remain>segment+1e-9;
-    tokens.push(noteToken(e,segment,tied));
-    remain-=segment;pos+=segment;
-    if(remain>1e-9){
-      // The continuation will be emitted at the start of the next bar.
-      e._continue={remain,event:e};
-      break;
-    }
-   }
-   cursor=Math.min(be,e.start+e.dur);idx++;
-  }
-  // Handle notes whose continuation crosses into this bar from an earlier event.
-  for(const e of events){
-   const start=e.start,end=e.start+e.dur;
-   if(start<bs-1e-9&&end>bs+1e-9){
-    const seg=Math.min(end,be)-bs;
-    tokens.unshift(noteToken(e,seg,end>be+1e-9));
-    cursor=Math.max(cursor,Math.min(be,end));
-   }
+   tokens.push(noteToken(e,e.dur,e.tied));
+   cursor=Math.max(cursor,e.start+e.dur);
   }
   if(cursor<be-1e-9)tokens.push(restToken(be-cursor));
   out.push(tokens.join(' ')+' |');
