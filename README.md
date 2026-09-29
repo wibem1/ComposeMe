@@ -1,4 +1,4 @@
-# ComposeMe 0.8.8
+# ComposeMe 0.8.9
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,9 +16,7 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Wiedergabe und Notenansicht (0.8.8):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in MusicXML 4.0. Der Notationsaufruf verwendet dieselbe einfache Responses-API-Struktur wie die beiden funktionierenden historischen Sol-Aufrufe. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom MusicXML. Für die Instrumentklänge werden jetzt exakt dieselben **FluidR3_GM_sf2_file**-Presets wie im historischen MinimalComposer-Player geladen; auch die MIDI-Velocity wird wieder unverändert auf 0…1 abgebildet. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
-
-Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXML durch KI erzeugen“**. Auch eine unvollständige oder ungültige KI-Antwort wird jetzt mit Rohantwort, API-Status und Fehler im Verlauf erhalten, statt still verloren zu gehen. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die MusicXML-Partitur wird mit **OpenSheetMusicDisplay** gerendert. Der bisherige direkte ComposeMe-Modus bleibt unverändert und benutzt weiterhin ABC/abcjs.
+**Historischer Zweistufenmodus (0.8.9):** Der Ablauf endet nach Klangvorstellung und Komposition. Danach stehen Original-MIDI, SoundFont-Wiedergabe, Verlauf und vollständiges Kommunikationsprotokoll zur Verfügung. Es gibt keinen dritten KI-Aufruf und keine interne MusicXML- oder ABC-Erzeugung für diesen Modus. Notensatz ist bewusst ausgelagert; die direkte alte ComposeMe-Funktion mit ABC/abcjs bleibt unverändert.
 
 ## Historische Quellen
 
@@ -33,9 +31,4 @@ Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXM
 Die bisherige Direktkomposition und bestehende Experimente werden nicht gelöscht oder migriert.
 
 
-### 0.8.8 – Migration alter Notationsanweisungen
-Alte historische Verlaufseinträge aus der ABC-Phase können noch eine gespeicherte ABC-Notationsanweisung enthalten. Beim Laden und beim MusicXML-Aufruf wird diese alte Standardanweisung nun automatisch durch die aktuelle MusicXML-Anweisung ersetzt. Eigene MusicXML-Anweisungen bleiben unverändert.
-
-
-### 0.8.8 – MusicXML-API-Aufruf
-Der dritte Notationsaufruf verwendet wieder dieselbe einfache Responses-API-Request-Struktur wie die beiden funktionierenden historischen Sol-Aufrufe. Zusätzliche Sonderparameter für Reasoning und Ausgabelimit wurden entfernt. Netzwerk- und HTTP-Fehler werden vollständig im Notationsaufruf protokolliert.
+### 0.8.9 – Entschlackung\nDer historische Modus wurde auf die zwei musikalisch relevanten KI-Aufrufe zurückgeführt. Alte MusicXML-/ABC-Daten in bestehenden Verlaufseinträgen bleiben als gespeicherte Alt-Daten erhalten, werden aber nicht mehr ausgeführt oder dargestellt.\n

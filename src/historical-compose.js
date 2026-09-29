@@ -1,10 +1,9 @@
-/* Transparent adapter for the preserved Minimal Composer 0.5.99 engine.
- * The original two musical stages remain unchanged. A third, post-composition
- * AI call may translate the already finished JSON score into ABC notation.
+/* Slim transparent adapter for the preserved Minimal Composer 0.5.99 engine.
+ * Exactly two musical AI stages: sound concept -> finished JSON composition.
+ * MIDI is created locally by the preserved historical engine. No notation AI call.
  */
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
-import {requestMusicXmlNotation,MUSICXML_NOTATION_INSTRUCTION,normalizeMusicXmlInstruction} from './historical-notation-ai.js?v=0.8.8';
 
 export function originalHistoricalPrompts(engine,task,concept='') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
@@ -12,16 +11,14 @@ export function originalHistoricalPrompts(engine,task,concept='') {
   return engine.createPrompts(snapshot,concept);
 }
 
-const stageLabel=stage=>stage==='sound_concept'
- ?'=== 1. KLANGVORSTELLUNG ==='
- :stage==='score_realization'
-  ?'=== 2. KOMPOSITION ==='
-  :'=== 3. NOTATION: JSON → MusicXML ===';
+const compositionCalls=record=>(record?.historicalCalls||[]).filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
+const stageLabel=stage=>stage==='sound_concept'?'=== 1. KLANGVORSTELLUNG ===':'=== 2. KOMPOSITION ===';
 
 export function formatHistoricalProtocol(record){
- const lines=['VERFAHREN: Historische Composition Engine 1.4.0-experiment; die beiden musikalischen KI-Aufrufe bleiben unverändert.',
+ const calls=compositionCalls(record);
+ const lines=['VERFAHREN: Zweistufiger historischer Ablauf aus Minimal Composer 0.5.99.',
   'NUTZERAUFTRAG: '+(record.userInput||''),'PROVIDER / MODELL: OpenAI / '+(record.model||'')];
- for(const call of record.historicalCalls||[]){
+ for(const call of calls){
   lines.push('',stageLabel(call.stage),
    'TATSÄCHLICHE KI-ANFRAGE (vollständig):',call.prompt,
    'ORIGINALANTWORT DER KI (unverändert):',call.response,
@@ -29,7 +26,6 @@ export function formatHistoricalProtocol(record){
   if(call.recovery)lines.push('TECHNISCHE KORREKTUR:',call.recovery);
  }
  if(record.technicalRecovery)lines.push('','TECHNISCHE KORREKTUR DER JSON-PARTITUR:',record.technicalRecovery);
- if(record.notationError)lines.push('','NOTATIONSFEHLER:',record.notationError);
  return lines.join('\n');
 }
 
@@ -39,49 +35,17 @@ function sumUsage(calls){
 }
 
 function newPartial({task,model,calls,concept='',error=''}) {
- const usage=sumUsage(calls);
+ const musicalCalls=calls.filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
+ const usage=sumUsage(musicalCalls);
  return {mode:'historical',historicalVersion:'1.4.0-experiment',userInput:task,appAdditions:'',
- provider:'openai',model,actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
- historicalCalls:calls,concept,technicalRecovery:'',historicalScore:null,historicalMidi:null,
- historicalScoreJson:'',historicalMusicXml:'',historicalNotationInstruction:MUSICXML_NOTATION_INSTRUCTION,
- notationError:'',usage,estimatedCost:estimateCost(model,usage),error};
-}
-
-function recoveredScoreJson(raw){
- const repair=recoverSingleClosingBracket(String(raw||''));
- return {text:repair.text,recovery:repair.repaired?repair.explanation:''};
-}
-
-export async function addHistoricalMusicXmlNotation({
- record,apiKey,model='gpt-5.6-sol',instruction=MUSICXML_NOTATION_INSTRUCTION,
- fetchImpl=fetch,onProgress=()=>{}
-}){
- if(!record?.historicalScore)throw new Error('Keine fertige historische Komposition vorhanden.');
- const existing=(record.historicalCalls||[]).filter(c=>c.stage!=='notation_abc'&&c.stage!=='notation_musicxml');
- const effectiveInstruction=normalizeMusicXmlInstruction(instruction);
- const source=record.historicalScoreJson?.trim()
-  ?{text:record.historicalScoreJson,recovery:''}
-  :recoveredScoreJson(record.aiResponse||existing.find(c=>c.stage==='score_realization')?.response||'');
- try{
-  const result=await requestMusicXmlNotation({scoreJson:source.text,apiKey,model,instruction:effectiveInstruction,fetchImpl,onProgress});
-  const calls=[...existing,result.call],usage=sumUsage(calls);
-  return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:result.musicXml,
-   historicalAbc:'',historicalNotationInstruction:effectiveInstruction,notationError:'',actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
-   usage,estimatedCost:estimateCost(model,usage)};
- }catch(err){
-  const failedCall=err.notationCall;
-  const calls=failedCall?[...existing,failedCall]:existing;
-  const usage=sumUsage(calls);
-  return {...record,historicalCalls:calls,historicalScoreJson:source.text,historicalMusicXml:'',
-   historicalAbc:'',historicalNotationInstruction:effectiveInstruction,notationError:err.message,
-   actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),usage,estimatedCost:estimateCost(model,usage)};
- }
+ provider:'openai',model,actualRequest:musicalCalls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
+ historicalCalls:musicalCalls,concept,technicalRecovery:'',historicalScore:null,historicalMidi:null,
+ historicalScoreJson:'',usage,estimatedCost:estimateCost(model,usage),error};
 }
 
 export async function runHistoricalComposition({
  engine,task,model='gpt-5.6-sol',apiKey,
  firstPrompt=null,secondPrompt=null,
- notationInstruction=MUSICXML_NOTATION_INSTRUCTION,createNotation=true,
  onConcept=async()=>null,onProgress=()=>{},fetchImpl=fetch
 }){
  const cleanTask=String(task||'').trim();
@@ -137,7 +101,7 @@ export async function runHistoricalComposition({
    snapshot,key:apiKey,runId:'composeme-'+Date.now(),now:()=>new Date().toISOString(),
    requestModel,usedTitles:[]
   });
-  let record=newPartial({task:cleanTask,model,calls,concept});
+  const record=newPartial({task:cleanTask,model,calls,concept});
   record.aiResponse=calls.find(c=>c.stage==='score_realization')?.response??'';
   record.historicalScore=output.run.score;
   record.historicalMidi=Array.from(output.midiBytes);
@@ -145,16 +109,7 @@ export async function runHistoricalComposition({
   record.title=output.run.score?.title||'Ohne Titel';
   record.technicalRecovery=calls.find(c=>c.stage==='score_realization'&&c.recovery)?.recovery||'';
   record.bars=output.run.profile?.barCount;
-  if(createNotation){
-   try{
-    record=await addHistoricalMusicXmlNotation({record,apiKey,model,instruction:notationInstruction,fetchImpl,onProgress});
-   }catch(err){
-    record.notationError=err.message;
-    record.usage=sumUsage(record.historicalCalls||[]);
-    record.estimatedCost=estimateCost(model,record.usage);
-    onProgress('Komposition fertig; MusicXML-Notation konnte nicht erzeugt werden.');
-   }
-  }
+  onProgress('Komposition fertig.');
   return record;
  }catch(error){
   error.partialRecord=newPartial({task:cleanTask,model,calls,concept,error:error.message});
