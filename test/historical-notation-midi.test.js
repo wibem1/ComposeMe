@@ -65,7 +65,9 @@ test('original MIDI parser still reproduces every canonical note event',()=>{
 test('SoundFont player keeps original MIDI as source and has no oscillator fallback',()=>{
  const player=fs.readFileSync('src/historical-player.js','utf8'),html=fs.readFileSync('index.html','utf8');
  assert.match(player,/WebAudioFontPlayer/);
- assert.match(player,/findInstrument\(program\)/);
+ assert.match(player,/FluidR3_GM_sf2_file/);
+ assert.match(player,/fluidR3Info\(program\)/);
+ assert.doesNotMatch(player,/findInstrument\(program\)/);
  assert.match(player,/queueWaveTable/);
  assert.match(player,/cancelQueue/);
  assert.doesNotMatch(player,/createOscillator/);
