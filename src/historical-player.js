@@ -91,7 +91,7 @@ export function createMidiPlayer(record,{onState=()=>{}}={}){
   cancelAnimationFrame(raf);raf=0;for(const o of oscillators)try{o.stop()}catch{}oscillators=[];
   if(ctx){ctx.close().catch(()=>{});ctx=null;}
  }
- function tick(){if(!playing)return;position=current();onState({playing,position,duration:parsed.duration});if(position>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,position,duration:parsed.duration});return;}raf=requestAnimationFrame(tick);}
+ function tick(){if(!playing)return;const now=current();onState({playing,position:now,duration:parsed.duration});if(now>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,position,duration:parsed.duration});return;}raf=requestAnimationFrame(tick);}
  async function play(){
   if(playing)return;const Klass=Ctx();if(!Klass)throw Error('AudioContext ist nicht verfügbar.');
   ctx=new Klass();await ctx.resume();playing=true;startedAt=ctx.currentTime;
