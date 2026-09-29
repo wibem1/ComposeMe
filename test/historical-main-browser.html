@@ -1,0 +1,62 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>ComposeMe integrated historical smoke</title></head>
+<body data-historical-ready="pending">
+<iframe id="app" src="../index.html" style="width:1100px;height:800px"></iframe>
+<script>
+const frame=document.getElementById('app');
+frame.addEventListener('load',async()=>{
+ try {
+ const w=frame.contentWindow,d=frame.contentDocument;
+ await new Promise(resolve=>setTimeout(resolve,800));
+ const mode=d.getElementById('composition-process'),first=d.getElementById('historical-first-prompt');
+ if(!mode||!first)throw Error('Neue UI fehlt oder App konnte nicht starten.');
+ const task='Komponiere ein Klavierstück von 32 Takten im Stil von Beethoven.';
+ d.getElementById('task').value=task;
+ mode.value='historical';mode.dispatchEvent(new w.Event('change',{bubbles:true}));
+ const prompt=first.value;
+ if(!prompt.includes('Stelle dir das verlangte Musikstück zunächst ausschließlich')||!prompt.endsWith(task))
+  throw Error('Historischer Originalprompt wurde nicht geladen.');
+ if(!d.getElementById('provider').disabled||!d.getElementById('model').disabled)
+  throw Error('Historisches Modell nicht fixiert.');
+ const requests=[];
+ const stage1='Eine frei erfundene Klangvorstellung, die aus einem Motiv wächst.';
+ const score={t:'Integrations-Teststück',b:112,m:[4,4],v:[
+ ['Klavier RH',0,0,[[1,0,1,60,92],[1,1,2,67,74],[32,0,4,72,61]]],
+ ['Klavier LH',0,1,[[1,0,4,36,65],[32,0,4,36,60]]]]};
+ w.fetch=async(_url,options)=>{
+   const body=JSON.parse(options.body);
+   requests.push(body);
+   return new w.Response(JSON.stringify({
+      output:[{type:'message',content:[{type:'output_text',text:requests.length===1?stage1:JSON.stringify(score)}]}],
+      usage:{input_tokens:100,output_tokens:200,total_tokens:300}
+   }),{status:200,headers:{'Content-Type':'application/json'}});
+ };
+ d.getElementById('api-key-openai').value='browser-only-test-key';
+ d.getElementById('compose-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ for(let i=0;i<50;i++){
+  await new Promise(resolve=>setTimeout(resolve,100));
+  if(d.getElementById('result').value.includes('Integrations-Teststück'))break;
+ }
+ if(requests.length!==2)throw Error('Erwartet zwei KI-Aufrufe, beobachtet: '+requests.length);
+ if(requests[0].input[0].content[0].text!==prompt)throw Error('Erster KI-Prompt wurde verändert.');
+ const second=requests[1].input[0].content[0].text;
+ if(!second.includes(stage1)||!second.includes(task)||!second.includes('TECHNISCHES FORMAT'))
+  throw Error('Historischer zweiter Prompt enthält nicht die exakten Eingaben.');
+ if(!d.getElementById('historical-concept').value.includes(stage1))
+  throw Error('Erste Antwort wird nicht sichtbar angezeigt.');
+ const text=d.getElementById('protocol').textContent;
+ if(!text.includes(stage1)||!text.includes('TATSÄCHLICHE KI-ANFRAGE'))
+  throw Error('Historischer Kommunikationsverlauf fehlt.');
+ if(!d.getElementById('paper').textContent.includes('Integrations-Teststück'))
+  throw Error('MIDI-Score ist im ComposeMe-Player nicht verfügbar.');
+ const hist=d.getElementById('history');
+ if(![...hist.options].some(x=>x.textContent.includes('Integrations-Teststück')))
+  throw Error('Historische Komposition nicht im bestehenden Verlauf gespeichert.');
+ document.body.dataset.historicalReady='true';
+ document.body.dataset.promptUnchanged='true';
+ document.body.dataset.calls='2';
+ document.body.dataset.historySaved='true';
+ }catch(e){
+ document.body.dataset.historicalReady='false';document.body.dataset.error=e?.stack||String(e);
+ }
+});
+</script></body></html>
