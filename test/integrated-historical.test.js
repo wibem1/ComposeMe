@@ -42,6 +42,19 @@ test('default integrated Sol procedure uses exactly two musical calls',async()=>
  assert.equal(res.historicalCalls[1].response,JSON.stringify(compactScore()));
  assert.match(formatHistoricalProtocol(res),/TATSÄCHLICHE KI-ANFRAGE/);
 });
+
+test('selected OpenAI model is used for both two-stage requests and stored transparently',async()=>{
+ const requests=[];
+ const chosen='gpt-5.6-pro';
+ const rec=await runHistoricalComposition({engine,task,provider:'openai',model:chosen,apiKey:'test',
+  fetchImpl:fakeTransport(['Klangidee',JSON.stringify(compactScore())],requests)});
+ assert.equal(requests.length,2);
+ assert.deepEqual(requests.map(x=>x.model),[chosen,chosen]);
+ assert.equal(rec.provider,'openai');
+ assert.equal(rec.model,chosen);
+ assert.match(formatHistoricalProtocol(rec),/openai \/ gpt-5\.6-pro/);
+});
+
 test('optional manual pause sees EXACT completed stage-two prompt and records user edit transparently',async()=>{
  const requests=[],concept='Neue freie Vorstellung',changed='Meine bewusst geänderte zweite Anfrage';
  const rec=await runHistoricalComposition({engine,task,apiKey:'test',
