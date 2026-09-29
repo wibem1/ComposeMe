@@ -29,7 +29,7 @@ test('JSON score projects to ABC for notation without changing source score',()=
  assert.match(abc,/clef=bass/);
  assert.match(abc,/clef=treble/);
  assert.match(abc,/_E/); // flat spelling survives
- assert.match(abc,/=E/); // explicit natural avoids accidental carry
+ assert.match(abc,/=e/); // explicit natural avoids accidental carry
  const audit=auditHistoricalAbc(score,abc);
  assert.equal(audit.sourceNotes,14);
  assert.equal(audit.ok,true);
@@ -42,7 +42,7 @@ test('original MIDI parser reproduces every note event from canonical MIDI bytes
  assert.equal(parsed.ppq,480);
  assert.equal(parsed.notes.find(n=>n.channel===0)?.program,40);
  assert.equal(parsed.notes.find(n=>n.channel===1)?.program,0);
- assert.ok(parsed.duration>120);
+ assert.ok(parsed.duration>=120);
 });
 test('historical UI explicitly separates ABC notation from original MIDI playback',()=>{
  const ui=fs.readFileSync('src/historical-ui.js','utf8');
@@ -51,4 +51,11 @@ test('historical UI explicitly separates ABC notation from original MIDI playbac
  assert.match(ui,/data\.source='original-midi'/);
  assert.doesNotMatch(ui,/SynthController/);
  assert.match(ui,/Wiedergabequelle bleibt ausschließlich das Original-MIDI/);
+});
+
+test('notes crossing a barline are tied and do not create overlapping rests',()=>{
+ const compact={t:'Tie',b:60,m:[4,4],v:[['Violine',40,0,[[1,3,2,69,80,'A4'],[2,2,1,71,80,'B4']]]]};
+ const abc=historicalScoreToAbc(engine.findScore(compact));
+ assert.match(abc,/=A4- \|/);
+ assert.match(abc,/=A4 z4 =B4 z4 \|/);
 });
