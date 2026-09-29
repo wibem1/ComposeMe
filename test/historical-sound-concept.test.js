@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 const historical=fs.readFileSync('experiments/sound-concept-149/historical-engine.js','utf8');
 const context={window:{},crypto:crypto.webcrypto,TextEncoder};
 vm.runInNewContext(historical,context);
@@ -30,4 +31,12 @@ test('historical parser and MIDI builder accept compact 32 bar scores',()=>{
  assert.equal(s.tracks.length,2);
  assert.equal(s.tracks[0].notes[1][0],124);
  assert.equal(e.buildMidi(s)[0],77);
+});
+
+test('isolated browser script is syntactically valid and page contains separate controls',()=>{
+ execFileSync(process.execPath,['--check','experiments/sound-concept-149/app.js']);
+ const html=fs.readFileSync('experiments/sound-concept-149/index.html','utf8');
+ assert.match(html,/historical-engine\\.js/);
+ assert.match(html,/id="diagnosis"/);
+ assert.doesNotMatch(html,/src="\\.\\.\\/\\.\\.\\/src\\/app\\.js"/);
 });
