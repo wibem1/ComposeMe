@@ -23,11 +23,11 @@ function compactScore(){
   v:[['RH',0,0,[[1,0,1,60,101],[1,1,0.5,63,83],[32,3,1,72,96]]],
      ['LH',0,1,[[1,0,4,36,70],[32,0,4,36,75]]]]};
 }
-test('default integrated Sol procedure sends both ORIGINAL historical prompts, no new musical rules',async()=>{
+test('default integrated Sol procedure preserves two musical prompts and adds non-composing MusicXML notation',async()=>{
  const concept='Frei erfundene klingende Vorstellung, ohne einzelne ausnotierte Noten.';
  const requests=[];
  const res=await runHistoricalComposition({engine,task,apiKey:'test',
-  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore()),'X:1\nT:Eigener Kompositionsversuch\nM:4/4\nL:1/4\nK:C\nC D E F |'],requests)});
+  fetchImpl:fakeTransport([concept,JSON.stringify(compactScore()),'\<?xml version="1.0" encoding="UTF-8"?><score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Klavier</part-name></score-part></part-list><part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes><note><rest/><duration>4</duration><type>whole</type></note></measure></part></score-partwise>'],requests)});
  assert.equal(requests.length,3);
  assert.deepEqual(requests.map(x=>x.model),['gpt-5.6-sol','gpt-5.6-sol','gpt-5.6-sol']);
  const original=originalHistoricalPrompts(engine,task,concept);
@@ -40,10 +40,10 @@ test('default integrated Sol procedure sends both ORIGINAL historical prompts, n
  assert.equal(String.fromCharCode(...res.historicalMidi.slice(0,4)),'MThd');
  assert.equal(res.historicalScore.tracks[0].notes[0][3],101);
  assert.equal(res.historicalCalls[1].response,JSON.stringify(compactScore()));
- assert.equal(res.historicalCalls[2].stage,'notation_abc');
+ assert.equal(res.historicalCalls[2].stage,'notation_musicxml');
  assert.match(res.historicalCalls[2].prompt,/JSON-PARTITUR:/);
  assert.match(res.historicalCalls[2].prompt,/Eigener Kompositionsversuch/);
- assert.match(res.historicalAbc,/^X:1/m);
+ assert.match(res.historicalMusicXml,/<score-partwise/);
  assert.match(formatHistoricalProtocol(res),/TATSÄCHLICHE KI-ANFRAGE/);
 });
 test('optional manual pause sees EXACT completed stage-two prompt and records user edit transparently',async()=>{
