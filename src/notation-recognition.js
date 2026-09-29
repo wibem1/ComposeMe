@@ -1,4 +1,4 @@
-import {extractAbc} from './music-view.js?v=0.8.5';
+import {extractAbc} from './music-view.js?v=0.8.6';
 
 export function recognizeNotation(text){
  if(typeof text!=='string'||!text.trim())return {format:null,abc:'',error:null};
