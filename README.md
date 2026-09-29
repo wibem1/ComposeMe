@@ -1,4 +1,4 @@
-# ComposeMe 0.8.3
+# ComposeMe 0.8.4
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -16,9 +16,9 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Wiedergabe und Notenansicht (0.8.3):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in ABC-Notation. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom ABC. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
+**Wiedergabe und Notenansicht (0.8.4):** Die fertige Komposition bleibt als JSON-Partitur und Original-MIDI unverändert. Danach folgt ein **dritter, ausdrücklich nicht-kompositorischer KI-Aufruf**: Sol erhält die fertige JSON-Partitur und überträgt sie in MusicXML 4.0. Dieser Aufruf darf keine Musik ändern, sondern nur notatorische Entscheidungen treffen. Seine vollständige Anfrage und Originalantwort werden im Kommunikationsprotokoll gespeichert. Der SoundFont-Player liest weiterhin ausschließlich das Original-MIDI und ist unabhängig vom MusicXML. Für die Klänge werden die im MIDI enthaltenen General-MIDI-Programme über WebAudioFont mit SoundFont-Samples wiedergegeben; die bisherige Oszillator-Vorschau entfällt.
 
-Für ältere zweistufige Verlaufseinträge ohne KI-ABC gibt es **„ABC durch KI erzeugen“**. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die bisherige direkte ComposeMe-Komposition bleibt unverändert und benutzt weiterhin ihren bisherigen ABC-Player.
+Für ältere zweistufige Verlaufseinträge ohne KI-MusicXML gibt es **„MusicXML durch KI erzeugen“**. Dadurch wird nur die Notationsstufe nachgeholt; die vorhandene Komposition und das vorhandene MIDI werden nicht neu erzeugt. Die MusicXML-Partitur wird mit **OpenSheetMusicDisplay** gerendert. Der bisherige direkte ComposeMe-Modus bleibt unverändert und benutzt weiterhin ABC/abcjs.
 
 ## Historische Quellen
 
@@ -28,6 +28,6 @@ Für ältere zweistufige Verlaufseinträge ohne KI-ABC gibt es **„ABC durch KI
 
 ## Qualitätssicherung
 
-`npm run verify` führt statische, Unit- und Smoke-Tests aus, einschließlich exakter historischer Anfragen, des zweistufigen Ablaufs, des optionalen manuellen Halts, unveränderter Original-MIDI-Daten, MIDI-Parsing, JSON→ABC-Projektion und technischer Fehlerbehandlung. GitHub Actions führt zusätzlich echte Browser-Smoke-Tests aus, die beide historischen KI-Aufrufe mit einer **simulierten** API-Antwort und die Speicherung im regulären Verlauf prüfen. Die Tests verursachen keine kostenpflichtigen API-Aufrufe und stellen **keinen musikalischen Hörtest** dar; die musikalische Qualität einer neuen echten Sol-Komposition muss beim Anwender beurteilt werden.
+`npm run verify` führt statische, Unit- und Smoke-Tests aus, einschließlich exakter historischer Anfragen, des zweistufigen Ablaufs, des optionalen manuellen Halts, unveränderter Original-MIDI-Daten, MIDI-Parsing, JSON→MusicXML-Notation, MusicXML-Ausgabe und technischer Fehlerbehandlung. GitHub Actions führt zusätzlich echte Browser-Smoke-Tests aus, die beide historischen KI-Aufrufe mit einer **simulierten** API-Antwort und die Speicherung im regulären Verlauf prüfen. Die Tests verursachen keine kostenpflichtigen API-Aufrufe und stellen **keinen musikalischen Hörtest** dar; die musikalische Qualität einer neuen echten Sol-Komposition muss beim Anwender beurteilt werden.
 
 Die bisherige Direktkomposition und bestehende Experimente werden nicht gelöscht oder migriert.
