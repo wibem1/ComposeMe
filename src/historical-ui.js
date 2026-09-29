@@ -1,7 +1,7 @@
-import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalAbcNotation} from './historical-compose.js?v=0.8.2';
-import {ABC_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.2';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.2';
-import {normalizeAbcForAbcjs} from './music-view.js?v=0.8.2';
+import {originalHistoricalPrompts,runHistoricalComposition,addHistoricalAbcNotation} from './historical-compose.js?v=0.8.3';
+import {ABC_NOTATION_INSTRUCTION} from './historical-notation-ai.js?v=0.8.3';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.3';
+import {normalizeAbcForAbcjs} from './music-view.js?v=0.8.3';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -90,7 +90,7 @@ function formatTime(sec){const s=Math.max(0,Math.round(Number(sec)||0));return M
 function renderMidiControls(record,audio,note){
  const old=activePlayers.get(audio);old?.stop?.();
  const holder=document.createElement('div');holder.className='midi-player';holder.dataset.source='original-midi';
- const title=document.createElement('strong');title.textContent='MIDI-Player · Original-MIDI';
+ const title=document.createElement('strong');title.textContent='SoundFont-Player · Original-MIDI';
  const play=document.createElement('button');play.type='button';play.textContent='▶ Abspielen';
  const stop=document.createElement('button');stop.type='button';stop.textContent='■ Stopp';
  const range=document.createElement('input');range.type='range';range.min='0';range.max='1000';range.value='0';range.step='1';range.setAttribute('aria-label','MIDI-Wiedergabeposition');
@@ -99,7 +99,8 @@ function renderMidiControls(record,audio,note){
  let player;
  try{
   player=createMidiPlayer(record,{onState:s=>{
-   play.textContent=s.playing?'❚❚ Pause':'▶ Abspielen';
+   play.textContent=s.loading?'Klang wird geladen …':s.playing?'❚❚ Pause':'▶ Abspielen';
+   play.disabled=Boolean(s.loading);
    range.value=s.duration?String(Math.round(1000*s.position/s.duration)):'0';
    time.textContent=formatTime(s.position)+' / '+formatTime(s.duration);
   }});
@@ -135,7 +136,7 @@ export function renderHistoricalScore({record,paper,audio,onRequestNotation=null
  const description=document.createElement('p');
  description.textContent=`${record.bars||'?'} Takte · ${score.bpm||'?'} BPM · ${score.tracks?.length||0} Originalspuren`;
  const note=document.createElement('p');note.className='historical-score-note';
- note.textContent='Die Komposition und Wiedergabe beruhen auf dem Original-MIDI. ABC ist nur eine nachgelagerte Notationsfassung.';
+ note.textContent='Die Wiedergabe nutzt das Original-MIDI mit SoundFont-Instrumenten. ABC ist nur eine nachgelagerte Notationsfassung.';
  heading.append(title,description,note);paper.append(heading);
  let rendered=false;
  try{rendered=renderHistoricalNotation(record,paper);}catch(e){
