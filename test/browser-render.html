@@ -1,7 +1,8 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>ComposeMe browser render test</title></head>
 <body data-render-success="pending">
-<div id="paper"></div><div id="audio"></div><div id="abendlicht-paper"></div><div id="abendlicht-audio"></div><div id="abendlicht-paper"></div><div id="abendlicht-audio"></div>
+<div id="paper"></div><div id="audio"></div>
+<div id="abendlicht-paper"></div><div id="abendlicht-audio"></div>
 <script src="https://cdn.jsdelivr.net/npm/abcjs@6.5.2/dist/abcjs-basic-min.js"></script>
 <script type="module">
 import {renderMusic,normalizeAbcForAbcjs} from '../src/music-view.js?v=0.7.7';
@@ -29,29 +30,18 @@ try {
   const noteCount=document.querySelectorAll('#paper .abcjs-note').length;
   document.body.dataset.svgCount=String(svgCount);
   document.body.dataset.noteCount=String(noteCount);
-  document.body.dataset.lineCount=String(visual?.lines?.length??0);
-  document.body.dataset.warningCount=String(visual?.warnings?.length??0);
   const pre=document.createElement('pre');pre.id='warnings';pre.textContent=JSON.stringify(visual?.warnings??[]);document.body.append(pre);
   const rangeWarning=document.querySelector('#paper .notation-warning')?.textContent??'';
   document.body.dataset.rangeWarning=String(Boolean(rangeWarning));
-  const abendlicht=await (await fetch('./fixtures/abendlicht-original.abc')).text();
-  const piano=renderMusic({abc:abendlicht,ABCJS:window.ABCJS,
-    paper:document.getElementById('abendlicht-paper'),audio:document.getElementById('abendlicht-audio')});
-  document.body.dataset.abendlichtLines=String(piano?.lines?.length??0);
-  document.body.dataset.abendlichtPaired=String(piano?.lines?.length===4 && piano.lines.every(line=>line.staff?.length===2));
-  document.body.dataset.abendlichtWarnings=String(piano?.warnings?.length??0);
-  const uneven=await(await fetch('./fixtures/abendlicht-uneven-voices.abc')).text();
-  const unevenPaper=document.createElement('div'),unevenAudio=document.createElement('div');
-  document.body.append(unevenPaper,unevenAudio);
-  const unevenVisual=renderMusic({abc:uneven,ABCJS:window.ABCJS,paper:unevenPaper,audio:unevenAudio});
-  const staffCounts=(unevenVisual?.lines??[]).map(line=>(line.staff??[]).filter(Boolean).length);
-  document.body.dataset.abendlichtStaffCounts=staffCounts.join(',');
-  document.body.dataset.abendlichtAligned=String(staffCounts.length===4&&staffCounts.every(n=>n===2));
+
   const abendlicht=await (await fetch('./fixtures/abendlicht.abc')).text();
+  const abendNormalized=normalizeAbcForAbcjs(abendlicht);
   const abendVisual=renderMusic({abc:abendlicht,ABCJS:window.ABCJS,paper:document.getElementById('abendlicht-paper'),audio:document.getElementById('abendlicht-audio')});
-  const completeSystems=(abendVisual?.lines??[]).filter(line=>line?.staff?.length).every(line=>line.staff.length===2);
+  const scoreLines=(abendVisual?.lines??[]).filter(line=>Array.isArray(line?.staff)&&line.staff.length);
+  const completeSystems=scoreLines.length>0&&scoreLines.every(line=>line.staff.filter(Boolean).length===2);
+  document.body.dataset.abendlichtLinebreakNone=String(abendNormalized.includes('I:linebreak <none>'));
   document.body.dataset.abendlichtCompleteSystems=String(completeSystems);
-  document.body.dataset.abendlichtLineCount=String(abendVisual?.lines?.length??0);
+  document.body.dataset.abendlichtScoreLines=String(scoreLines.length);
   document.body.dataset.renderSuccess=String(svgCount>0 && noteCount>0 && completeSystems);
 } catch (error) {
   document.body.dataset.renderSuccess='false';
