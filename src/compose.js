@@ -1,6 +1,6 @@
 import {buildCompositionRequest} from './composition-request.js';
-import {sendToAI} from './ai-client.js?v=0.8.6';
-import {createCommunicationRecord} from './communication-protocol.js?v=0.8.6';
+import {sendToAI} from './ai-client.js?v=0.8.7';
+import {createCommunicationRecord} from './communication-protocol.js?v=0.8.7';
 export async function compose({task,additionalInstructions='',provider,model,apiKey,transport}){
   const actualRequest=buildCompositionRequest({task,additionalInstructions});
   const reply=await sendToAI({provider,model,prompt:actualRequest,apiKey,transport});
