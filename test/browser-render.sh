@@ -14,6 +14,7 @@ fi
   --dump-dom http://127.0.0.1:8123/test/browser-render.html > /tmp/composeme-render-dom.html
 cat /tmp/composeme-render-dom.html
 grep -q 'data-render-success="true"' /tmp/composeme-render-dom.html
+grep -q 'data-abendlicht-complete-systems="true"' /tmp/composeme-render-dom.html
 grep -Eq 'data-note-count="[1-9][0-9]*"' /tmp/composeme-render-dom.html
 grep -q 'data-violin-program-directive="true"' /tmp/composeme-render-dom.html
 grep -q 'data-violin-program-midi="true"' /tmp/composeme-render-dom.html
