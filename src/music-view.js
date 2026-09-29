@@ -1,3 +1,4 @@
+import {alignParallelVoiceLines} from './abc-voice-layout.js';
 import {alignScoreVoiceLines} from './voice-line-sync.js';
 export function normalizeAbcForAbcjs(abc){
  if(typeof abc!=='string'||!abc.trim())return '';
