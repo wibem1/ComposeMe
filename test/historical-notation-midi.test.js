@@ -36,7 +36,25 @@ test('third call uses Sol and preserves raw MusicXML answer',async()=>{
  })};};
  const r=await requestMusicXmlNotation({scoreJson:JSON.stringify(compact),apiKey:'x',fetchImpl});
  assert.equal(requests[0].model,'gpt-5.6-sol');
+ assert.equal(requests[0].max_output_tokens,64000);
+ assert.equal(requests[0].reasoning?.effort,'none');
  assert.equal(r.call.stage,'notation_musicxml');assert.equal(r.call.response,xml);assert.match(r.musicXml,/<score-partwise/);
+});
+test('incomplete MusicXML response keeps raw text and API reason on the failed call',async()=>{
+ const partial='<?xml version="1.0"?><score-partwise version="4.0"><part-list>';
+ const fetchImpl=async()=>({ok:true,json:async()=>({
+  status:'incomplete',incomplete_details:{reason:'max_output_tokens'},
+  output:[{type:'message',content:[{type:'output_text',text:partial}]}],
+  usage:{input_tokens:10,output_tokens:64000,total_tokens:64010}
+ })});
+ await assert.rejects(()=>requestMusicXmlNotation({scoreJson:JSON.stringify(compact),apiKey:'x',fetchImpl}),err=>{
+  assert.match(err.message,/unvollständig/);
+  assert.equal(err.notationCall?.response,partial);
+  assert.equal(err.notationCall?.apiStatus,'incomplete');
+  assert.equal(err.notationCall?.incompleteDetails?.reason,'max_output_tokens');
+  assert.equal(err.notationCall?.status,'failed');
+  return true;
+ });
 });
 test('original MIDI parser still reproduces every canonical note event',()=>{
  const score=engine.findScore(compact),midi=engine.buildMidi(score),parsed=parseMidi(midi);
