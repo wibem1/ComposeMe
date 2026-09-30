@@ -1,4 +1,4 @@
-# ComposeMe 0.8.24
+# ComposeMe 0.8.25
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -49,26 +49,29 @@ Größere Beschriftungen der Hauptfelder; „Kompositionsauftrag“ heißt „Au
 ### 0.8.15 – Übergabe an ABC Tools
 Für KI-Ausgaben im ABC-Format gibt es jetzt direkt bei der Antwort die Schaltfläche „An ABC Tools übergeben“. Übergeben wird die erkannte ABC-Partitur an die abgespeckte wibem1-ABC-Tools-Version; dort wird sie unmittelbar geladen und dargestellt.
 
-### 0.8.24 – Automatische Noten-App
+### 0.8.25 – Automatische Noten-App
 Ein einziger Button „In Noten-App öffnen“ entscheidet automatisch: LilyPond wird an Hacklily übergeben; ABC, MusicXML und das Original-MIDI des historischen Zweistufenmodus werden an die abgespeckte wibem1-Version von ABC Tools übergeben. Größere MusicXML- und MIDI-Daten werden lokal im Browser übergeben statt in die URL geschrieben.
 
-### 0.8.24 – Vergleich
+### 0.8.25 – Vergleich
 Die Rubrik „Vergleich“ ist einklappbar.
 
-### 0.8.24 – Interne Notenansicht entfernt
+### 0.8.25 – Interne Notenansicht entfernt
 Die fehleranfällige interne ABC-Notendarstellung wurde entfernt. ComposeMe konzentriert sich auf Komposition, Wiedergabe des Original-MIDI im Zweistufenmodus, Verlauf und Vergleich. Der Vergleich zeigt Auftrag und Ausgabe beider Versionen; jede geeignete Ausgabe kann mit „In Noten-App öffnen“ an Hacklily oder ABC Tools übergeben werden.
 
-### 0.8.24 – Zweistufenmodus: MusicXML statt MIDI-Transkription
+### 0.8.25 – Zweistufenmodus: MusicXML statt MIDI-Transkription
 Für „In Noten-App öffnen“ wird die vorhandene historische JSON-Partitur jetzt lokal und deterministisch in zweisystemiges Klavier-MusicXML umgesetzt und an ABC Tools übergeben. Kein zusätzlicher KI-Aufruf, keine musikalische Neukomposition und keine kostenpflichtige Konvertierung. Das Original-MIDI bleibt unverändert für Wiedergabe und Download erhalten. Die technische Aufteilung verwendet zwei Klaviersysteme und mehrere Stimmen, damit überlappende Noten nicht verloren gehen.
 
-### 0.8.24 – Infotext entfernt
+### 0.8.25 – Infotext entfernt
 Der erläuternde Absatz unter dem Zweistufenmodus wurde aus der Oberfläche entfernt.
 
-### 0.8.24 – Fortsetzen nach Netzwerkfehler
+### 0.8.25 – Fortsetzen nach Netzwerkfehler
 Bricht der zweite KI-Aufruf des Zweistufenmodus mit einem Netzwerkfehler ab, bleibt die bereits fertige Klangvorstellung erhalten. Beim Laden dieses Zwischenstands kann „Komposition fortsetzen“ nur den zweiten KI-Aufruf erneut ausführen; der erste Aufruf wird nicht wiederholt. Fehlgeschlagene Aufrufe werden im Protokoll ausdrücklich als fehlgeschlagen markiert.
 
-### 0.8.24 – Erster Prompt dauerhaft editierbar
+### 0.8.25 – Erster Prompt dauerhaft editierbar
 Eine eigene Fassung der ersten KI-Anweisung wird lokal im Browser gespeichert und nach Neustart wiederhergestellt. Beim Wechsel des Auftrags wird der AUFTRAG-Abschnitt an den aktuellen Auftrag angepasst. „Standard wiederherstellen“ löscht die gespeicherte eigene Fassung und stellt die historische Originalanweisung wieder her.
 
-### 0.8.24 – Prompt bleibt unverändert
+### 0.8.25 – Prompt bleibt unverändert
 Der aktuell gespeicherte erste Prompt wird wortwörtlich weiterverwendet und nicht mehr automatisch an einen neuen Auftrag angepasst. Er bleibt gültig, bis er vom Nutzer überschrieben oder mit „Standard wiederherstellen“ zurückgesetzt wird.
+
+### 0.8.25 – Alle editierbaren Prompts bleiben bestehen
+Für beide editierbaren KI-Anweisungen gilt dieselbe Regel: Eine vom Nutzer geänderte Fassung wird wortwörtlich lokal gespeichert und bleibt erhalten, bis sie erneut überschrieben oder mit „Standard wiederherstellen“ zurückgesetzt wird. Solange Prompt 2 nie manuell geändert wurde, darf er weiterhin aus aktuellem Auftrag und aktueller Klangvorstellung erzeugt werden.
