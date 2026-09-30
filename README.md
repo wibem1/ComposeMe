@@ -43,3 +43,7 @@ Geladene historische Versuche zeigen ihre alten Prompts nur zur Einsicht. Ein ne
 
 ### 0.8.12 – Prompt-Isolation, Diagnose und Lesbarkeit
 Beim Anzeigen alter Experimente bleiben deren Prompts sichtbar, werden aber nicht ungefragt in einen neuen Kompositionslauf übernommen. Diagnose-Export ist eine eigenständige Rubrik; Überschriften sind größer. Leere API-Key-Eingabefelder beim Komponieren löschen keine gespeicherten Keys mehr. Das Exportieren einer Diagnose ist weiterhin rein lesend und exportiert keine Schlüssel. Regressionsprüfungen für die relevanten Abläufe.
+
+
+### 0.8.12 – Experiment- und Diagnoseoberfläche
+Beim Anzeigen alter Experimente bleiben die damaligen KI-Anfragen einsehbar; eine neue Komposition verwendet wieder die ursprüngliche erste Anweisung, sofern sie nicht ausdrücklich neu bearbeitet wurde. Die Diagnose hat einen eigenen Bereich; Rubriken sind besser lesbar. Export einer Diagnose verändert keine API-Keys, und leere Felder überschreiben beim Senden keine zuvor gespeicherten Schlüssel. Browserregressionen prüfen Prompt-Isolation und Key-Erhalt.
