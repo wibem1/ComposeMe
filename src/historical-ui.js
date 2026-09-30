@@ -71,21 +71,34 @@ export function renderHistoricalScore({record,paper,audio}){
  const note=document.createElement('p');note.className='historical-score-note';
  note.textContent='Komposition fertig. Wiedergabe und MIDI basieren direkt auf der erzeugten Original-Partitur. Notensatz ist bewusst ausgelagert.';
  paper.append(meta,note);
- const holder=document.createElement('div');holder.className='midi-player';holder.dataset.source='original-midi';
- const title=document.createElement('strong');title.textContent='SoundFont-Player · Original-MIDI';
- const play=document.createElement('button');play.type='button';play.textContent='▶ Abspielen';
- const stop=document.createElement('button');stop.type='button';stop.textContent='■ Stopp';
- const range=document.createElement('input');range.type='range';range.min='0';range.max='1000';range.value='0';range.step='1';
+ const holder=document.createElement('section');holder.className='midi-player';holder.dataset.source='original-midi';
+ const heading=document.createElement('div');heading.className='midi-player-heading';
+ const title=document.createElement('strong');title.textContent='MIDI-Player · SoundFont';
+ const state=document.createElement('span');state.className='midi-player-state';state.textContent='Bereit';
+ heading.append(title,state);
+ const controls=document.createElement('div');controls.className='midi-player-controls';
+ const play=document.createElement('button');play.type='button';play.textContent='▶';play.title='Abspielen';play.setAttribute('aria-label','Abspielen');
+ const stop=document.createElement('button');stop.type='button';stop.textContent='■';stop.title='Stopp';stop.setAttribute('aria-label','Stopp');
+ const range=document.createElement('input');range.type='range';range.min='0';range.max='1000';range.value='0';range.step='1';range.setAttribute('aria-label','Wiedergabeposition');
  const time=document.createElement('span');time.className='midi-time';
+ const actions=document.createElement('div');actions.className='midi-player-actions';
  const midi=document.createElement('button');midi.type='button';midi.textContent='Original-MIDI speichern';
- let player;
+ actions.append(midi);
+ let player,playing=false;
  try{
-  player=createMidiPlayer(record,{onState:s=>{play.textContent=s.loading?'Klang wird geladen …':s.playing?'❚❚ Pause':'▶ Abspielen';play.disabled=Boolean(s.loading);range.value=s.duration?String(Math.round(1000*s.position/s.duration)):'0';time.textContent=formatTime(s.position)+' / '+formatTime(s.duration);}});
+  player=createMidiPlayer(record,{onState:s=>{
+   playing=Boolean(s.playing);
+   state.textContent=s.loading?'SoundFont wird geladen …':playing?'Wiedergabe':'SoundFont bereit';
+   play.textContent=playing?'❚❚':'▶';play.title=playing?'Pause':'Abspielen';play.setAttribute('aria-label',play.title);
+   play.disabled=Boolean(s.loading);
+   range.value=s.duration?String(Math.round(1000*s.position/s.duration)):'0';
+   time.textContent=formatTime(s.position)+' / '+formatTime(s.duration);
+  }});
   time.textContent='0:00 / '+formatTime(player.duration);
- }catch(e){note.textContent='SoundFont-Player: '+e.message;play.disabled=true;stop.disabled=true;range.disabled=true;}
- play.addEventListener('click',async()=>{if(!player)return;try{if(play.textContent.includes('Pause'))player.pause();else await player.play();}catch(e){note.textContent='MIDI-Wiedergabefehler: '+e.message;}});
+ }catch(e){note.textContent='SoundFont-Player: '+e.message;state.textContent='Nicht verfügbar';play.disabled=true;stop.disabled=true;range.disabled=true;}
+ play.addEventListener('click',async()=>{if(!player)return;try{if(playing)player.pause();else await player.play();}catch(e){state.textContent='Fehler';note.textContent='MIDI-Wiedergabefehler: '+e.message;}});
  stop.addEventListener('click',()=>player?.stop());
- range.addEventListener('input',async()=>{if(!player)return;await player.seek(player.duration*Number(range.value)/1000);});
+ range.addEventListener('input',async()=>{if(!player)return;try{await player.seek(player.duration*Number(range.value)/1000);}catch(e){state.textContent='Fehler';note.textContent='MIDI-Wiedergabefehler: '+e.message;}});
  midi.addEventListener('click',()=>downloadOriginalMidi(record));
- holder.append(title,play,stop,range,time,midi);audio.replaceChildren(holder);if(player)activePlayers.set(audio,player);
+ controls.append(play,stop,range,time);holder.append(heading,controls,actions);audio.replaceChildren(holder);if(player)activePlayers.set(audio,player);
 }
