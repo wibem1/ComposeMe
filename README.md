@@ -1,4 +1,4 @@
-# ComposeMe 0.8.28
+# ComposeMe 0.8.29
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -84,3 +84,7 @@ Die vom Nutzer bearbeiteten Anweisungsteile von Prompt 1 und Prompt 2 bleiben da
 
 ### 0.8.28 – JSON-Codeblöcke robust verarbeiten
 Im Zweistufenmodus akzeptiert ComposeMe nun auch technisch korrektes JSON, das ein Modell in einen äußeren Markdown-Codeblock (`\`\`json … \`\`\``) setzt. Der Codeblock wird lokal vor dem JSON-Parsing entfernt; die originale KI-Antwort bleibt im Protokoll unverändert. Keine zusätzliche KI-Anfrage und keine musikalische Veränderung.
+
+
+### 0.8.29 – Allgemeine Partiturstruktur
+Der technische JSON-Vertrag kann musikalisch eigenständige Stimmen desselben Instruments nun explizit als getrennte Spuren kennzeichnen (`Instrument :: Stimme`). Das gilt allgemein für Klavier, Streicher, Chor und andere mehrstimmige Besetzungen; einzelne Instrumente bleiben normale eigene Spuren. Der lokale MusicXML-Konverter gruppiert solche Stimmen wieder zu einem Instrument, erhält ihre Stimmenstruktur und übernimmt vorhandene enharmonische Notennamen. Keine zusätzliche KI-Anfrage und keine musikalische Nachkorrektur.
