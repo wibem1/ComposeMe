@@ -39,3 +39,7 @@ Provider und Modell sind im Zweistufenmodus wieder frei wählbar. Fest bleibt nu
 
 ### 0.8.12 – Experimentisolation und Diagnose
 Geladene historische Versuche zeigen ihre alten Prompts nur zur Einsicht. Ein neuer Versuch verwendet wieder die vollständige erste Originalanweisung, sofern diese nicht nach dem Laden ausdrücklich bearbeitet wurde. Diagnose-Export ist eine separate Rubrik und darf Key-Speicher nicht verändern; beim Start löscht ein leeres Key-Eingabefeld keinen gespeicherten Schlüssel mehr. Größere Rubriktitel.
+
+
+### 0.8.12 – Prompt-Isolation, Diagnose und Lesbarkeit
+Beim Anzeigen alter Experimente bleiben deren Prompts sichtbar, werden aber nicht ungefragt in einen neuen Kompositionslauf übernommen. Diagnose-Export ist eine eigenständige Rubrik; Überschriften sind größer. Leere API-Key-Eingabefelder beim Komponieren löschen keine gespeicherten Keys mehr. Das Exportieren einer Diagnose ist weiterhin rein lesend und exportiert keine Schlüssel. Regressionsprüfungen für die relevanten Abläufe.
