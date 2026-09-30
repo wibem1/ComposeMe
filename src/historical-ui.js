@@ -1,4 +1,4 @@
-import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.23';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.24';
 import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.21';
 
 const $=id=>document.getElementById(id);
@@ -17,11 +17,8 @@ function saveFirstPrompt(prompt,task){
  try{localStorage.setItem(FIRST_PROMPT_KEY,JSON.stringify({prompt:String(prompt||''),task:String(task||'')}));}catch{}
 }
 function clearSavedFirstPrompt(){try{localStorage.removeItem(FIRST_PROMPT_KEY);}catch{}}
-function promptForTask(saved,currentTask){
- if(!saved?.prompt)return'';
- const marker='\\n\\nAUFTRAG:\\n',i=saved.prompt.lastIndexOf(marker);
- if(i<0)return saved.prompt;
- return saved.prompt.slice(0,i+marker.length)+String(currentTask||'');
+function savedPromptText(saved){
+ return saved?.prompt?String(saved.prompt):'';
 }
 
 export function initHistoricalControls(){
@@ -35,7 +32,7 @@ export function initHistoricalControls(){
   const engine=baseEngine();if(!engine)return;
   const original=originalHistoricalPrompts(engine,task.value);
   const saved=loadSavedFirstPrompt();
-  if(saved)first.value=promptForTask(saved,task.value);
+  if(saved)first.value=savedPromptText(saved);
   else if(!firstWasEdited)first.value=original.musicalDraft;
   if(!secondAwaiter&&!concept.value)second.value='Die vollständige zweite Originalanfrage erscheint hier nach dem ersten KI-Aufruf.\n\n'+original.midiTranslation;
  };
@@ -79,7 +76,7 @@ export function initHistoricalControls(){
   const expected=originalHistoricalPrompts(engine,taskText).musicalDraft;
   // A saved custom first prompt is persistent across reloads and follows the current task.
   const saved=loadSavedFirstPrompt();
-  if(saved){first.value=promptForTask(saved,taskText);firstWasEdited=true;}
+  if(saved){first.value=savedPromptText(saved);firstWasEdited=true;}
   else if(!firstWasEdited)first.value=expected;
   concept.value='';
   const firstPrompt=first.value===expected?null:first.value;
