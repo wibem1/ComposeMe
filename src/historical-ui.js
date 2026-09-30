@@ -1,4 +1,4 @@
-import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.21';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.22';
 import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.21';
 
 const $=id=>document.getElementById(id);
@@ -11,7 +11,7 @@ export function initHistoricalControls(){
   concept=$('historical-concept'),pause=$('historical-pause'),
   proceed=$('historical-proceed'),task=$('task'),additional=$('additional'),
   model=$('model'),provider=$('provider');
- let firstWasEdited=false,secondAwaiter=null;
+ let firstWasEdited=false,secondAwaiter=null,resumableRecord=null;
  const initial=()=>{
   const engine=baseEngine();if(!engine)return;
   const original=originalHistoricalPrompts(engine,task.value);
@@ -28,7 +28,10 @@ export function initHistoricalControls(){
  task.addEventListener('input',()=>{if(select.value==='historical'&&!secondAwaiter)initial();});
  first.addEventListener('input',()=>{firstWasEdited=true;});
  reset.addEventListener('click',()=>{firstWasEdited=false;initial();});
- proceed.addEventListener('click',()=>{if(!secondAwaiter)return;const resume=secondAwaiter;secondAwaiter=null;proceed.disabled=true;resume(second.value);});
+ proceed.addEventListener('click',()=>{
+  if(secondAwaiter){const resume=secondAwaiter;secondAwaiter=null;proceed.disabled=true;resume(second.value);return;}
+  if(resumableRecord)document.getElementById('compose-form')?.requestSubmit();
+ });
  initial();refresh();
  function showRecord(record){
   if(record?.mode!=='historical')return;
@@ -39,10 +42,19 @@ export function initHistoricalControls(){
   first.value=c1?.prompt||originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;
   firstWasEdited=false;
   if(c2?.prompt)second.value=c2.prompt;
+  const stage1Done=record.historicalCalls?.some(c=>c.stage==='sound_concept'&&c.status==='completed'&&c.response?.trim());
+  resumableRecord=record.runStatus==='partial'&&stage1Done&&record.concept?.trim()&&!record.historicalScore?record:null;
+  proceed.textContent=resumableRecord?'Komposition fortsetzen':'Komposition fortsetzen';
+  if(resumableRecord)proceed.disabled=false;
  }
  function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
  async function run({apiKey,taskText,providerName,modelName,onStage1,onProgress}){
   const engine=baseEngine();if(!engine)throw new Error('Historische Engine fehlt. Bitte die App vollständig neu laden.');
+  if(resumableRecord&&String(resumableRecord.userInput||'').trim()===String(taskText||'').trim()&&
+     resumableRecord.provider===providerName&&resumableRecord.model===modelName){
+    const record=resumableRecord;resumableRecord=null;proceed.disabled=true;
+    return resumeHistoricalComposition({engine,record,apiKey,secondPrompt:second.value,onProgress});
+  }
   const expected=originalHistoricalPrompts(engine,taskText).musicalDraft;
   // A new run uses the canonical prompt unless the user explicitly edits the field after loading a record.
   if(!firstWasEdited)first.value=expected;concept.value='';
@@ -58,7 +70,7 @@ export function initHistoricalControls(){
    }
   });
  }
- return {run,showRecord,refresh,abortWait,isHistorical:()=>select.value==='historical'};
+ return {run,showRecord,refresh,abortWait,resumeId:()=>resumableRecord?.id||null,isHistorical:()=>select.value==='historical'};
 }
 
 function formatTime(sec){const s=Math.max(0,Math.round(Number(sec)||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
