@@ -82,6 +82,9 @@ export async function runHistoricalComposition({
    data=await res.json();
    original=engine.extractText(snapshot.provider,data);
    if(!original?.trim())throw new Error('Die KI hat keinen Text zurückgegeben.');
+  }catch(error){
+   call.status='failed';call.elapsedMs=Date.now()-started;call.error=error?.message||String(error);
+   throw error;
   }finally{clearTimeout(timeout);}
   call.response=original;
   call.status='completed';call.elapsedMs=Date.now()-started;
@@ -117,4 +120,59 @@ export async function runHistoricalComposition({
   error.partialRecord=newPartial({task:cleanTask,provider,model,calls,concept,error:error.message});
   throw error;
  }
+}
+
+
+function scoreBarCount(score){
+ const ts=Array.isArray(score?.timeSignature)?score.timeSignature:[4,4];
+ const beats=(Number(ts[0])||4)*(4/(Number(ts[1])||4));
+ let end=0;
+ for(const tr of(score?.tracks||[]))for(const n of(tr.notes||[]))if(Array.isArray(n))end=Math.max(end,(Number(n[0])||0)+(Number(n[1])||0));
+ return Math.max(1,Math.ceil(end/Math.max(.25,beats)));
+}
+
+export async function resumeHistoricalComposition({
+ engine,record,apiKey,secondPrompt=null,onProgress=()=>{},fetchImpl=fetch
+}){
+ if(!engine?.makeRequest||!engine?.actualRequest||!engine?.extractText||!engine?.extractJson||!engine?.findScore||!engine?.buildMidi)
+  throw new Error('Die historische Engine fehlt.');
+ if(!record?.concept?.trim())throw new Error('Keine gespeicherte Klangvorstellung zum Fortsetzen vorhanden.');
+ if(!apiKey)throw new Error('API-Key fehlt.');
+ const task=String(record.userInput||'').trim(),provider=record.provider||'openai',model=record.model||'gpt-5.6-sol';
+ const snapshot={visibleTask:task,provider,model};
+ const calls=(record.historicalCalls||[]).map(call=>structuredClone(call));
+ const generated=engine.createPrompts(snapshot,record.concept).midiTranslation;
+ const previous=calls.filter(call=>call.stage==='score_realization').at(-1)?.prompt;
+ const prompt=String(secondPrompt||previous||generated).trim();
+ if(!prompt)throw new Error('Zweite KI-Anweisung ist leer.');
+ const template=engine.makeRequest(provider,model,prompt,'score_realization');
+ const request=engine.actualRequest(template,apiKey);
+ const call={stage:'score_realization',prompt,response:'',usage:null,recovery:null,status:'started',resumed:true};
+ calls.push(call);onProgress('Komposition wird fortgesetzt …');
+ const started=Date.now(),abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),180000);
+ let data,original;
+ try{
+  const res=await fetchImpl(request.url,{method:'POST',headers:request.headers,body:JSON.stringify(request.body),signal:abort.signal});
+  if(!res.ok)throw new Error('API '+res.status+': '+(await res.text()).slice(0,450));
+  data=await res.json();original=engine.extractText(provider,data);
+  if(!original?.trim())throw new Error('Die KI hat keinen Text zurückgegeben.');
+ }catch(error){
+  call.status='failed';call.elapsedMs=Date.now()-started;call.error=error?.message||String(error);
+  error.partialRecord={...newPartial({task,provider,model,calls,concept:record.concept,error:call.error}),id:record.id};
+  throw error;
+ }finally{clearTimeout(timeout);}
+ call.response=original;call.status='completed';call.elapsedMs=Date.now()-started;call.usage=extractUsage(provider,data);
+ let repair;
+ try{repair=recoverSingleClosingBracket(original);if(repair.repaired)call.recovery=repair.explanation;}
+ catch(err){
+  const error=new Error('Die KI-Partitur ist technisch ungültig: '+err.message);
+  error.partialRecord={...newPartial({task,provider,model,calls,concept:record.concept,error:error.message}),id:record.id};
+  throw error;
+ }
+ const obj=engine.extractJson(repair.text),score=engine.findScore(obj),midiBytes=engine.buildMidi(score);
+ const result=newPartial({task,provider,model,calls,concept:record.concept,runStatus:'completed'});
+ result.aiResponse=original;result.historicalScore=score;result.historicalMidi=Array.from(midiBytes);
+ result.historicalScoreJson=repair.text;result.title=score.title||'Ohne Titel';result.technicalRecovery=repair.repaired?repair.explanation:'';
+ result.bars=scoreBarCount(score);result.error='';onProgress('Komposition fertig.');
+ return result;
 }
