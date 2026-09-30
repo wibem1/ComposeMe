@@ -16,7 +16,7 @@ const stageLabel=stage=>stage==='sound_concept'?'=== 1. KLANGVORSTELLUNG ===':'=
 
 export function normalizeScoreJson(text){
  let cleaned=String(text??'').trim(),fenceRemoved=false;
- const fenced=cleaned.match(/^\`\`\`(?:json)?[ \\t]*\\r?\\n([\\s\\S]*?)\\r?\\n\`\`\`[ \\t]*$/i);
+ const fenced=cleaned.match(/^```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n```[ \t]*$/i);
  if(fenced){cleaned=fenced[1].trim();fenceRemoved=true;}
  const repair=recoverSingleClosingBracket(cleaned);
  const notes=[];
