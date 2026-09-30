@@ -61,7 +61,10 @@ details textarea{margin:7px 0}
 #paper,.compare-paper{background:#fff;color:#111;overflow-x:auto;margin:10px 0;
   padding:12px;border:1px solid #ddd;border-radius:8px}
 #audio,.compare-audio{margin:10px 0}
-.abcjs-inline-audio{max-width:100%}
+.abcjs-inline-audio{max-width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface)}
+.abcjs-inline-audio button{border-radius:8px}
+.abcjs-inline-audio .abcjs-btn{min-height:38px}
+.abcjs-inline-audio input{accent-color:var(--accent)}
 #comparison:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 #comparison-area:has(#comparison[hidden]){display:none}
 .compare-card{min-width:0;border:1px solid var(--line);padding:14px;border-radius:10px;cursor:zoom-in}
