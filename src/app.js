@@ -63,7 +63,6 @@ copyResponse.addEventListener('click',async()=>{const text=result.value??'';if(!
 function downloadTextFile(file){const blob=new Blob([file.content],{type:file.mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=file.filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),0);}
 saveResponse.addEventListener('click',()=>{const text=result.value??'';if(!text){status.textContent='Keine KI-Ausgabe zum Speichern.';return;}const file=responseFile(text);downloadTextFile(file);status.textContent='Ausgabe gespeichert: '+file.filename;});
 function encodeBytesForHandoff(bytes){let bin='';for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function encodeTextForHandoff(text){return encodeBytesForHandoff(new TextEncoder().encode(text));}
 function scoreAppTarget(record=null){
  const parsed=responseFile(result.value??'');
  if(parsed.format==='lilypond')return{app:'hacklily',format:'lilypond',content:parsed.content};
