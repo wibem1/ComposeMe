@@ -24,6 +24,7 @@ frame.addEventListener('load',async()=>{
  const old={mode:'historical',userInput:task,provider:'openai',model:'gpt-5.6-sol',
   historicalCalls:[{stage:'sound_concept',prompt:'Nur alter verkürzter Prompt'}],concept:'Alter Entwurf'};
  w.localStorage.setItem('minimal-composer-next:experiments',JSON.stringify([{...old,id:'old-prompt-test',savedAt:new Date().toISOString()}]));
+ d.getElementById('history').add(new w.Option('Alter Test', 'old-prompt-test'));
  d.getElementById('history').value='old-prompt-test';
  d.getElementById('history').dispatchEvent(new w.Event('change'));
  if(first.value!=='Nur alter verkürzter Prompt')throw Error('Alte Anweisung wird im Verlauf nicht angezeigt.');
