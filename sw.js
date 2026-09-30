@@ -1,5 +1,5 @@
-// ComposeMe 0.8.16 deployment marker
-const CACHE='composeme-0.8.16';
+// ComposeMe 0.8.17 deployment marker
+const CACHE='composeme-0.8.17';
 const SHELL=['./','./index.html','./style.css','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',event=>{
