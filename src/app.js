@@ -1,7 +1,8 @@
-import {historicalScoreToMusicXML} from './historical-musicxml.js?v=0.8.29';
-import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.29';
-import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.29';
-import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.29';import {setupPwa} from './pwa.js?v=0.8.29';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.29';import {compose} from './compose.js?v=0.8.29';import {recognizeNotation} from './notation-recognition.js?v=0.8.29';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.29';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.29';import {historyLabel} from './history-label.js?v=0.8.29';
+import {runClassicComposition,formatClassicProtocol} from './classic-compose.js?v=0.8.30';
+import {historicalScoreToMusicXML} from './historical-musicxml.js?v=0.8.30';
+import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.30';
+import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.30';
+import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.30';import {setupPwa} from './pwa.js?v=0.8.30';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.30';import {compose} from './compose.js?v=0.8.30';import {recognizeNotation} from './notation-recognition.js?v=0.8.30';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.30';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.30';import {historyLabel} from './history-label.js?v=0.8.30';
 const $=id=>document.getElementById(id);const form=$('compose-form'),status=$('status'),result=$('result'),protocol=$('protocol'),provider=$('provider'),model=$('model'),customModel=$('custom-model'),history=$('history'),deleteHistory=$('delete-history'),paper=$('paper'),audio=$('audio'),copyToInput=$('copy-to-input'),comparison=$('comparison'),comparisonChoice=$('comparison-choice'),singleResult=$('single-result'),resultViewTitle=$('result-view-title'),diagnostic=$('history-diagnostic'),linkOriginal=$('link-original'),linkVariant=$('link-variant'),linkButton=$('link-button'),copyResponse=$('copy-response'),saveResponse=$('save-response'),openScoreApp=$('open-score-app'),backupSave=$('backup-save'),backupLoad=$('backup-load'),backupFile=$('backup-file'),keyBackupSave=$('key-backup-save'),keyBackupLoad=$('key-backup-load'),keyBackupFile=$('key-backup-file'),diagnosticSave=$('diagnostic-save'),costSummary=$('cost-summary'),installApp=$('install-app'),keyOpenAI=$('api-key-openai'),keyAnthropic=$('api-key-anthropic'),keyGoogle=$('api-key-google');const keys=createKeyStore(localStorage),prefs=createPreferenceStore(localStorage),experiments=createExperimentStore(localStorage);let currentId=null;const VIEW_KEY='minimal-composer-next:last-view';function saveView(otherId=null){if(currentId)try{localStorage.setItem(VIEW_KEY,JSON.stringify({id:currentId,otherId}));}catch{}}
 function fillModels(){const saved=prefs.get(`model:${provider.value}`);model.replaceChildren(...modelsFor(provider.value).map(([value,label])=>new Option(label,value)),new Option('Anderes Modell …','__custom__'));const known=[...model.options].some(o=>o.value===saved);model.value=known&&saved?saved:(model.options[0]?.value??'__custom__');customModel.hidden=model.value!=='__custom__';if(!known&&saved){model.value='__custom__';customModel.value=saved;customModel.hidden=false;}}
 const historicalControls=initHistoricalControls();const DEFAULT_ADDITIONAL=$('additional').value.trim();const keyInputs={openai:keyOpenAI,anthropic:keyAnthropic,google:keyGoogle};function loadAllKeys(){for(const [name,input] of Object.entries(keyInputs))input.value=keys.get(name);}function currentKey(){return keyInputs[provider.value]?.value.trim()??'';}function loadProvider(){fillModels();}function providerLabel(){return provider.value==='openai'?'OpenAI':provider.value==='anthropic'?'Anthropic':provider.value==='google'?'Google':provider.value;}function selectedModel(){return model.value==='__custom__'?customModel.value.trim():model.value;}function renderCostSummary(record=null){
@@ -76,7 +77,7 @@ function showExperiment(x){
  if(x.mode==='historical'){
   resultViewTitle.textContent='Wiedergabe';
   historicalControls.showRecord(x);
-  protocol.textContent=formatHistoricalProtocol(x);
+  protocol.textContent=x.workflow==='classic-0.4.24'?formatClassicProtocol(x):formatHistoricalProtocol(x);
   renderCostSummary(x);
   singleResult.hidden=false;
   renderHistoricalScore({record:x,paper,audio});
@@ -89,7 +90,12 @@ function showExperiment(x){
  status.textContent=x.parentId?'Variante mit Original geladen.':'Aus Verlauf geladen.';
  saveView(comparison.hidden?null:comparisonChoice.value);
 }
-async function run(){const secret=currentKey(),modelName=selectedModel();if(secret)keys.set(provider.value,secret);prefs.set('provider',provider.value);prefs.set(`model:${provider.value}`,modelName);status.textContent=providerLabel()+' antwortet …';status.classList.add('working');$('compose').disabled=true;copyToInput.disabled=true;let provisionalId=historicalControls.resumeId?.()||null;try{if(!secret)throw new Error('API-Key für '+providerLabel()+' fehlt.');const record=historicalControls.isHistorical()
+async function run(){const secret=currentKey(),modelName=selectedModel();if(secret)keys.set(provider.value,secret);prefs.set('provider',provider.value);prefs.set(`model:${provider.value}`,modelName);status.textContent=providerLabel()+' antwortet …';status.classList.add('working');$('compose').disabled=true;copyToInput.disabled=true;let provisionalId=historicalControls.resumeId?.()||null;try{if(!secret)throw new Error('API-Key für '+providerLabel()+' fehlt.');const record=$('composition-process').value==='classic'
+ ?await runClassicComposition({engine:window.CompositionEngine,apiKey:secret,task:$('task').value,provider:provider.value,model:modelName,
+  onStage1:stage1Record=>{try{const saved=experiments.save(stage1Record);provisionalId=saved.id;currentId=saved.id;renderHistory();history.value=saved.id;protocol.textContent=formatClassicProtocol(saved);renderCostSummary(saved);}catch(error){status.textContent='Entwurf konnte nicht gespeichert werden: '+error.message;}},
+  onStage2:stage2Record=>{if(provisionalId)try{experiments.update(provisionalId,stage2Record);}catch(error){status.textContent='Zwischenstand konnte nicht gespeichert werden: '+error.message;}},
+  onProgress:message=>{status.textContent=message;}})
+ :historicalControls.isHistorical()
  ?await historicalControls.run({apiKey:secret,taskText:$('task').value,providerName:provider.value,modelName,
    onStage1:stage1Record=>{
     try{
@@ -153,7 +159,7 @@ diagnosticSave.addEventListener('click',()=>{try{
  // Never clear a stored key just because its field is temporarily empty.
  for(const [name,input] of Object.entries(keyInputs)){const visible=input.value.trim();if(visible)keys.set(name,visible);}
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.29',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.30',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';

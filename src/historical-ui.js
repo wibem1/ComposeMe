@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.29';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.29';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.30';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.30';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -108,7 +108,8 @@ export function initHistoricalControls(){
  function refresh(){
   section.hidden=select.value!=='historical';
   model.disabled=false;provider.disabled=false;
-  additional.disabled=!section.hidden;
+  additional.disabled=!section.hidden||select.value==='classic';
+  const classicInfo=$('classic-info');if(classicInfo)classicInfo.hidden=select.value!=='classic';
   if(!section.hidden)initial();
  }
  select.addEventListener('change',refresh);
@@ -129,6 +130,7 @@ export function initHistoricalControls(){
  initial();refresh();
  function showRecord(record){
   if(record?.mode!=='historical')return;
+  if(record.workflow==='classic-0.4.24'){select.value='classic';concept.value=record.concept||'';resumableRecord=null;refresh();return;}
   select.value='historical';refresh();concept.value=record.concept||'';
   const c1=record.historicalCalls?.find(c=>c.stage==='sound_concept');
   const c2=record.historicalCalls?.find(c=>c.stage==='score_realization');
