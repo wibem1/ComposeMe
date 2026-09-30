@@ -87,8 +87,11 @@ openScoreApp.addEventListener('click',()=>{
    status.textContent='LilyPond-Ausgabe an Hacklily übergeben.';
    return;
   }
-  const payload=target.format==='midi'?encodeBytesForHandoff(target.bytes):encodeTextForHandoff(target.content);
-  window.open('https://wibem1.github.io/abctools/?'+target.format+'='+encodeURIComponent(payload),'abc-tools');
+  const handoff=target.format==='midi'
+   ?{format:'midi',data:encodeBytesForHandoff(target.bytes)}
+   :{format:target.format,content:target.content};
+  localStorage.setItem('wibem1_abctools_handoff_v1',JSON.stringify(handoff));
+  window.open('https://wibem1.github.io/abctools/?handoff=composeme','abc-tools');
   status.textContent=(target.format==='midi'?'MIDI':target.format==='musicxml'?'MusicXML':'ABC')+' an ABC Tools übergeben.';
  }catch(err){status.textContent='Noten-App konnte nicht geöffnet werden: '+err.message;}
 });
