@@ -121,3 +121,11 @@ test('main UI has both modes but original ComposeMe branch remains in place',()=
  assert.match(app,/historicalControls\.isHistorical\(\)/);
  assert.match(app,/await compose\(\{provider:/);
 });
+
+
+test('technical score contract asks for generic instrument and voice separation',()=>{
+ const p=originalHistoricalPrompts(engine,'Komponiere ein Duo.','Klangidee').midiTranslation;
+ assert.match(p,/Instrument :: Stimme/);
+ assert.match(p,/mehrere musikalisch eigenständige Stimmen/);
+ assert.match(p,/Akkordtöne derselben Stimme bleiben gemeinsam/);
+});
