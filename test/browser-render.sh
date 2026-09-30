@@ -37,6 +37,8 @@ echo
 grep -q 'data-historical-ready="true"' /tmp/composeme-historical-dom.html
 grep -q 'data-history-saved="true"' /tmp/composeme-historical-dom.html
 grep -q 'data-stage1-persisted="true"' /tmp/composeme-historical-dom.html
+grep -q 'data-prompt-isolation="true"' /tmp/composeme-historical-dom.html
+grep -q 'data-key-preserved="true"' /tmp/composeme-historical-dom.html
 grep -q 'data-calls="2"' /tmp/composeme-historical-dom.html
 grep -q 'data-midi-source="original"' /tmp/composeme-historical-dom.html
 grep -q 'data-no-abc-player="true"' /tmp/composeme-historical-dom.html
