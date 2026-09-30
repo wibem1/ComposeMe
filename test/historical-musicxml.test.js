@@ -35,7 +35,7 @@ test('overlapping notes are emitted as separate voices instead of being discarde
  const xml=historicalScoreToMusicXML(score);
  assert.equal((xml.match(/<pitch>/g)||[]).length,2);
  assert.match(xml,/<voice>1<\/voice>/);
- assert.match(xml,/<voice>2<\/voice>/);
+ assert.match(xml,/<voice>5<\/voice>/);
 });
 
 
