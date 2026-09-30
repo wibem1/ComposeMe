@@ -19,16 +19,26 @@ function saveFirstPrompt(prompt,task){
 }
 function clearSavedFirstPrompt(){try{localStorage.removeItem(FIRST_PROMPT_KEY);}catch{}}
 function splitSecondPrompt(text){
- const marker='\\n\\nKLINGENDE VORSTELLUNG:\\n';
- const s=String(text||''),i=s.indexOf(marker);
- return i>=0?{prefix:s.slice(0,i),concept:s.slice(i+marker.length)}:{prefix:s,concept:''};
+ const conceptMarker='\\n\\nKLINGENDE VORSTELLUNG:\\n',technicalMarker='\\n\\nTECHNISCHES FORMAT (kompakt):';
+ const s=String(text||''),i=s.indexOf(conceptMarker);
+ if(i<0)return{prefix:s,concept:'',tail:''};
+ const after=s.slice(i+conceptMarker.length),j=after.indexOf(technicalMarker);
+ return j<0
+  ?{prefix:s.slice(0,i),concept:after,tail:''}
+  :{prefix:s.slice(0,i),concept:after.slice(0,j),tail:'TECHNISCHES FORMAT (kompakt):'+after.slice(j+technicalMarker.length)};
 }
 function loadSavedSecondPrompt(){
  try{
   const raw=localStorage.getItem(SECOND_PROMPT_KEY);
   if(!raw)return null;
   const parsed=JSON.parse(raw);
-  return parsed&&typeof parsed.prefix==='string'?parsed:null;
+  if(parsed&&typeof parsed.prefix==='string')return parsed;
+  if(parsed&&typeof parsed.prompt==='string'){
+   const migrated={prefix:splitSecondPrompt(parsed.prompt).prefix};
+   localStorage.setItem(SECOND_PROMPT_KEY,JSON.stringify(migrated));
+   return migrated;
+  }
+  return null;
  }catch{return null;}
 }
 function saveSecondPromptPrefix(text){
@@ -59,7 +69,7 @@ export function initHistoricalControls(){
   const savedSecond=loadSavedSecondPrompt();
   if(savedSecond){
    const generated=splitSecondPrompt(original.midiTranslation);
-   second.value=concept.value?buildSecondPrompt(savedSecond.prefix,concept.value,generated.concept):savedSecond.prefix;
+   second.value=concept.value?buildSecondPrompt(savedSecond.prefix,concept.value,generated.tail):savedSecond.prefix;
   } else if(!secondAwaiter&&!concept.value&&!secondWasEdited)second.value='Die vollständige zweite Originalanfrage erscheint hier nach dem ersten KI-Aufruf.\n\n'+original.midiTranslation;
  };
  function refresh(){
@@ -96,7 +106,7 @@ export function initHistoricalControls(){
   if(savedSecond){
    const basis=c2?.prompt||originalHistoricalPrompts(baseEngine(),record.userInput,record.concept||'').midiTranslation;
    const parts=splitSecondPrompt(basis);
-   second.value=buildSecondPrompt(savedSecond.prefix,record.concept||parts.concept,'');
+   second.value=buildSecondPrompt(savedSecond.prefix,record.concept||parts.concept,parts.tail);
   } else if(c2?.prompt)second.value=c2.prompt;
   const stage1Done=record.historicalCalls?.some(c=>c.stage==='sound_concept'&&c.status==='completed'&&c.response?.trim());
   resumableRecord=record.runStatus==='partial'&&stage1Done&&record.concept?.trim()&&!record.historicalScore?record:null;
@@ -126,7 +136,7 @@ export function initHistoricalControls(){
     const savedSecond=loadSavedSecondPrompt();
     if(savedSecond){
       const generated=splitSecondPrompt(proposal);
-      second.value=buildSecondPrompt(savedSecond.prefix,idea,generated.concept);
+      second.value=buildSecondPrompt(savedSecond.prefix,idea,generated.tail);
       secondWasEdited=true;
     } else if(!secondWasEdited)second.value=proposal;
     if(!pause.checked)return secondWasEdited?second.value:null;
