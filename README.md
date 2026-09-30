@@ -49,5 +49,8 @@ Größere Beschriftungen der Hauptfelder; „Kompositionsauftrag“ heißt „Au
 ### 0.8.15 – Übergabe an ABC Tools
 Für KI-Ausgaben im ABC-Format gibt es jetzt direkt bei der Antwort die Schaltfläche „An ABC Tools übergeben“. Übergeben wird die erkannte ABC-Partitur an die abgespeckte wibem1-ABC-Tools-Version; dort wird sie unmittelbar geladen und dargestellt.
 
-### 0.8.16 – Automatische Noten-App
+### 0.8.17 – Automatische Noten-App
 Ein einziger Button „In Noten-App öffnen“ entscheidet automatisch: LilyPond wird an Hacklily übergeben; ABC, MusicXML und das Original-MIDI des historischen Zweistufenmodus werden an die abgespeckte wibem1-Version von ABC Tools übergeben. Größere MusicXML- und MIDI-Daten werden lokal im Browser übergeben statt in die URL geschrieben.
+
+### 0.8.17 – Vergleich
+Die Rubrik „Vergleich“ ist jetzt einklappbar. Die interne ABC-Darstellung bleibt als schnelle Vorschau und für direkte Versionsvergleiche erhalten; ausführliche Notenbearbeitung wird an ABC Tools übergeben.
