@@ -1,7 +1,7 @@
 import {openAIRequest} from './providers/openai.js';
 import {anthropicRequest} from './providers/anthropic.js';
 import {googleRequest} from './providers/google.js';
-import {extractUsage,estimateCost} from './cost-control.js?v=0.8.22';
+import {extractUsage,estimateCost} from './cost-control.js?v=0.8.23';
 const adapters={openai:openAIRequest,anthropic:anthropicRequest,google:googleRequest};
 export async function sendToAI({provider,model,prompt,apiKey,transport=fetch}) {
   if(!adapters[provider]) throw new Error(`Unbekannter Provider: ${provider}`);
