@@ -34,3 +34,10 @@ test('production keeps direct notation routing without hidden musical conversion
  assert.doesNotMatch(html,/variant-request\.js|buildVariantRequest|actualRequestOverride/);
  assert.doesNotMatch(html,/notate-response|notation-action\.js/);
 });
+
+
+test('internal ABC renderer is not shipped in the production page',()=>{
+ assert.doesNotMatch(html,/abcjs/i);
+ assert.doesNotMatch(html,/Notenansicht/);
+ assert.match(html,/In Noten-App öffnen/);
+});
