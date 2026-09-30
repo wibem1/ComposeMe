@@ -37,3 +37,40 @@ test('overlapping notes are emitted as separate voices instead of being discarde
  assert.match(xml,/<voice>1<\/voice>/);
  assert.match(xml,/<voice>2<\/voice>/);
 });
+
+
+test('explicit voices of one instrument are grouped into one MusicXML part',()=>{
+ const score={title:'Mehrstimmig',bpm:72,timeSignature:[6,8],tracks:[
+  {name:'Klavier :: Oberstimme',program:0,channel:0,notes:[[0,1,72,80,'C5'],[1,1,74,80,'D5']]},
+  {name:'Klavier :: Bass',program:0,channel:0,notes:[[0,3,48,65,'C3'],[3,3,43,65,'G2']]}
+ ]};
+ const xml=historicalScoreToMusicXML(score);
+ assert.equal((xml.match(/<part id="P1">/g)||[]).length,1);
+ assert.doesNotMatch(xml,/<part id="P2">/);
+ assert.match(xml,/<part-name>Klavier<\/part-name>/);
+ assert.match(xml,/<staves>2<\/staves>/);
+ assert.equal((xml.match(/<pitch>/g)||[]).length,4);
+});
+
+test('voice grouping is generic across ensemble instruments',()=>{
+ const score={title:'Ensemble',bpm:88,timeSignature:[4,4],tracks:[
+  {name:'Violine :: Hauptstimme',program:40,channel:0,notes:[[0,2,76,80,'E5']]},
+  {name:'Violine :: Gegenstimme',program:40,channel:0,notes:[[0,2,67,72,'G4']]},
+  {name:'Violoncello',program:42,channel:1,notes:[[0,4,43,70,'G2']]}
+ ]};
+ const xml=historicalScoreToMusicXML(score);
+ assert.equal((xml.match(/<part id="P[12]">/g)||[]).length,2);
+ assert.match(xml,/<part-name>Violine<\/part-name>/);
+ assert.match(xml,/<part-name>Violoncello<\/part-name>/);
+ assert.match(xml,/<voice>1<\/voice>/);
+ assert.match(xml,/<voice>2<\/voice>/);
+});
+
+test('written enharmonic pitch spelling from the score is preserved',()=>{
+ const score={title:'Schreibweise',bpm:60,timeSignature:[4,4],tracks:[
+  {name:'Violine',program:40,channel:0,notes:[[0,1,71,80,'Cb5'],[1,1,72,80,'B#4']]}
+ ]};
+ const xml=historicalScoreToMusicXML(score);
+ assert.match(xml,/<step>C<\/step><alter>-1<\/alter><octave>5<\/octave>/);
+ assert.match(xml,/<step>B<\/step><alter>1<\/alter><octave>4<\/octave>/);
+});
