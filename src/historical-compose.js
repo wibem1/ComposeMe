@@ -14,6 +14,17 @@ export function originalHistoricalPrompts(engine,task,concept='',provider='opena
 const compositionCalls=record=>(record?.historicalCalls||[]).filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
 const stageLabel=stage=>stage==='sound_concept'?'=== 1. KLANGVORSTELLUNG ===':'=== 2. KOMPOSITION ===';
 
+export function normalizeScoreJson(text){
+ let cleaned=String(text??'').trim(),fenceRemoved=false;
+ const fenced=cleaned.match(/^\`\`\`(?:json)?[ \\t]*\\r?\\n([\\s\\S]*?)\\r?\\n\`\`\`[ \\t]*$/i);
+ if(fenced){cleaned=fenced[1].trim();fenceRemoved=true;}
+ const repair=recoverSingleClosingBracket(cleaned);
+ const notes=[];
+ if(fenceRemoved)notes.push('Äußerer Markdown-Codeblock entfernt; JSON-Inhalt unverändert.');
+ if(repair.repaired)notes.push(repair.explanation);
+ return {text:repair.text,repaired:fenceRemoved||repair.repaired,explanation:notes.join(' ')};
+}
+
 export function formatHistoricalProtocol(record){
  const calls=compositionCalls(record);
  const lines=['VERFAHREN: Zweistufiger historischer Ablauf aus Minimal Composer 0.5.99.',
@@ -95,7 +106,7 @@ export async function runHistoricalComposition({
    return original;
   }
   try{
-   const repair=recoverSingleClosingBracket(original);
+   const repair=normalizeScoreJson(original);
    if(repair.repaired)call.recovery=repair.explanation;
    scoreJson=repair.text;
    return repair.text;
@@ -163,7 +174,7 @@ export async function resumeHistoricalComposition({
  }finally{clearTimeout(timeout);}
  call.response=original;call.status='completed';call.elapsedMs=Date.now()-started;call.usage=extractUsage(provider,data);
  let repair;
- try{repair=recoverSingleClosingBracket(original);if(repair.repaired)call.recovery=repair.explanation;}
+ try{repair=normalizeScoreJson(original);if(repair.repaired)call.recovery=repair.explanation;}
  catch(err){
   const error=new Error('Die KI-Partitur ist technisch ungültig: '+err.message);
   error.partialRecord={...newPartial({task,provider,model,calls,concept:record.concept,error:error.message}),id:record.id};
