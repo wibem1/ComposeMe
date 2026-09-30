@@ -25,7 +25,6 @@ p{margin:10px 0}
 small,.tempo-hint,.historical-score-note{font-size:.9rem;line-height:1.5}
 label{display:grid;gap:7px;min-width:0;flex:1;margin:13px 0;font-size:1rem;font-weight:600}
 input:not([type=checkbox]):not([type=range]):not([type=file]),select,textarea{
-  font:400 1rem/1.45 inherit; /* explicit font properties follow for browser compatibility */
   font-family:inherit;font-size:1rem;font-weight:400;line-height:1.45;
   width:100%;min-width:0;padding:10px 12px;border:1px solid var(--line);
   border-radius:8px;color:var(--text);background:var(--field)
