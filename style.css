@@ -23,9 +23,9 @@ h2{font-size:1.25rem;line-height:1.35;margin:0 0 14px;letter-spacing:-.01em}
 h3{font-size:1.1rem;line-height:1.4}
 p{margin:10px 0}
 small,.tempo-hint,.historical-score-note{font-size:.9rem;line-height:1.5}
-label{display:grid;gap:7px;min-width:0;flex:1;margin:13px 0;font-size:1rem;font-weight:600}
+label{display:grid;gap:7px;min-width:0;flex:1;margin:13px 0;font-size:1.125rem;font-weight:650}
 input:not([type=checkbox]):not([type=range]):not([type=file]),select,textarea{
-  font-family:inherit;font-size:1rem;font-weight:400;line-height:1.45;
+  font-family:inherit;font-size:1.0625rem;font-weight:400;line-height:1.45;
   width:100%;min-width:0;padding:10px 12px;border:1px solid var(--line);
   border-radius:8px;color:var(--text);background:var(--field)
 }
@@ -96,12 +96,16 @@ details textarea{margin:7px 0}
 .historical-pause-label input{width:auto;flex:0 0 auto;margin:0}
 #historical-proceed{width:auto;margin:8px 0}
 #historical-controls[hidden]{display:none}
-.midi-player{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:10px;align-items:center;
-  border:1px solid var(--line);background:var(--surface-soft);border-radius:9px;padding:12px;margin:10px 0}
-.midi-player strong{white-space:nowrap}
-.midi-player button{width:auto;margin:0}
-.midi-player input[type=range]{min-width:160px;padding:0}
-.midi-time{font-variant-numeric:tabular-nums;white-space:nowrap}
+.midi-player{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px;margin:14px 0;box-shadow:0 1px 3px rgb(0 0 0 / .04)}
+.midi-player-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.midi-player-heading strong{font-size:1.0625rem;font-weight:700}
+.midi-player-state{color:var(--muted);font-size:.94rem}
+.midi-player-controls{display:grid;grid-template-columns:44px 44px minmax(100px,1fr) auto;gap:10px;align-items:center}
+.midi-player-controls button{display:grid;place-items:center;width:44px;height:44px;min-height:44px;margin:0;padding:0;font-size:1.25rem}
+.midi-player-controls input[type=range]{width:100%;min-width:0;padding:0;accent-color:var(--accent);cursor:pointer}
+.midi-time{font-size:.94rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.midi-player-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.midi-player-actions button{width:auto;margin:0;font-size:.94rem}
 .notation-source{display:block;margin:8px 0;color:var(--muted)}
 #result{min-height:220px}
 #technical pre,pre{font:400 .94rem/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;
@@ -116,7 +120,6 @@ details textarea{margin:7px 0}
   .row>label{flex-basis:100%;margin:8px 0}
   #compose-form>.row button{flex:1 1 210px}
   #comparison:not([hidden]){grid-template-columns:1fr}
-  .midi-player{grid-template-columns:1fr 1fr}
-  .midi-player strong,.midi-player input[type=range],.midi-time{grid-column:1/-1}
-  .midi-player input[type=range]{width:100%;min-width:0}
+  .midi-player-controls{grid-template-columns:44px 44px minmax(0,1fr)}
+  .midi-player-controls .midi-time{grid-column:1/-1;text-align:right}
 }
