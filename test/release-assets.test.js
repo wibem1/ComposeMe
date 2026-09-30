@@ -18,7 +18,7 @@ test('all internal cache-busted module imports match app version',()=>{
 });
 
 
-test('production keeps ABC rendering and adds LilyPond pass-through only',()=>{
+test('production keeps direct notation routing without hidden musical conversion',()=>{
  const production=['index.html',...fs.readdirSync(new URL('../src/',import.meta.url)).filter(name=>name.endsWith('.js')).map(name=>'src/'+name)];
  for(const file of production){
   const text=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
@@ -27,7 +27,7 @@ test('production keeps ABC rendering and adds LilyPond pass-through only',()=>{
  assert.match(html,/<textarea id="additional" rows="9"><\/textarea>/);
  assert.doesNotMatch(html,/AUSGABEFORMAT:/);
  assert.match(html,/Ausgabe als Datei speichern/);
- assert.match(html,/In Hacklily öffnen/);
+ assert.match(html,/In Noten-App öffnen/);
  assert.match(html,/Ausgabe in Eingabe kopieren/);
  assert.match(html,/id="delete-history"/);
  assert.doesNotMatch(html,/Variante erzeugen/);
