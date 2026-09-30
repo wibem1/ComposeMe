@@ -1,4 +1,4 @@
-# ComposeMe 0.8.27
+# ComposeMe 0.8.28
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -81,3 +81,6 @@ Bei Prompt 2 wird nur der vom Nutzer geänderte Vorspann bis unmittelbar vor „
 
 ### 0.8.27 – Promptvorlagen stabil, Auftrag dynamisch
 Die vom Nutzer bearbeiteten Anweisungsteile von Prompt 1 und Prompt 2 bleiben dauerhaft gespeichert. Der eigentliche Kompositionsauftrag wird bei jedem Lauf aus dem aktuellen Auftragsfeld eingesetzt. Bei Prompt 2 wird zusätzlich die jeweils neue Klangvorstellung eingesetzt; der technische Schlussblock bleibt separat. So bleiben die Promptformulierungen stabil, während Auftrag und Klangvorstellung flexibel bleiben.
+
+### 0.8.28 – JSON-Codeblöcke robust verarbeiten
+Im Zweistufenmodus akzeptiert ComposeMe nun auch technisch korrektes JSON, das ein Modell in einen äußeren Markdown-Codeblock (`\`\`json … \`\`\``) setzt. Der Codeblock wird lokal vor dem JSON-Parsing entfernt; die originale KI-Antwort bleibt im Protokoll unverändert. Keine zusätzliche KI-Anfrage und keine musikalische Veränderung.
