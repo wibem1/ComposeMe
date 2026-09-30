@@ -5,10 +5,23 @@
 import {recoverSingleClosingBracket} from '../experiments/sound-concept-149/technical-recovery.js';
 import {extractUsage,estimateCost} from './cost-control.js';
 
+const STRUCTURED_SCORE_CONTRACT=`TECHNISCHES FORMAT (kompakt):
+Nur valides JSON.
+{"t":"Titel","b":BPM,"m":[Z,N],"v":[["Instrument :: Stimme",Program,Channel,[[Takt,Position,Dauer,Pitch,Velocity,"Notenname?"],...]],...]}
+Takt beginnt bei 1, Position bei 0. Pausen durch Lücken. Jede klingende Note genau einmal ausgeben. Optionaler Notenname bewahrt die beabsichtigte Schreibweise (z. B. Db4/C#4).
+PARTITURSTRUKTUR:
+Jedes Instrument bleibt als eigenes Instrument erkennbar. Hat dasselbe Instrument gleichzeitig mehrere musikalisch eigenständige Stimmen, gib diese als getrennte v-Spuren aus und benenne sie "Instrument :: Stimme", z. B. "Klavier :: Oberstimme" und "Klavier :: Bass". Bei nur einer Stimme genügt der Instrumentname. Akkordtöne derselben Stimme bleiben gemeinsam in einer Spur. Die Strukturierung dient nur dem Notensatz und verändert die Musik nicht.`;
+
+function withStructuredScoreContract(prompt){
+ const s=String(prompt??''),marker='TECHNISCHES FORMAT (kompakt):',i=s.indexOf(marker);
+ return i<0?s+'\n\n'+STRUCTURED_SCORE_CONTRACT:s.slice(0,i)+STRUCTURED_SCORE_CONTRACT;
+}
+
 export function originalHistoricalPrompts(engine,task,concept='',provider='openai',model='gpt-5.6-sol') {
   if(!engine?.createPrompts)throw new Error('Die historische Engine wurde nicht geladen.');
   const snapshot={visibleTask:String(task).trim(),provider,model};
-  return engine.createPrompts(snapshot,concept);
+  const prompts=engine.createPrompts(snapshot,concept);
+  return {...prompts,midiTranslation:withStructuredScoreContract(prompts.midiTranslation)};
 }
 
 const compositionCalls=record=>(record?.historicalCalls||[]).filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
@@ -66,12 +79,12 @@ export async function runHistoricalComposition({
  const calls=[];
  let concept='',scoreJson='';
  const requestModel=async({snapshot,key,promptText,stage})=>{
-  const originalPrompt=promptText;
+  const originalPrompt=stage==='score_realization'?withStructuredScoreContract(promptText):promptText;
   let finalPrompt=originalPrompt;
   if(stage==='sound_concept'){
    if(firstPrompt!=null)finalPrompt=firstPrompt;
   }else if(stage==='score_realization'){
-   const proposal=secondPrompt ?? originalPrompt;
+   const proposal=withStructuredScoreContract(secondPrompt ?? originalPrompt);
    const stage1Record=newPartial({task:cleanTask,provider,model,calls,concept,runStatus:'stage1_completed'});
    onStage1(stage1Record);
    finalPrompt=await onConcept({concept,proposal,original:originalPrompt,partialRecord:stage1Record});
@@ -152,9 +165,9 @@ export async function resumeHistoricalComposition({
  const task=String(record.userInput||'').trim(),provider=record.provider||'openai',model=record.model||'gpt-5.6-sol';
  const snapshot={visibleTask:task,provider,model};
  const calls=(record.historicalCalls||[]).map(call=>structuredClone(call));
- const generated=engine.createPrompts(snapshot,record.concept).midiTranslation;
+ const generated=withStructuredScoreContract(engine.createPrompts(snapshot,record.concept).midiTranslation);
  const previous=calls.filter(call=>call.stage==='score_realization').at(-1)?.prompt;
- const prompt=String(secondPrompt||previous||generated).trim();
+ const prompt=withStructuredScoreContract(secondPrompt||previous||generated).trim();
  if(!prompt)throw new Error('Zweite KI-Anweisung ist leer.');
  const template=engine.makeRequest(provider,model,prompt,'score_realization');
  const request=engine.actualRequest(template,apiKey);
