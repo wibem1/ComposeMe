@@ -1,4 +1,4 @@
-import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.25';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.26';
 import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.21';
 
 const $=id=>document.getElementById(id);
@@ -18,20 +18,29 @@ function saveFirstPrompt(prompt,task){
  try{localStorage.setItem(FIRST_PROMPT_KEY,JSON.stringify({prompt:String(prompt||''),task:String(task||'')}));}catch{}
 }
 function clearSavedFirstPrompt(){try{localStorage.removeItem(FIRST_PROMPT_KEY);}catch{}}
+function splitSecondPrompt(text){
+ const marker='\\n\\nKLINGENDE VORSTELLUNG:\\n';
+ const s=String(text||''),i=s.indexOf(marker);
+ return i>=0?{prefix:s.slice(0,i),concept:s.slice(i+marker.length)}:{prefix:s,concept:''};
+}
 function loadSavedSecondPrompt(){
  try{
   const raw=localStorage.getItem(SECOND_PROMPT_KEY);
   if(!raw)return null;
   const parsed=JSON.parse(raw);
-  return parsed&&typeof parsed.prompt==='string'?parsed:null;
+  return parsed&&typeof parsed.prefix==='string'?parsed:null;
  }catch{return null;}
 }
-function saveSecondPrompt(prompt){
- try{localStorage.setItem(SECOND_PROMPT_KEY,JSON.stringify({prompt:String(prompt||'')}));}catch{}
+function saveSecondPromptPrefix(text){
+ const {prefix}=splitSecondPrompt(text);
+ try{localStorage.setItem(SECOND_PROMPT_KEY,JSON.stringify({prefix}));}catch{}
 }
 function clearSavedSecondPrompt(){try{localStorage.removeItem(SECOND_PROMPT_KEY);}catch{}}
 function savedPromptText(saved){
  return saved?.prompt?String(saved.prompt):'';
+}
+function buildSecondPrompt(prefix,concept,technicalTail=''){
+ return String(prefix||'')+'\\n\\nKLINGENDE VORSTELLUNG:\\n'+String(concept||'')+(technicalTail?'\\n\\n'+technicalTail:'');
 }
 
 export function initHistoricalControls(){
@@ -48,8 +57,10 @@ export function initHistoricalControls(){
   if(saved)first.value=savedPromptText(saved);
   else if(!firstWasEdited)first.value=original.musicalDraft;
   const savedSecond=loadSavedSecondPrompt();
-  if(savedSecond)second.value=savedPromptText(savedSecond);
-  else if(!secondAwaiter&&!concept.value&&!secondWasEdited)second.value='Die vollständige zweite Originalanfrage erscheint hier nach dem ersten KI-Aufruf.\n\n'+original.midiTranslation;
+  if(savedSecond){
+   const generated=splitSecondPrompt(original.midiTranslation);
+   second.value=concept.value?buildSecondPrompt(savedSecond.prefix,concept.value,generated.concept):savedSecond.prefix;
+  } else if(!secondAwaiter&&!concept.value&&!secondWasEdited)second.value='Die vollständige zweite Originalanfrage erscheint hier nach dem ersten KI-Aufruf.\n\n'+original.midiTranslation;
  };
  function refresh(){
   section.hidden=select.value!=='historical';
@@ -60,7 +71,7 @@ export function initHistoricalControls(){
  select.addEventListener('change',refresh);
  task.addEventListener('input',()=>{if(select.value==='historical'&&!secondAwaiter)initial();});
  first.addEventListener('input',()=>{firstWasEdited=true;saveFirstPrompt(first.value,task.value);});
- second.addEventListener('input',()=>{secondWasEdited=true;saveSecondPrompt(second.value);});
+ second.addEventListener('input',()=>{secondWasEdited=true;saveSecondPromptPrefix(second.value);});
  reset.addEventListener('click',()=>{clearSavedFirstPrompt();firstWasEdited=false;initial();});
  resetSecond?.addEventListener('click',()=>{
   clearSavedSecondPrompt();secondWasEdited=false;
@@ -81,8 +92,12 @@ export function initHistoricalControls(){
   // Historical prompts are displayed for inspection, never implicitly reused as the next experiment's inputs.
   first.value=c1?.prompt||originalHistoricalPrompts(baseEngine(),record.userInput).musicalDraft;
   firstWasEdited=false;
-  if(loadSavedSecondPrompt())second.value=savedPromptText(loadSavedSecondPrompt());
-  else if(c2?.prompt)second.value=c2.prompt;
+  const savedSecond=loadSavedSecondPrompt();
+  if(savedSecond){
+   const basis=c2?.prompt||originalHistoricalPrompts(baseEngine(),record.userInput,record.concept||'').midiTranslation;
+   const parts=splitSecondPrompt(basis);
+   second.value=buildSecondPrompt(savedSecond.prefix,record.concept||parts.concept,'');
+  } else if(c2?.prompt)second.value=c2.prompt;
   const stage1Done=record.historicalCalls?.some(c=>c.stage==='sound_concept'&&c.status==='completed'&&c.response?.trim());
   resumableRecord=record.runStatus==='partial'&&stage1Done&&record.concept?.trim()&&!record.historicalScore?record:null;
   proceed.textContent=resumableRecord?'Komposition fortsetzen':'Komposition fortsetzen';
@@ -109,8 +124,11 @@ export function initHistoricalControls(){
    onConcept:async({concept:idea,proposal})=>{
     concept.value=idea;
     const savedSecond=loadSavedSecondPrompt();
-    if(savedSecond){second.value=savedPromptText(savedSecond);secondWasEdited=true;}
-    else if(!secondWasEdited)second.value=proposal;
+    if(savedSecond){
+      const generated=splitSecondPrompt(proposal);
+      second.value=buildSecondPrompt(savedSecond.prefix,idea,generated.concept);
+      secondWasEdited=true;
+    } else if(!secondWasEdited)second.value=proposal;
     if(!pause.checked)return secondWasEdited?second.value:null;
     onProgress('Klangvorstellung fertig. Zweite Anfrage prüfen und „Komposition fortsetzen“ drücken.');
     return new Promise(resolve=>{secondAwaiter=resolve;proceed.disabled=false;});
