@@ -1,10 +1,10 @@
-# ComposeMe 0.8.15
+# ComposeMe 0.8.18
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 ## Komponieren
 
-**Direkter Modus:** Bisheriger ComposeMe-Ablauf, genau ein KI-Aufruf mit dem sichtbaren Kompositionsauftrag und optionalen sichtbaren zusätzlichen Angaben. Bestehende ABC-/LilyPond-Ansicht und Exportfunktionen bleiben erhalten.
+**Direkter Modus:** Bisheriger ComposeMe-Ablauf, genau ein KI-Aufruf mit dem sichtbaren Kompositionsauftrag und optionalen sichtbaren zusätzlichen Angaben. Die KI-Ausgabe bleibt vollständig sichtbar. Notendarstellung wird an die passende externe Noten-App übergeben.
 
 **Klangvorstellung → Komposition:** Vollständig dokumentierte Integration des ursprünglichen zweistufigen Verfahrens von Minimal Composer 0.5.99 / Composition Engine 1.4.0-experiment. Im Auswahlfeld **Kompositionsablauf** wählen.
 
@@ -16,7 +16,7 @@ GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 Der historisch identische Ablauf nutzt **OpenAI GPT-5.6 Sol**. Eine bewusst editierte Anweisung ist als solche im Kommunikationsprotokoll erkennbar und gilt dann nicht mehr als unveränderter historischer Test. Bei exakt einer fehlenden terminalen eckigen JSON-Klammer wird nur diese technische Klammer ergänzt; die unberührte Originalantwort bleibt im Protokoll erhalten.
 
-**Historischer Zweistufenmodus (0.8.15):** Der Ablauf endet nach Klangvorstellung und Komposition. Danach stehen Original-MIDI, SoundFont-Wiedergabe, Verlauf und vollständiges Kommunikationsprotokoll zur Verfügung. Es gibt keinen dritten KI-Aufruf und keine interne MusicXML- oder ABC-Erzeugung für diesen Modus. Notensatz ist bewusst ausgelagert; die direkte alte ComposeMe-Funktion mit ABC/abcjs bleibt unverändert.
+**Historischer Zweistufenmodus (0.8.15):** Der Ablauf endet nach Klangvorstellung und Komposition. Danach stehen Original-MIDI, SoundFont-Wiedergabe, Verlauf und vollständiges Kommunikationsprotokoll zur Verfügung. Es gibt keinen dritten KI-Aufruf und keine interne MusicXML- oder ABC-Erzeugung für diesen Modus. Notensatz ist bewusst ausgelagert; ComposeMe enthält keine interne ABC-Notendarstellung mehr.
 
 ## Historische Quellen
 
@@ -49,8 +49,11 @@ Größere Beschriftungen der Hauptfelder; „Kompositionsauftrag“ heißt „Au
 ### 0.8.15 – Übergabe an ABC Tools
 Für KI-Ausgaben im ABC-Format gibt es jetzt direkt bei der Antwort die Schaltfläche „An ABC Tools übergeben“. Übergeben wird die erkannte ABC-Partitur an die abgespeckte wibem1-ABC-Tools-Version; dort wird sie unmittelbar geladen und dargestellt.
 
-### 0.8.17 – Automatische Noten-App
+### 0.8.18 – Automatische Noten-App
 Ein einziger Button „In Noten-App öffnen“ entscheidet automatisch: LilyPond wird an Hacklily übergeben; ABC, MusicXML und das Original-MIDI des historischen Zweistufenmodus werden an die abgespeckte wibem1-Version von ABC Tools übergeben. Größere MusicXML- und MIDI-Daten werden lokal im Browser übergeben statt in die URL geschrieben.
 
-### 0.8.17 – Vergleich
-Die Rubrik „Vergleich“ ist jetzt einklappbar. Die interne ABC-Darstellung bleibt als schnelle Vorschau und für direkte Versionsvergleiche erhalten; ausführliche Notenbearbeitung wird an ABC Tools übergeben.
+### 0.8.18 – Vergleich
+Die Rubrik „Vergleich“ ist einklappbar.
+
+### 0.8.18 – Interne Notenansicht entfernt
+Die fehleranfällige interne ABC-Notendarstellung wurde entfernt. ComposeMe konzentriert sich auf Komposition, Wiedergabe des Original-MIDI im Zweistufenmodus, Verlauf und Vergleich. Der Vergleich zeigt Auftrag und Ausgabe beider Versionen; jede geeignete Ausgabe kann mit „In Noten-App öffnen“ an Hacklily oder ABC Tools übergeben werden.
