@@ -1,4 +1,4 @@
-# ComposeMe 0.8.20
+# ComposeMe 0.8.21
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -49,14 +49,17 @@ Größere Beschriftungen der Hauptfelder; „Kompositionsauftrag“ heißt „Au
 ### 0.8.15 – Übergabe an ABC Tools
 Für KI-Ausgaben im ABC-Format gibt es jetzt direkt bei der Antwort die Schaltfläche „An ABC Tools übergeben“. Übergeben wird die erkannte ABC-Partitur an die abgespeckte wibem1-ABC-Tools-Version; dort wird sie unmittelbar geladen und dargestellt.
 
-### 0.8.20 – Automatische Noten-App
+### 0.8.21 – Automatische Noten-App
 Ein einziger Button „In Noten-App öffnen“ entscheidet automatisch: LilyPond wird an Hacklily übergeben; ABC, MusicXML und das Original-MIDI des historischen Zweistufenmodus werden an die abgespeckte wibem1-Version von ABC Tools übergeben. Größere MusicXML- und MIDI-Daten werden lokal im Browser übergeben statt in die URL geschrieben.
 
-### 0.8.20 – Vergleich
+### 0.8.21 – Vergleich
 Die Rubrik „Vergleich“ ist einklappbar.
 
-### 0.8.20 – Interne Notenansicht entfernt
+### 0.8.21 – Interne Notenansicht entfernt
 Die fehleranfällige interne ABC-Notendarstellung wurde entfernt. ComposeMe konzentriert sich auf Komposition, Wiedergabe des Original-MIDI im Zweistufenmodus, Verlauf und Vergleich. Der Vergleich zeigt Auftrag und Ausgabe beider Versionen; jede geeignete Ausgabe kann mit „In Noten-App öffnen“ an Hacklily oder ABC Tools übergeben werden.
 
-### 0.8.20 – Zweistufenmodus: MusicXML statt MIDI-Transkription
+### 0.8.21 – Zweistufenmodus: MusicXML statt MIDI-Transkription
 Für „In Noten-App öffnen“ wird die vorhandene historische JSON-Partitur jetzt lokal und deterministisch in zweisystemiges Klavier-MusicXML umgesetzt und an ABC Tools übergeben. Kein zusätzlicher KI-Aufruf, keine musikalische Neukomposition und keine kostenpflichtige Konvertierung. Das Original-MIDI bleibt unverändert für Wiedergabe und Download erhalten. Die technische Aufteilung verwendet zwei Klaviersysteme und mehrere Stimmen, damit überlappende Noten nicht verloren gehen.
+
+### 0.8.21 – Infotext entfernt
+Der erläuternde Absatz unter dem Zweistufenmodus wurde aus der Oberfläche entfernt.
