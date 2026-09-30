@@ -22,7 +22,7 @@ test('does not guess when JSON has other problems',()=>{
 
 
 test('accepts JSON wrapped in a Markdown code fence without changing the score',()=>{
- const original='\`\`\`json\\n{"t":"Fence","b":74,"m":[6,8],"v":[["Piano",0,0,[[1,0,1,66,60]]]]}\\n\`\`\`';
+ const original='```json\n{"t":"Fence","b":74,"m":[6,8],"v":[["Piano",0,0,[[1,0,1,66,60]]]]}\n```';
  const normalized=normalizeScoreJson(original);
  assert.equal(normalized.repaired,true);
  assert.match(normalized.explanation,/Markdown-Codeblock/);
