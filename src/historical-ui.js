@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.17';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.17';
+import {originalHistoricalPrompts,runHistoricalComposition} from './historical-compose.js?v=0.8.18';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.18';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
