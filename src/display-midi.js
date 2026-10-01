@@ -35,9 +35,17 @@ export function splitNotationVoices(track){
 
  if(voices.length===1)return [{...track,notes:voices[0].notes,cc:Array.isArray(track.cc)?track.cc.map(e=>Array.isArray(e)?[...e]:e):track.cc}];
 
- return voices.map((voice,index)=>({
+ const meanPitch=voice=>{
+  const pitches=voice.notes.map(n=>Number(n[2])).filter(Number.isFinite);
+  return pitches.length?pitches.reduce((a,b)=>a+b,0)/pitches.length:0;
+ };
+ const ordered=[...voices].sort((a,b)=>meanPitch(b)-meanPitch(a));
+ const piano=/klavier|piano/i.test(String(track.name||''));
+ return ordered.map((voice,index)=>({
   ...track,
-  name:`${track.name||'Instrument'} :: Stimme ${index+1}`,
+  name:piano&&ordered.length===2
+   ?`${track.name||'Klavier'} :: ${index===0?'rechte Hand':'linke Hand'}`
+   :`${track.name||'Instrument'} :: Stimme ${index+1}`,
   notes:voice.notes,
   // CC is notation-irrelevant; keep it only once to avoid duplicate controller events.
   cc:index===0&&Array.isArray(track.cc)?track.cc.map(e=>Array.isArray(e)?[...e]:e):[]
