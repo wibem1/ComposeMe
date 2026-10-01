@@ -1,4 +1,4 @@
-# ComposeMe 0.8.48
+# ComposeMe 0.8.49
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -136,3 +136,7 @@ Wenn das externe FluidR3-SoundFont nicht innerhalb von 8 Sekunden lädt oder nic
 
 ### 0.8.48 – Quantisierte Pure-MIDI-Ausgabe statt grober Nachreparatur
 Der sichtbare technische Vertrag im Pure→MIDI/JSON-Modus fordert normale binäre Rhythmen nun auf einem 1/16-Raster (0,25 Beat). 1/32-Werte, Triolen und kurze Verzierungen dürfen bewusst feiner sein. Beliebige Zwischenwerte wie 1,4 oder 1,8 Beat sollen vermieden werden; metrisch unnötig schwer lesbare Folgen wie mehrere punktierte Achtel über Zählzeitgrenzen ebenfalls. Die aktuelle sichtbare Pure-MIDI-Vorlage wird einmalig auf diesen neuen Vertrag aktualisiert. Alte Verlaufseinträge bleiben unverändert. Die Anzeigequantisierung ist wieder fein auf 1/16 gestellt; Original-JSON und Original-MIDI bleiben unangetastet.
+
+
+### 0.8.49 – Aktueller Pure-MIDI-Vertrag auch bei Verlauf
+Beim Laden eines alten Pure-MIDI-Verlaufseintrags zeigt das editierbare Feld „Zusätzliche Angaben an die KI“ nun dessen persönlichen Zusatz zusammen mit dem aktuellen technischen Pure-MIDI-Vertrag. So wird beim erneuten Senden nicht versehentlich ein veralteter Vertrag verwendet. Die damals tatsächlich gesendete vollständige Anfrage bleibt unverändert im Kommunikationsprotokoll und in der Diagnose erhalten.
