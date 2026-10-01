@@ -1,8 +1,6 @@
-import {quantizeDisplaySpan,notationPieces} from './display-quantization.js';
 // Deterministic technical conversion of the existing historical JSON score to MusicXML.
-// No AI call and no musical recomposition. Playback data stays untouched.
-// Only the notation view snaps starts/ends to a sixteenth-note display grid and splits
-// nonstandard visual durations into conventional tied note values.
+// No AI call and no musical recomposition. Notes, starts, durations, velocities, written pitches
+// and explicit instrument/voice separation are preserved.
 function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]));}
 function writtenPitch(name){
  const m=String(name||'').trim().match(/^([A-Ga-g])([#b]{0,2})(-?\d+)$/);
@@ -24,13 +22,12 @@ function typeXml(q){
  return x?'<type>'+x[1]+'</type>'+('<dot/>'.repeat(x[2])):'';
 }
 function restXml(q,voice,staff,div){return '<note><rest/><duration>'+Math.round(q*div)+'</duration><voice>'+voice+'</voice>'+typeXml(q)+(staff?'<staff>'+staff+'</staff>':'')+'</note>';}
-function restStreamXml(q,voice,staff,div){return notationPieces(q).map(x=>restXml(x,voice,staff,div)).join('');}
 function noteXml(n,voice,staff,div,chord=false,tieStart=false,tieStop=false){
  const ties=(tieStop?'<tie type="stop"/>':'')+(tieStart?'<tie type="start"/>':'');
  const notations=(tieStop||tieStart)?'<notations>'+(tieStop?'<tied type="stop"/>':'')+(tieStart?'<tied type="start"/>':'')+'</notations>':'';
  return '<note dynamics="'+Math.round((n.velocity/127)*100)+'">'+(chord?'<chord/>':'')+pitchXml(n.pitch,n.name)+'<duration>'+Math.round(n.duration*div)+'</duration><voice>'+voice+'</voice>'+typeXml(n.duration)+ties+(staff?'<staff>'+staff+'</staff>':'')+notations+'</note>';
 }
-function trackNotes(track){return (track?.notes||[]).filter(n=>Array.isArray(n)&&n.length>=4).map(n=>{const q=quantizeDisplaySpan(n[0],n[1]);return {start:q.start,duration:q.duration,pitch:Math.round(Number(n[2])||60),velocity:Math.max(1,Math.min(127,Math.round(Number(n[3])||80))),name:typeof n[4]==='string'?n[4]:undefined};});}
+function trackNotes(track){return (track?.notes||[]).filter(n=>Array.isArray(n)&&n.length>=4).map(n=>({start:Number(n[0])||0,duration:Math.max(.125,Number(n[1])||.25),pitch:Math.round(Number(n[2])||60),velocity:Math.max(1,Math.min(127,Math.round(Number(n[3])||80))),name:typeof n[4]==='string'?n[4]:undefined}));}
 function splitAcrossMeasures(notes,barQ,bars,staff){
  const out=Array.from({length:bars},()=>[]);
  for(const n of notes){const end=n.start+n.duration;let cursor=n.start,part=0;while(cursor<end-1e-8){const bi=Math.max(0,Math.min(bars-1,Math.floor(cursor/barQ))),measureEnd=(bi+1)*barQ,d=Math.min(end,measureEnd)-cursor;const resolvedStaff=staff===0?(n.pitch<60?2:1):staff;out[bi].push({start:cursor-bi*barQ,duration:d,pitch:n.pitch,velocity:n.velocity,name:n.name,tieStop:part>0,tieStart:cursor+d<end-1e-8,staff:resolvedStaff});cursor+=d;part++;}}
@@ -46,7 +43,7 @@ function allocateVoices(groups){
  for(const g of groups){let chosen=-1,bestEnd=-Infinity;for(let i=0;i<voices.length;i++){const end=voices[i].end;if(end<=g.start+1e-8&&end>bestEnd){chosen=i;bestEnd=end;}}if(chosen<0){chosen=voices.length;voices.push({end:0,groups:[]});}voices[chosen].groups.push(g);voices[chosen].end=Math.max(voices[chosen].end,g.start+g.duration);}
  return voices;
 }
-function voiceStream(groups,staff,voice,barQ,div){let out='',cursor=0;for(const g of groups){if(g.start>cursor+1e-8)out+=restStreamXml(g.start-cursor,voice,staff,div);const pieces=notationPieces(g.duration);pieces.forEach((piece,pi)=>{const tieStop=g.tieStop||pi>0,tieStart=g.tieStart||pi<pieces.length-1;g.notes.forEach((n,i)=>{out+=noteXml({...n,duration:piece},voice,staff,div,i>0,tieStart,tieStop);});});cursor=Math.max(cursor,g.start+g.duration);}if(cursor<barQ-1e-8)out+=restStreamXml(barQ-cursor,voice,staff,div);return out;}
+function voiceStream(groups,staff,voice,barQ,div){let out='',cursor=0;for(const g of groups){if(g.start>cursor+1e-8)out+=restXml(g.start-cursor,voice,staff,div);g.notes.forEach((n,i)=>{out+=noteXml({...n,duration:g.duration},voice,staff,div,i>0,g.tieStart,g.tieStop);});cursor=Math.max(cursor,g.start+g.duration);}if(cursor<barQ-1e-8)out+=restXml(barQ-cursor,voice,staff,div);return out;}
 function splitTrackName(name){const s=String(name||'').trim(),m=s.match(/^(.*?)\s*::\s*(.+)$/);return m?{instrument:m[1].trim()||s,voice:m[2].trim()}:{instrument:s,voice:''};}
 function isKeyboardName(name){return /klavier|piano|keyboard|keys|flügel|grand piano|electric piano/i.test(String(name||''));}
 function medianPitch(notes){const p=notes.map(n=>n.pitch).sort((a,b)=>a-b);return p.length?p[Math.floor(p.length/2)]:60;}
