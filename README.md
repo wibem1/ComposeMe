@@ -1,4 +1,4 @@
-# ComposeMe 0.8.46
+# ComposeMe 0.8.47
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -128,3 +128,7 @@ Beim ersten Start dieser Version wird eine alte gespeicherte Pure-MIDI-Vorlage a
 
 ### 0.8.46 – Zusatzfeld ist einzige Quelle
 Im Pure→MIDI/JSON-Modus enthält „Zusätzliche Angaben an die KI“ sichtbar sowohl persönliche Zusatzangaben als auch den technischen JSON/MIDI-Vertrag. Beim Laden alter Pure-MIDI-Verlaufseinträge wird der technische Vertrag sichtbar ergänzt, falls er dort fehlt. Gesendet wird ausschließlich der sichtbare Feldinhalt plus der Kompositionsauftrag; es gibt keine versteckten Zusatzanweisungen.
+
+
+### 0.8.47 – Robuster Player und metrische Darstellungsquantisierung
+Wenn das externe FluidR3-SoundFont nicht innerhalb von 8 Sekunden lädt oder nicht verfügbar ist, wechselt der MIDI-Player automatisch auf einen lokalen Web-Audio-Ersatzklang, statt mit einem Wiedergabefehler abzubrechen. Für die Noten-App werden Start und Ende der Anzeige-MIDI nun auf ein Achtelraster gesetzt. Das reduziert schwer lesbare, beat-übergreifende Werte wie zwei aufeinanderfolgende punktierte Achtel. Original-JSON und Original-MIDI bleiben unverändert.
