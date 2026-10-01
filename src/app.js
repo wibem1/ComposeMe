@@ -9,6 +9,17 @@ function fillModels(){const saved=prefs.get(`model:${provider.value}`);model.rep
 const historicalControls=initHistoricalControls();const DEFAULT_ADDITIONAL=$('additional').value.trim();const PROCESS_ADDITIONAL_KEY='composeme:additional-by-process';let lastProcess=$('composition-process').value;let loadingHistoryAdditional=false;function loadAdditionalMap(){try{return JSON.parse(localStorage.getItem(PROCESS_ADDITIONAL_KEY)||'{}')||{};}catch{return {};}}
 function saveAdditionalForProcess(mode,text){const map=loadAdditionalMap();map[mode]=String(text??'');localStorage.setItem(PROCESS_ADDITIONAL_KEY,JSON.stringify(map));}
 function defaultAdditionalForProcess(mode){return mode==='pure-midi'?PURE_MIDI_TECHNICAL_CONTRACT:DEFAULT_ADDITIONAL;}
+function historicalAdditionalText(x,mode){
+ const saved=typeof x?.appAdditions==='string'?x.appAdditions:'';
+ if(mode!=='pure-midi')return saved||defaultAdditionalForProcess(mode);
+ const actual=String(x?.actualRequest||x?.historicalCalls?.[0]?.prompt||'');
+ const hadLegacyContract=actual.includes('TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:');
+ const savedHasContract=saved.includes('TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:');
+ if(hadLegacyContract&&!savedHasContract){
+   return saved.trim()?saved.trim()+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT:PURE_MIDI_TECHNICAL_CONTRACT;
+ }
+ return saved||defaultAdditionalForProcess(mode);
+}
 function loadAdditionalForProcess(mode){const map=loadAdditionalMap();$('additional').value=Object.prototype.hasOwnProperty.call(map,mode)?map[mode]:defaultAdditionalForProcess(mode);}
 const keyInputs={openai:keyOpenAI,anthropic:keyAnthropic,google:keyGoogle};function loadAllKeys(){for(const [name,input] of Object.entries(keyInputs)){const saved=keys.get(name);if(saved)input.value=saved;}}function currentKey(){return keyInputs[provider.value]?.value.trim()??'';}function loadProvider(){fillModels();}function providerLabel(){return provider.value==='openai'?'OpenAI':provider.value==='anthropic'?'Anthropic':provider.value==='google'?'Google':provider.value;}function selectedModel(){return model.value==='__custom__'?customModel.value.trim():model.value;}function renderCostSummary(record=null){
   const t=todayTotals(experiments.list());
@@ -76,7 +87,7 @@ function showExperiment(x){
  provider.value=x.provider;prefs.set('provider',x.provider);loadProvider();
  const known=[...model.options].some(o=>o.value===x.model);
  if(known)model.value=x.model;else{model.value='__custom__';customModel.value=x.model;customModel.hidden=false;}
- $('task').value=x.userInput??'';loadingHistoryAdditional=true;$('additional').value=typeof x.appAdditions==='string'?x.appAdditions:defaultAdditionalForProcess(x.workflow==='pure-midi'?'pure-midi':$('composition-process').value);loadingHistoryAdditional=false;
+ $('task').value=x.userInput??'';loadingHistoryAdditional=true;{const mode=x.workflow==='pure-midi'?'pure-midi':$('composition-process').value;$('additional').value=historicalAdditionalText(x,mode);}loadingHistoryAdditional=false;
  result.value=x.aiResponse??'';updateScoreAppButton(x);
  const midiKey=x.mode==='historical'&&x.historicalScore&&Array.isArray(x.historicalMidi)?x.id+'|'+x.historicalMidi.length+'|'+(x.runStatus||''):null;
  if(midiKey!==renderedMidiKey||!audio.querySelector('.midi-player')){paper.replaceChildren();audio.replaceChildren();singleResult.hidden=true;renderedMidiKey=null;}
@@ -173,7 +184,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.43',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.44',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
