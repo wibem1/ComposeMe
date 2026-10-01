@@ -82,7 +82,7 @@ function showExperiment(x){
  if(midiKey!==renderedMidiKey||!audio.querySelector('.midi-player')){paper.replaceChildren();audio.replaceChildren();singleResult.hidden=true;renderedMidiKey=null;}
  if(x.mode==='historical'){
   resultViewTitle.textContent='Wiedergabe';
-  if(x.workflow==='pure-midi'){$('composition-process').value='pure-midi';lastProcess='pure-midi';$('additional').value=x.appAdditions?.trim()?x.appAdditions:PURE_MIDI_TECHNICAL_CONTRACT;saveAdditionalForProcess('pure-midi',$('additional').value);historicalControls.refresh();}else historicalControls.showRecord(x);
+  if(x.workflow==='pure-midi'){$('composition-process').value='pure-midi';lastProcess='pure-midi';loadAdditionalForProcess('pure-midi');historicalControls.refresh();}else historicalControls.showRecord(x);
   protocol.textContent=x.workflow==='classic-0.4.24'?formatClassicProtocol(x):x.workflow==='pure-midi'?formatPureMidiProtocol(x):formatHistoricalProtocol(x);
   renderCostSummary(x);
   singleResult.hidden=false;
@@ -97,7 +97,7 @@ function showExperiment(x){
  status.textContent=x.parentId?'Variante mit Original geladen.':'Aus Verlauf geladen.';
  saveView(comparison.hidden?null:comparisonChoice.value);
 }
-async function run(){const secret=currentKey(),modelName=selectedModel();if(secret)keys.set(provider.value,secret);prefs.set('provider',provider.value);prefs.set(`model:${provider.value}`,modelName);status.textContent=providerLabel()+' antwortet …';status.classList.add('working');$('compose').disabled=true;copyToInput.disabled=true;let provisionalId=historicalControls.resumeId?.()||null;try{if(!secret)throw new Error('API-Key für '+providerLabel()+' fehlt.');const mode=$('composition-process').value;const record=mode==='pure-midi'
+async function run(){const secret=currentKey(),modelName=selectedModel();saveAdditionalForProcess($('composition-process').value,$('additional').value);if(secret)keys.set(provider.value,secret);prefs.set('provider',provider.value);prefs.set(`model:${provider.value}`,modelName);status.textContent=providerLabel()+' antwortet …';status.classList.add('working');$('compose').disabled=true;copyToInput.disabled=true;let provisionalId=historicalControls.resumeId?.()||null;try{if(!secret)throw new Error('API-Key für '+providerLabel()+' fehlt.');const mode=$('composition-process').value;const record=mode==='pure-midi'
  ?await runPureMidiComposition({engine:window.CompositionEngine,apiKey:secret,task:$('task').value,additionalInstructions:$('additional').value,provider:provider.value,model:modelName,onProgress:message=>{status.textContent=message;}})
  :mode==='classic'
  ?await runClassicComposition({engine:window.CompositionEngine,apiKey:secret,task:$('task').value,additionalInstructions:$('additional').value,provider:provider.value,model:modelName,
@@ -173,7 +173,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.39',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.40',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
