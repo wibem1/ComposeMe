@@ -1,4 +1,4 @@
-import {CLASSIC_TECHNICAL_CONTRACT} from './classic-prompts.js';
+export const PURE_MIDI_TECHNICAL_CONTRACT="TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:\nAntworte ausschließlich mit validem JSON, ohne Markdown und ohne Text außerhalb des JSON.\nDie Partitur steht entweder direkt im Wurzelobjekt oder im Feld \"score\".\nPartiturformat:\n{\n  \"title\": \"optional\",\n  \"bpm\": Zahl,\n  \"timeSignature\": [Zaehler, Nenner],\n  \"tracks\": [{\n    \"name\": \"Instrument\",\n    \"program\": 0-127,\n    \"channel\": 0-15,\n    \"notes\": [[StartBeat, DauerInBeats, MIDIPitch, Velocity], ...],\n    \"cc\": [[StartBeat, CCNummer, Wert], ...]\n  }]\n}\nStartBeat und DauerInBeats dürfen Dezimalzahlen sein. MIDI-Pitch, Velocity, CCNummer und CC-Wert verwenden die MIDI-Wertebereiche. Das CC-Feld ist optional und bildet MIDI-Control-Change-Ereignisse unverändert ab. Das technische Format macht keinerlei Vorgaben zu Stil, Harmonik, Melodik, Rhythmik, Form oder musikalischer Qualität.";
 import {normalizeScoreJson} from './historical-compose.js';
 import {diagnosticRequest,diagnosticResponse} from './api-diagnostic.js';
 import {extractUsage,estimateCost} from './cost-control.js';
@@ -7,7 +7,7 @@ export function pureMidiPrompt(task,additionalInstructions=''){
  const clean=String(task||'').trim(),extra=String(additionalInstructions||'').trim();
  if(!clean)throw new Error('Kompositionsauftrag fehlt.');
  const musicalRequest=extra?extra+'\n\nKOMPOSITIONSAUFTRAG:\n'+clean:clean;
- return musicalRequest+'\n\n'+CLASSIC_TECHNICAL_CONTRACT;
+ return musicalRequest+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT;
 }
 
 function scoreBarCount(score){

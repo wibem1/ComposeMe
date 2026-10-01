@@ -32,6 +32,7 @@ export function parseMidi(bytes){
    const a=b[p++],c=b[p++];
    if(kind===0x90)events.push({tick,type:c===0?'off':'on',channel:ch,pitch:a,velocity:c,track:ti});
    else if(kind===0x80)events.push({tick,type:'off',channel:ch,pitch:a,velocity:c,track:ti});
+   else if(kind===0xB0)events.push({tick,type:'cc',channel:ch,controller:a,value:c,track:ti});
   }
   off=end;
  }
@@ -46,21 +47,30 @@ export function parseMidi(bytes){
   let point=tempoPoints[0];for(const p of tempoPoints){if(p.tick>tick)break;point=p;}
   return point.seconds+(tick-point.tick)*point.mpqn/(1e6*ppq);
  };
- const currentPrograms=new Array(16).fill(0),active=new Map(),notes=[];let duration=0;
+ const currentPrograms=new Array(16).fill(0),active=new Map(),notes=[],cc=[],sustain=new Array(16).fill(false),deferred=new Map();let duration=0,lastEventTick=0;
+ const finish=(on,tick)=>{const endSec=tickToSec(tick);notes.push({start:on.startSec,end:Math.max(on.startSec+.01,endSec),pitch:on.pitch,velocity:on.velocity,channel:on.channel,program:on.program,track:on.track});duration=Math.max(duration,endSec);};
+ const releaseSustain=(channel,tick)=>{const held=deferred.get(channel)||[];for(const on of held)finish(on,tick);deferred.set(channel,[]);};
  for(const e of events){
+  lastEventTick=Math.max(lastEventTick,e.tick);
   if(e.type==='program'){currentPrograms[e.channel]=e.program;continue;}
+  if(e.type==='cc'){
+   cc.push({...e,seconds:tickToSec(e.tick)});
+   if(e.controller===64){const down=e.value>=64;if(sustain[e.channel]&&!down)releaseSustain(e.channel,e.tick);sustain[e.channel]=down;}
+   continue;
+  }
   if(e.type==='on'){
    const key=e.track+'|'+e.channel+'|'+e.pitch;
    const stack=active.get(key)||[];stack.push({...e,program:currentPrograms[e.channel],startSec:tickToSec(e.tick)});active.set(key,stack);
   }else if(e.type==='off'){
    const key=e.track+'|'+e.channel+'|'+e.pitch,stack=active.get(key);if(!stack?.length)continue;
-   const on=stack.shift(),endSec=tickToSec(e.tick);notes.push({start:on.startSec,end:Math.max(on.startSec+.01,endSec),pitch:on.pitch,velocity:on.velocity,channel:on.channel,program:on.program,track:on.track});
-   duration=Math.max(duration,endSec);
+   const on=stack.shift();
+   if(sustain[e.channel]){const held=deferred.get(e.channel)||[];held.push(on);deferred.set(e.channel,held);}else finish(on,e.tick);
   }
  }
- return {format,ppq,notes,duration,trackNames,tempoPoints};
+ for(let ch=0;ch<16;ch++)releaseSustain(ch,lastEventTick);
+ return {format,ppq,notes,cc,duration,trackNames,tempoPoints};
 }
-function order(e){return e.type==='tempo'?0:e.type==='program'?1:e.type==='off'?2:3;}
+function order(e){return e.type==='tempo'?0:e.type==='program'?1:e.type==='cc'?2:e.type==='off'?3:4;}
 function waitForLoader(player){
  return new Promise((resolve,reject)=>{
   let done=false;
