@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.33';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.33';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.34';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.34';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -108,7 +108,8 @@ export function initHistoricalControls(){
  function refresh(){
   section.hidden=select.value!=='historical';
   model.disabled=false;provider.disabled=false;
-  additional.disabled=!section.hidden;
+  additional.disabled=false;
+  additional.readOnly=false;
   const classicInfo=$('classic-info');if(classicInfo)classicInfo.hidden=select.value!=='classic';
   if(!section.hidden)initial();
  }
@@ -152,7 +153,7 @@ export function initHistoricalControls(){
   if(resumableRecord)proceed.disabled=false;
  }
  function abortWait(){if(secondAwaiter){secondAwaiter(null);secondAwaiter=null;proceed.disabled=true;}}
- async function run({apiKey,taskText,providerName,modelName,onStage1,onProgress}){
+ async function run({apiKey,taskText,additionalInstructions='',providerName,modelName,onStage1,onProgress}){
   const engine=baseEngine();if(!engine)throw new Error('Historische Engine fehlt. Bitte die App vollständig neu laden.');
   if(resumableRecord&&String(resumableRecord.userInput||'').trim()===String(taskText||'').trim()&&
      resumableRecord.provider===providerName&&resumableRecord.model===modelName){
@@ -168,7 +169,7 @@ export function initHistoricalControls(){
   const firstPrompt=first.value===expected?null:first.value;
   secondAwaiter=null;proceed.disabled=true;
   return runHistoricalComposition({
-   engine,task:taskText,provider:providerName,model:modelName,apiKey,firstPrompt,onStage1,onProgress,
+   engine,task:taskText,additionalInstructions,provider:providerName,model:modelName,apiKey,firstPrompt,onStage1,onProgress,
    onConcept:async({concept:idea,proposal})=>{
     concept.value=idea;
     const savedSecond=loadSavedSecondPrompt();

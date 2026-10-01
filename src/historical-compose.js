@@ -58,21 +58,21 @@ function sumUsage(calls){
  total:a.total+(c.usage?.total||0),cached:a.cached+(c.usage?.cached||0)}),{input:0,output:0,total:0,cached:0});
 }
 
-function newPartial({task,provider,model,calls,concept='',error='',runStatus='partial'}) {
+function newPartial({task,additionalInstructions='',provider,model,calls,concept='',error='',runStatus='partial'}) {
  const musicalCalls=calls.filter(c=>c.stage==='sound_concept'||c.stage==='score_realization');
  const usage=sumUsage(musicalCalls);
- return {mode:'historical',historicalVersion:'1.4.0-experiment',userInput:task,appAdditions:'',
+ return {mode:'historical',historicalVersion:'1.4.0-experiment',userInput:task,appAdditions:additionalInstructions,
  provider,model,actualRequest:musicalCalls.map(c=>c.prompt).join('\n\n---\n\n'),aiResponse:'',
  historicalCalls:musicalCalls,concept,technicalRecovery:'',historicalScore:null,historicalMidi:null,
  historicalScoreJson:'',usage,estimatedCost:estimateCost(model,usage),error,runStatus};
 }
 
 export async function runHistoricalComposition({
- engine,task,provider='openai',model='gpt-5.6-sol',apiKey,
+ engine,task,additionalInstructions='',provider='openai',model='gpt-5.6-sol',apiKey,
  firstPrompt=null,secondPrompt=null,
  onConcept=async()=>null,onStage1=()=>{},onProgress=()=>{},fetchImpl=fetch
 }){
- const cleanTask=String(task||'').trim();
+ const cleanTask=String(task||'').trim(),extra=String(additionalInstructions||'').trim();
  if(!cleanTask||!apiKey)throw new Error('Auftrag und API-Key fehlen.');
  if(!engine?.compose||!engine?.createPrompts)throw new Error('Die historische Engine fehlt.');
  const snapshot={visibleTask:cleanTask,provider,model};
@@ -80,12 +80,13 @@ export async function runHistoricalComposition({
  let concept='',scoreJson='';
  const requestModel=async({snapshot,key,promptText,stage})=>{
   const originalPrompt=stage==='score_realization'?withStructuredScoreContract(promptText):promptText;
-  let finalPrompt=originalPrompt;
+  let finalPrompt=originalPrompt+(extra?'\n\nZUSÄTZLICHE ANGABEN AN DIE KI:\n'+extra:'');
   if(stage==='sound_concept'){
-   if(firstPrompt!=null)finalPrompt=firstPrompt;
+   if(firstPrompt!=null)finalPrompt=firstPrompt+(extra?'\n\nZUSÄTZLICHE ANGABEN AN DIE KI:\n'+extra:'');
   }else if(stage==='score_realization'){
-   const proposal=withStructuredScoreContract(secondPrompt ?? originalPrompt);
-   const stage1Record=newPartial({task:cleanTask,provider,model,calls,concept,runStatus:'stage1_completed'});
+   const proposalBase=withStructuredScoreContract(secondPrompt ?? originalPrompt);
+   const proposal=proposalBase+(extra?'\n\nZUSÄTZLICHE ANGABEN AN DIE KI:\n'+extra:'');
+   const stage1Record=newPartial({task:cleanTask,additionalInstructions:extra,provider,model,calls,concept,runStatus:'stage1_completed'});
    onStage1(stage1Record);
    finalPrompt=await onConcept({concept,proposal,original:originalPrompt,partialRecord:stage1Record});
    if(finalPrompt==null)finalPrompt=proposal;
@@ -130,7 +131,7 @@ export async function runHistoricalComposition({
    snapshot,key:apiKey,runId:'composeme-'+Date.now(),now:()=>new Date().toISOString(),
    requestModel,usedTitles:[]
   });
-  const record=newPartial({task:cleanTask,provider,model,calls,concept,runStatus:'completed'});
+  const record=newPartial({task:cleanTask,additionalInstructions:extra,provider,model,calls,concept,runStatus:'completed'});
   record.aiResponse=calls.find(c=>c.stage==='score_realization')?.response??'';
   record.historicalScore=output.run.score;
   record.historicalMidi=Array.from(output.midiBytes);
@@ -141,7 +142,7 @@ export async function runHistoricalComposition({
   onProgress('Komposition fertig.');
   return record;
  }catch(error){
-  error.partialRecord=newPartial({task:cleanTask,provider,model,calls,concept,error:error.message});
+  error.partialRecord=newPartial({task:cleanTask,additionalInstructions:extra,provider,model,calls,concept,error:error.message});
   throw error;
  }
 }
@@ -162,12 +163,13 @@ export async function resumeHistoricalComposition({
   throw new Error('Die historische Engine fehlt.');
  if(!record?.concept?.trim())throw new Error('Keine gespeicherte Klangvorstellung zum Fortsetzen vorhanden.');
  if(!apiKey)throw new Error('API-Key fehlt.');
- const task=String(record.userInput||'').trim(),provider=record.provider||'openai',model=record.model||'gpt-5.6-sol';
+ const task=String(record.userInput||'').trim(),extra=String(record.appAdditions||'').trim(),provider=record.provider||'openai',model=record.model||'gpt-5.6-sol';
  const snapshot={visibleTask:task,provider,model};
  const calls=(record.historicalCalls||[]).map(call=>structuredClone(call));
  const generated=withStructuredScoreContract(engine.createPrompts(snapshot,record.concept).midiTranslation);
  const previous=calls.filter(call=>call.stage==='score_realization').at(-1)?.prompt;
- const prompt=withStructuredScoreContract(secondPrompt||previous||generated).trim();
+ const promptBase=withStructuredScoreContract(secondPrompt||previous||generated).trim();
+ const prompt=(extra?promptBase+'\n\nZUSÄTZLICHE ANGABEN AN DIE KI:\n'+extra:promptBase).trim();
  if(!prompt)throw new Error('Zweite KI-Anweisung ist leer.');
  const template=engine.makeRequest(provider,model,prompt,'score_realization');
  const request=engine.actualRequest(template,apiKey);
@@ -182,7 +184,7 @@ export async function resumeHistoricalComposition({
   if(!original?.trim())throw new Error('Die KI hat keinen Text zurückgegeben.');
  }catch(error){
   call.status='failed';call.elapsedMs=Date.now()-started;call.error=error?.message||String(error);
-  error.partialRecord={...newPartial({task,provider,model,calls,concept:record.concept,error:call.error}),id:record.id};
+  error.partialRecord={...newPartial({task,additionalInstructions:extra,provider,model,calls,concept:record.concept,error:call.error}),id:record.id};
   throw error;
  }finally{clearTimeout(timeout);}
  call.response=original;call.status='completed';call.elapsedMs=Date.now()-started;call.usage=extractUsage(provider,data);
@@ -190,11 +192,11 @@ export async function resumeHistoricalComposition({
  try{repair=normalizeScoreJson(original);if(repair.repaired)call.recovery=repair.explanation;}
  catch(err){
   const error=new Error('Die KI-Partitur ist technisch ungültig: '+err.message);
-  error.partialRecord={...newPartial({task,provider,model,calls,concept:record.concept,error:error.message}),id:record.id};
+  error.partialRecord={...newPartial({task,additionalInstructions:extra,provider,model,calls,concept:record.concept,error:error.message}),id:record.id};
   throw error;
  }
  const obj=engine.extractJson(repair.text),score=engine.findScore(obj),midiBytes=engine.buildMidi(score);
- const result=newPartial({task,provider,model,calls,concept:record.concept,runStatus:'completed'});
+ const result=newPartial({task,additionalInstructions:extra,provider,model,calls,concept:record.concept,runStatus:'completed'});
  result.aiResponse=original;result.historicalScore=score;result.historicalMidi=Array.from(midiBytes);
  result.historicalScoreJson=repair.text;result.title=score.title||'Ohne Titel';result.technicalRecovery=repair.repaired?repair.explanation:'';
  result.bars=scoreBarCount(score);result.error='';onProgress('Komposition fertig.');

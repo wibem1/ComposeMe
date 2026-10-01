@@ -41,3 +41,10 @@ test('internal ABC renderer is not shipped in the production page',()=>{
  assert.doesNotMatch(html,/Notenansicht/);
  assert.match(html,/In Noten-App öffnen/);
 });
+
+test('additional instructions remain editable in every mode',()=>{
+ const ui=fs.readFileSync(new URL('../src/historical-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/additional\.disabled=false/);
+ assert.match(ui,/additional\.readOnly=false/);
+ assert.doesNotMatch(html,/<textarea id="additional"[^>]*(disabled|readonly)/i);
+});
