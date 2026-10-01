@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {pureMidiPrompt,runPureMidiComposition} from '../src/pure-midi-compose.js';
+import {pureMidiPrompt,runPureMidiComposition,tickScoreToBeatScore} from '../src/pure-midi-compose.js';
 
 const engine={
  makeRequest:(_p,_m,prompt)=>({url:'/mock',headers:{},body:{input:prompt}}),
@@ -38,4 +38,14 @@ test('pure MIDI makes one AI call and creates local MIDI',async()=>{
  assert.equal(r.historicalScore.title,'Test');
  assert.deepEqual(r.historicalMidi,[77,84,104,100]);
  assert.equal(r.usage.total,30);
+});
+
+
+test('Pure MIDI tick score is converted locally to beat units without musical changes',()=>{
+ const raw={title:'Ticks',bpm:120,timeSignature:[4,4],ppq:480,tracks:[{name:'Klavier',program:0,channel:0,notes:[[0,480,60,80],[480,240,62,70]],cc:[[960,64,127]]}]};
+ const score=tickScoreToBeatScore(raw);
+ assert.deepEqual(score.tracks[0].notes,[[0,1,60,80],[1,0.5,62,70]]);
+ assert.deepEqual(score.tracks[0].cc,[[2,64,127]]);
+ assert.equal('ppq' in score,false);
+ assert.deepEqual(raw.tracks[0].notes,[[0,480,60,80],[480,240,62,70]]);
 });
