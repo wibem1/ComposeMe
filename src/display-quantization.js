@@ -1,34 +1,32 @@
 // Display-only quantization for notation export.
 // Playback MIDI and the stored composition remain untouched.
-export const DISPLAY_GRID=0.25; // quarter of a beat = sixteenth-note grid in quarter-note beat units
-export const NOTATION_VALUES=[4,3,2,1.5,1,0.75,0.5,0.25];
+export const DISPLAY_GRID=0.25; // sixteenth-note onset grid in quarter-note beat units
+
+// Conventional readable note lengths: undotted and singly dotted values.
+// Deliberately excludes double-dotted values such as 1.75 or 3.5 beats.
+export const DISPLAY_DURATIONS=[0.25,0.375,0.5,0.75,1,1.5,2,3,4,6,8,12,16];
 
 function snap(value,grid=DISPLAY_GRID){
  const n=Number(value);
  return Math.round((Number.isFinite(n)?n:0)/grid)*grid;
 }
 
-export function quantizeDisplaySpan(start,duration,grid=DISPLAY_GRID){
- const rawStart=Math.max(0,Number(start)||0);
- const rawDuration=Math.max(grid,Number(duration)||grid);
- const qStart=Math.max(0,snap(rawStart,grid));
- let qEnd=Math.max(qStart+grid,snap(rawStart+rawDuration,grid));
- if(qEnd<=qStart)qEnd=qStart+grid;
- return {start:Number(qStart.toFixed(8)),duration:Number((qEnd-qStart).toFixed(8))};
-}
-
-export function notationPieces(duration){
- let rest=Math.max(DISPLAY_GRID,Number(duration)||DISPLAY_GRID);
- const pieces=[];
- for(const value of NOTATION_VALUES){
-  while(rest>=value-1e-8){
-   pieces.push(value);
-   rest=Number((rest-value).toFixed(8));
+function nearestDuration(value){
+ const raw=Math.max(DISPLAY_GRID,Number(value)||DISPLAY_GRID);
+ let best=DISPLAY_DURATIONS[0],distance=Math.abs(raw-best);
+ for(const candidate of DISPLAY_DURATIONS){
+  const d=Math.abs(raw-candidate);
+  if(d<distance-1e-8||(Math.abs(d-distance)<1e-8&&candidate>best)){
+   best=candidate;distance=d;
   }
  }
- if(rest>1e-8){
-  const units=Math.max(1,Math.round(rest/DISPLAY_GRID));
-  for(let i=0;i<units;i++)pieces.push(DISPLAY_GRID);
- }
- return pieces;
+ if(raw>DISPLAY_DURATIONS.at(-1))return Math.max(DISPLAY_GRID,snap(raw));
+ return best;
+}
+
+export function quantizeDisplaySpan(start,duration,grid=DISPLAY_GRID){
+ const rawStart=Math.max(0,Number(start)||0);
+ const qStart=Math.max(0,snap(rawStart,grid));
+ const qDuration=nearestDuration(duration);
+ return {start:Number(qStart.toFixed(8)),duration:Number(qDuration.toFixed(8))};
 }
