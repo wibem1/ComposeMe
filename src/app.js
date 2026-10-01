@@ -1,8 +1,8 @@
-import {runPureMidiComposition,formatPureMidiProtocol,PURE_MIDI_TECHNICAL_CONTRACT} from './pure-midi-compose.js?v=0.8.48';
+import {runPureMidiComposition,formatPureMidiProtocol,PURE_MIDI_TECHNICAL_CONTRACT} from './pure-midi-compose.js?v=0.8.49';
 import {runClassicComposition,formatClassicProtocol} from './classic-compose.js?v=0.8.36';
-import {buildDisplayMidi} from './display-midi.js?v=0.8.48';
+import {buildDisplayMidi} from './display-midi.js?v=0.8.49';
 import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.36';
-import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.48';
+import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.49';
 import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.36';import {setupPwa} from './pwa.js?v=0.8.36';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.36';import {compose} from './compose.js?v=0.8.36';import {recognizeNotation} from './notation-recognition.js?v=0.8.36';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.36';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.36';import {historyLabel} from './history-label.js?v=0.8.36';
 const $=id=>document.getElementById(id);const form=$('compose-form'),status=$('status'),result=$('result'),protocol=$('protocol'),provider=$('provider'),model=$('model'),customModel=$('custom-model'),history=$('history'),deleteHistory=$('delete-history'),paper=$('paper'),audio=$('audio'),copyToInput=$('copy-to-input'),comparison=$('comparison'),comparisonChoice=$('comparison-choice'),singleResult=$('single-result'),resultViewTitle=$('result-view-title'),diagnostic=$('history-diagnostic'),linkOriginal=$('link-original'),linkVariant=$('link-variant'),linkButton=$('link-button'),copyResponse=$('copy-response'),saveResponse=$('save-response'),openScoreApp=$('open-score-app'),backupSave=$('backup-save'),backupLoad=$('backup-load'),backupFile=$('backup-file'),keyBackupSave=$('key-backup-save'),keyBackupLoad=$('key-backup-load'),keyBackupFile=$('key-backup-file'),diagnosticSave=$('diagnostic-save'),costSummary=$('cost-summary'),installApp=$('install-app'),keyOpenAI=$('api-key-openai'),keyAnthropic=$('api-key-anthropic'),keyGoogle=$('api-key-google');const keys=createKeyStore(localStorage),prefs=createPreferenceStore(localStorage),experiments=createExperimentStore(localStorage);let currentId=null,renderedMidiKey=null;const VIEW_KEY='minimal-composer-next:last-view';function saveView(otherId=null){if(currentId)try{localStorage.setItem(VIEW_KEY,JSON.stringify({id:currentId,otherId}));}catch{}}
 function fillModels(){const saved=prefs.get(`model:${provider.value}`);model.replaceChildren(...modelsFor(provider.value).map(([value,label])=>new Option(label,value)),new Option('Anderes Modell …','__custom__'));const known=[...model.options].some(o=>o.value===saved);model.value=known&&saved?saved:(model.options[0]?.value??'__custom__');customModel.hidden=model.value!=='__custom__';if(!known&&saved){model.value='__custom__';customModel.value=saved;customModel.hidden=false;}}
@@ -27,7 +27,10 @@ function saveAdditionalForProcess(mode,text){const map=loadAdditionalMap();map[m
 function defaultAdditionalForProcess(mode){return mode==='pure-midi'?PURE_MIDI_TECHNICAL_CONTRACT:DEFAULT_ADDITIONAL;}
 function historicalAdditionalText(x,mode){
  const saved=typeof x?.appAdditions==='string'?x.appAdditions:'';
- return saved||defaultAdditionalForProcess(mode);
+ if(mode!=='pure-midi')return saved||defaultAdditionalForProcess(mode);
+ const marker='TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:';
+ const prefix=saved.includes(marker)?saved.slice(0,saved.indexOf(marker)).trim():saved.trim();
+ return prefix?prefix+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT:PURE_MIDI_TECHNICAL_CONTRACT;
 }
 function loadAdditionalForProcess(mode){const map=loadAdditionalMap();$('additional').value=Object.prototype.hasOwnProperty.call(map,mode)?map[mode]:defaultAdditionalForProcess(mode);}
 const keyInputs={openai:keyOpenAI,anthropic:keyAnthropic,google:keyGoogle};function loadAllKeys(){for(const [name,input] of Object.entries(keyInputs)){const saved=keys.get(name);if(saved)input.value=saved;}}function currentKey(){return keyInputs[provider.value]?.value.trim()??'';}function loadProvider(){fillModels();}function providerLabel(){return provider.value==='openai'?'OpenAI':provider.value==='anthropic'?'Anthropic':provider.value==='google'?'Google':provider.value;}function selectedModel(){return model.value==='__custom__'?customModel.value.trim():model.value;}function renderCostSummary(record=null){
@@ -193,7 +196,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.48',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.49',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
