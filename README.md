@@ -91,4 +91,4 @@ Der technische JSON-Vertrag kann musikalisch eigenständige Stimmen desselben In
 
 
 ### 0.8.37 – Darstellungsquantifizierung
-Die direkte MIDI/JSON-Komposition bleibt unverändert und behält freie Start- und Dauernwerte für die Wiedergabe. Ausschließlich beim lokalen MusicXML-Export für die Noten-App werden Start und Ende auf ein Sechzehntel-Raster gesetzt. Nicht als einzelner Standardnotenwert darstellbare Dauern werden in gebundene reguläre Notenwerte zerlegt. Dadurch verändert die Notenansicht weder das gespeicherte JSON noch die Original-MIDI-Datei.
+Die direkte MIDI/JSON-Komposition bleibt unverändert und behält freie Start- und Dauernwerte für die Wiedergabe. Für ABC Tools erzeugt ComposeMe aus einer geklonten Partitur eine separate Anzeige-MIDI, deren Notenanfänge und -enden auf ein Sechzehntel-Raster gesetzt werden. Die gespeicherte JSON-Partitur und die Original-MIDI-Datei bleiben unverändert. Für intern erzeugte JSON-Partituren ist damit kein MusicXML-Zwischenschritt mehr nötig.
