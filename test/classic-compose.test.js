@@ -19,6 +19,8 @@ test('classic preserves 0.4.24 prompts and notes format across three calls',asyn
  assert.equal(r.historicalScore.title,'Walzer');
  assert.deepEqual(r.historicalMidi,[77,84,104,100]);assert.equal(r.compositionIdea,'Musikalische Beschreibung');
  assert.equal(r.usage.total,90);
+ assert.deepEqual(r.historicalCalls[0].requestMetadata.body,{input:requests[0]});
+ assert.equal(r.historicalCalls[0].responseMetadata.usage.input_tokens,10);
 });
 test('a failed optional description cannot discard completed composition',async()=>{
  let count=0;const r=await runClassicComposition({engine,task:'Walzer',apiKey:'secret',fetchImpl:async()=>{

@@ -1,3 +1,4 @@
+import {diagnosticRequest,diagnosticResponse} from './api-diagnostic.js';
 /* Originaler Musik-Ablauf V0.4.24, isoliert von der aktuellen Klangvorstellung.
  * Die KI komponiert zuerst vollständig und übersetzt danach werkgetreu;
  * MIDI entsteht unverändert lokal. */
@@ -32,6 +33,8 @@ export function formatClassicProtocol(record){
   lines.push('','=== '+(labels[c.stage]||c.stage)+' ===','VOLLSTÄNDIGE ANFRAGE:',c.prompt,
    'ORIGINALANTWORT:',c.response,'TOKENS: '+JSON.stringify(c.usage||{}));
   if(c.recovery)lines.push('TECHNISCHE BEREINIGUNG:',c.recovery);
+  if(c.requestMetadata)lines.push('API-ANFRAGE (OHNE ZUGANGSDATEN):',JSON.stringify(c.requestMetadata,null,2));
+  if(c.responseMetadata)lines.push('API-ANTWORTMETADATEN:',JSON.stringify(c.responseMetadata,null,2));
   if(c.error)lines.push('FEHLER:',c.error);
  }
  return lines.join('\n');
@@ -49,6 +52,7 @@ export async function runClassicComposition({
  const call=async(stage,prompt)=>{
   const c={stage,prompt,response:'',usage:null,status:'started'};calls.push(c);
   const tmpl=engine.makeRequest(provider,model,prompt,stage),req=engine.actualRequest(tmpl,apiKey);
+  c.requestMetadata=diagnosticRequest(tmpl,req);
   onProgress({musical_draft:'Musikalischer Entwurf entsteht …',midi_translation:'Entwurf wird technisch übertragen …',composition_idea_afterwards:'Komposition wird beschrieben …'}[stage]);
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),180000);
   try{
@@ -57,7 +61,7 @@ export async function runClassicComposition({
    const data=await res.json();
    c.response=engine.extractText(provider,data);
    if(!c.response?.trim())throw new Error('Leere KI-Antwort ('+stage+').');
-   c.usage=extractUsage(provider,data);c.status='completed';
+   c.usage=extractUsage(provider,data);c.responseMetadata=diagnosticResponse(provider,data,res);c.status='completed';
    return c.response;
   }catch(e){c.status='failed';c.error=e.message;throw e;}
   finally{clearTimeout(timer);}
