@@ -179,7 +179,7 @@ export function createMidiPlayer(record,{onState=()=>{}}={}){
  async function seek(seconds){
   const was=playing;if(was)pause();position=Math.max(0,Math.min(parsed.duration,Number(seconds)||0));onState({playing:false,loading:false,position,duration:parsed.duration,engine});if(was)await play();
  }
- return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed,engine};
+ return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed,get engine(){return engine;}};
 }
 export function downloadOriginalMidi(record){
  if(!Array.isArray(record?.historicalMidi))throw new Error('Keine originale MIDI-Datei vorhanden.');
