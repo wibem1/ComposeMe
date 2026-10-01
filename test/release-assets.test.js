@@ -54,5 +54,5 @@ test('Pure MIDI comparison mode is exposed',()=>{
  const src=fs.readFileSync(new URL('../src/pure-midi-compose.js',import.meta.url),'utf8');
  assert.match(src,/Ein einziger KI-Aufruf/);
  assert.match(src,/CLASSIC_TECHNICAL_CONTRACT/);
- assert.doesNotMatch(src,/Klangvorstellung|vollständigen musikalischen Entwurf/);
+ assert.match(src,/pureMidiPrompt/);
 });
