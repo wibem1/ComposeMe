@@ -1,9 +1,9 @@
 // Display-only quantization for notation export.
 // Playback MIDI and the stored composition remain untouched.
-// The display copy uses an eighth-note grid (0.5 quarter-note beats), similar
-// to DAW display quantization: free performance timing stays in the original,
-// while notation is aligned to readable metric positions.
-export const DISPLAY_GRID=0.5;
+// Fine sixteenth-note display grid: preserves ordinary 1/16 rhythms while
+// cleaning small non-musical timing deviations. Finer intended values from the
+// model remain possible in the original MIDI.
+export const DISPLAY_GRID=0.25;
 
 function snap(value,grid=DISPLAY_GRID){
  const n=Number(value);
