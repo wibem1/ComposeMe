@@ -30,7 +30,7 @@ function openScoreTarget(target){
    return;
   }
   const handoff=target.format==='midi'
-   ?{format:'midi',data:encodeBytesForHandoff(target.bytes)}
+   ?{format:'midi',data:encodeBytesForHandoff(target.bytes),title:target.title||''}
    :{format:target.format,content:target.content};
   localStorage.setItem('wibem1_abctools_handoff_v1',JSON.stringify(handoff));
   window.open('https://wibem1.github.io/abctools/?handoff=composeme','abc-tools');
@@ -152,9 +152,9 @@ function scoreAppTarget(record=null,text=null){
  if(parsed.format==='musicxml')return{app:'abctools',format:'musicxml',content:parsed.content};
  const source=record??(currentId?experiments.get(currentId):null);
  if(source?.mode==='historical'&&source?.historicalScore){
-  try{return{app:'abctools',format:'midi',bytes:buildDisplayMidi(source.historicalScore,window.CompositionEngine?.buildMidi),displayQuantized:true};}catch{}
+  try{return{app:'abctools',format:'midi',bytes:buildDisplayMidi(source.historicalScore,window.CompositionEngine?.buildMidi),displayQuantized:true,title:source.title||source.historicalScore?.title||''};}catch{}
  }
- if(Array.isArray(source?.historicalMidi)&&source.historicalMidi.length)return{app:'abctools',format:'midi',bytes:Uint8Array.from(source.historicalMidi)};
+ if(Array.isArray(source?.historicalMidi)&&source.historicalMidi.length)return{app:'abctools',format:'midi',bytes:Uint8Array.from(source.historicalMidi),title:source.title||source.historicalScore?.title||''};
  return null;
 }
 function updateScoreAppButton(record=null){
@@ -173,7 +173,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.42',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.43',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
