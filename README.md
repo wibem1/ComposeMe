@@ -1,4 +1,4 @@
-# ComposeMe 0.8.37
+# ComposeMe 0.8.38
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -92,3 +92,7 @@ Der technische JSON-Vertrag kann musikalisch eigenständige Stimmen desselben In
 
 ### 0.8.37 – Darstellungsquantifizierung
 Die direkte MIDI/JSON-Komposition bleibt unverändert und behält freie Start- und Dauernwerte für die Wiedergabe. Für ABC Tools erzeugt ComposeMe aus einer geklonten Partitur eine separate Anzeige-MIDI, deren Notenanfänge und -enden auf ein Sechzehntel-Raster gesetzt werden. Die gespeicherte JSON-Partitur und die Original-MIDI-Datei bleiben unverändert. Für intern erzeugte JSON-Partituren ist damit kein MusicXML-Zwischenschritt mehr nötig.
+
+
+### 0.8.38 – Polyphone Anzeige-MIDI
+Für die Übergabe an ABC Tools werden überlappende Noten eines Tracks in getrennte Notationsstimmen verteilt. Gleichzeitig beginnende und gleich lange Akkordtöne bleiben zusammen. Das betrifft ausschließlich die darstellungsquantisierte Anzeige-MIDI; Original-JSON und Original-MIDI bleiben unverändert.
