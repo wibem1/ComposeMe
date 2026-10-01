@@ -7,7 +7,8 @@ import {extractUsage,estimateCost} from './cost-control.js';
 export function tickScoreToBeatScore(value){
  const root=value&&value.score&&Array.isArray(value.score.tracks)?value.score:value;
  if(!root||!Array.isArray(root.tracks))return value;
- const ppq=Number(root.ppq)||480;
+ if(root.ppq==null)return root;
+ const ppq=Number(root.ppq);
  if(!Number.isFinite(ppq)||ppq<=0)throw new Error('Ungültiger PPQ-Wert.');
  const score={...root,tracks:root.tracks.map(track=>({
   ...track,
