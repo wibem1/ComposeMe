@@ -1,4 +1,4 @@
-# ComposeMe 0.8.45
+# ComposeMe 0.8.46
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -124,3 +124,7 @@ Beim Laden älterer Pure-MIDI-Verlaufseinträge wird geprüft, ob deren damalige
 
 ### 0.8.45 – Einmalige Migration der Pure-MIDI-Vorlage
 Beim ersten Start dieser Version wird eine alte gespeicherte Pure-MIDI-Vorlage aus der Übergangsphase einmalig geprüft. Fehlt dort der technische JSON/MIDI-Vertrag, wird er sichtbar an den vorhandenen Zusatz angefügt und gespeichert. Danach greift diese Migration nicht erneut; spätere Bearbeitungen oder auch das bewusste Entfernen bleiben erhalten und es gibt weiterhin keine versteckten Zusätze.
+
+
+### 0.8.46 – Zusatzfeld ist einzige Quelle
+Im Pure→MIDI/JSON-Modus enthält „Zusätzliche Angaben an die KI“ sichtbar sowohl persönliche Zusatzangaben als auch den technischen JSON/MIDI-Vertrag. Beim Laden alter Pure-MIDI-Verlaufseinträge wird der technische Vertrag sichtbar ergänzt, falls er dort fehlt. Gesendet wird ausschließlich der sichtbare Feldinhalt plus der Kompositionsauftrag; es gibt keine versteckten Zusatzanweisungen.
