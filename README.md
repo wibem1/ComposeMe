@@ -1,4 +1,4 @@
-# ComposeMe 0.8.38
+# ComposeMe 0.8.39
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -96,3 +96,7 @@ Die direkte MIDI/JSON-Komposition bleibt unverändert und behält freie Start- u
 
 ### 0.8.38 – Polyphone Anzeige-MIDI
 Für die Übergabe an ABC Tools werden überlappende Noten eines Tracks in getrennte Notationsstimmen verteilt. Gleichzeitig beginnende und gleich lange Akkordtöne bleiben zusammen. Das betrifft ausschließlich die darstellungsquantisierte Anzeige-MIDI; Original-JSON und Original-MIDI bleiben unverändert.
+
+
+### 0.8.39 – Transparente technische Zusatzangaben
+Im Pure→MIDI/JSON-Modus wird der technische JSON/MIDI-Vertrag nicht mehr unsichtbar im Code an die Anfrage angehängt. Er steht sichtbar und editierbar im Feld „Zusätzliche Angaben an die KI“. Gesendet wird ausschließlich der dort sichtbare Inhalt plus der Kompositionsauftrag. Das Feld speichert seinen Inhalt getrennt pro Kompositionsmodus.
