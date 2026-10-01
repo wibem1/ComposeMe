@@ -1,6 +1,6 @@
 import {runPureMidiComposition,formatPureMidiProtocol,PURE_MIDI_TECHNICAL_CONTRACT} from './pure-midi-compose.js?v=0.8.39';
 import {runClassicComposition,formatClassicProtocol} from './classic-compose.js?v=0.8.36';
-import {buildDisplayMidi} from './display-midi.js?v=0.8.38';
+import {buildDisplayMidi} from './display-midi.js?v=0.8.47';
 import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.36';
 import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.36';
 import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.36';import {setupPwa} from './pwa.js?v=0.8.36';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.36';import {compose} from './compose.js?v=0.8.36';import {recognizeNotation} from './notation-recognition.js?v=0.8.36';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.36';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.36';import {historyLabel} from './history-label.js?v=0.8.36';
@@ -191,7 +191,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.46',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.47',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
