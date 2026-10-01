@@ -56,3 +56,13 @@ test('Pure MIDI comparison mode is exposed',()=>{
  assert.match(src,/CLASSIC_TECHNICAL_CONTRACT/);
  assert.match(src,/pureMidiPrompt/);
 });
+
+test('Pure MIDI exposes CC events and production MIDI builder/player handle them',()=>{
+ const pure=fs.readFileSync(new URL('../src/pure-midi-compose.js',import.meta.url),'utf8');
+ const engine=fs.readFileSync(new URL('../experiments/sound-concept-149/historical-engine.js',import.meta.url),'utf8');
+ const player=fs.readFileSync(new URL('../src/historical-player.js',import.meta.url),'utf8');
+ assert.match(pure,/\"cc\": \[\[StartBeat, CCNummer, Wert\]/);
+ assert.match(engine,/176\|ch/);
+ assert.match(player,/kind===0xB0/);
+ assert.match(player,/controller===64/);
+});
