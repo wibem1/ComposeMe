@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.51';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.51';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.52';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.52';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -191,11 +191,17 @@ function formatTime(sec){const s=Math.max(0,Math.round(Number(sec)||0));return M
 export function renderHistoricalScore({record,paper,audio}){
  const score=record?.historicalScore;
  activePlayers.get(audio)?.stop?.();activePlayers.delete(audio);
- paper.replaceChildren();audio.replaceChildren();if(!score)return;
+ paper.replaceChildren();audio.replaceChildren();
+ const hasMidi=Array.isArray(record?.historicalMidi)&&record.historicalMidi.length>0;
+ if(!score&&!hasMidi)return;
  const meta=document.createElement('p');meta.className='historical-score-meta';
- meta.textContent=`${score.title||'Ohne Titel'} · ${record.bars||'?'} Takte · ${score.bpm||'?'} BPM · ${score.tracks?.length||0} Originalspuren`;
+ meta.textContent=score
+  ?`${score.title||record.title||'Ohne Titel'} · ${record.bars||'?'} Takte · ${score.bpm||'?'} BPM · ${score.tracks?.length||0} Originalspuren`
+  :`${record.title||record.generatedFilename||'MIDI-Datei'} · direkte binäre MIDI-Datei`;
  const note=document.createElement('p');note.className='historical-score-note';
- note.textContent='Komposition fertig. Wiedergabe und MIDI basieren direkt auf der erzeugten Original-Partitur. Notensatz ist bewusst ausgelagert.';
+ note.textContent=score
+  ?'Komposition fertig. Wiedergabe und MIDI basieren direkt auf der erzeugten Original-Partitur. Notensatz ist bewusst ausgelagert.'
+  :'Die von der KI erzeugte MIDI-Datei wird unverändert wiedergegeben und kann direkt heruntergeladen werden.';
  paper.append(meta,note);
  const holder=document.createElement('section');holder.className='midi-player';holder.dataset.source='original-midi';
  const heading=document.createElement('div');heading.className='midi-player-heading';
@@ -208,7 +214,7 @@ export function renderHistoricalScore({record,paper,audio}){
  const range=document.createElement('input');range.type='range';range.min='0';range.max='1000';range.value='0';range.step='1';range.setAttribute('aria-label','Wiedergabeposition');
  const time=document.createElement('span');time.className='midi-time';
  const actions=document.createElement('div');actions.className='midi-player-actions';
- const midi=document.createElement('button');midi.type='button';midi.textContent='Original-MIDI speichern';
+ const midi=document.createElement('button');midi.type='button';midi.textContent='MIDI herunterladen';
  actions.append(midi);
  let player,playing=false;
  try{
