@@ -1,6 +1,6 @@
-import {runPureMidiComposition,formatPureMidiProtocol,PURE_MIDI_TECHNICAL_CONTRACT} from './pure-midi-compose.js?v=0.8.39';
+import {runPureMidiComposition,formatPureMidiProtocol,PURE_MIDI_TECHNICAL_CONTRACT} from './pure-midi-compose.js?v=0.8.48';
 import {runClassicComposition,formatClassicProtocol} from './classic-compose.js?v=0.8.36';
-import {buildDisplayMidi} from './display-midi.js?v=0.8.47';
+import {buildDisplayMidi} from './display-midi.js?v=0.8.48';
 import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.36';
 import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.36';
 import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.36';import {setupPwa} from './pwa.js?v=0.8.36';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.36';import {compose} from './compose.js?v=0.8.36';import {recognizeNotation} from './notation-recognition.js?v=0.8.36';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.36';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.36';import {historyLabel} from './history-label.js?v=0.8.36';
@@ -9,11 +9,14 @@ function fillModels(){const saved=prefs.get(`model:${provider.value}`);model.rep
 const historicalControls=initHistoricalControls();const DEFAULT_ADDITIONAL=$('additional').value.trim();const PROCESS_ADDITIONAL_KEY='composeme:additional-by-process';let lastProcess=$('composition-process').value;let loadingHistoryAdditional=false;function loadAdditionalMap(){try{return JSON.parse(localStorage.getItem(PROCESS_ADDITIONAL_KEY)||'{}')||{};}catch{return {};}}
 function withVisiblePureMidiContract(text){
  const current=String(text??'').trim();
- if(current.includes('TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:'))return current;
- return current?current+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT:PURE_MIDI_TECHNICAL_CONTRACT;
+ const marker='TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:';
+ if(!current.includes(marker))return current?current+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT:PURE_MIDI_TECHNICAL_CONTRACT;
+ if(current.includes('feines musikalisches Raster von 1/16-Noten'))return current;
+ const prefix=current.slice(0,current.indexOf(marker)).trim();
+ return prefix?prefix+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT:PURE_MIDI_TECHNICAL_CONTRACT;
 }
 function initializePureMidiTemplate(){
- const key='composeme:pure-midi-visible-template-v2';
+ const key='composeme:pure-midi-visible-template-v3';
  if(localStorage.getItem(key)==='1')return;
  const map=loadAdditionalMap();
  map['pure-midi']=withVisiblePureMidiContract(map['pure-midi']);
@@ -24,7 +27,6 @@ function saveAdditionalForProcess(mode,text){const map=loadAdditionalMap();map[m
 function defaultAdditionalForProcess(mode){return mode==='pure-midi'?PURE_MIDI_TECHNICAL_CONTRACT:DEFAULT_ADDITIONAL;}
 function historicalAdditionalText(x,mode){
  const saved=typeof x?.appAdditions==='string'?x.appAdditions:'';
- if(mode==='pure-midi')return withVisiblePureMidiContract(saved);
  return saved||defaultAdditionalForProcess(mode);
 }
 function loadAdditionalForProcess(mode){const map=loadAdditionalMap();$('additional').value=Object.prototype.hasOwnProperty.call(map,mode)?map[mode]:defaultAdditionalForProcess(mode);}
@@ -191,7 +193,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.47',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.48',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
