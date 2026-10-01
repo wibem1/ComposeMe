@@ -1,6 +1,6 @@
 import {runPureMidiComposition,formatPureMidiProtocol} from './pure-midi-compose.js?v=0.8.36';
 import {runClassicComposition,formatClassicProtocol} from './classic-compose.js?v=0.8.36';
-import {historicalScoreToMusicXML} from './historical-musicxml.js?v=0.8.36';
+import {historicalScoreToMusicXML} from './historical-musicxml.js?v=0.8.37';
 import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.36';
 import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.36';
 import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.36';import {setupPwa} from './pwa.js?v=0.8.36';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.36';import {compose} from './compose.js?v=0.8.36';import {recognizeNotation} from './notation-recognition.js?v=0.8.36';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.36';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.36';import {historyLabel} from './history-label.js?v=0.8.36';
