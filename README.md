@@ -1,4 +1,4 @@
-# ComposeMe 0.8.42
+# ComposeMe 0.8.43
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -112,3 +112,7 @@ Beim Laden eines Verlaufseintrags zeigt „Zusätzliche Angaben an die KI“ wie
 
 ### 0.8.42 – Klavierdarstellung
 Bei in mehrere Notationsstimmen aufgeteilten Klavierspuren wird die höhere Stimme als rechte Hand oben und die tiefere als linke Hand darunter ausgegeben. ABC Tools entfernt bei ComposeMe-Übergaben die wiederholten Kurzbezeichnungen der Instrumente in Folgesystemen.
+
+
+### 0.8.43 – Titel in der Notendarstellung
+Beim MIDI-Handoff an ABC Tools wird der tatsächliche Kompositionstitel mitgegeben. ABC Tools verwendet ihn für die virtuelle MIDI-Datei und damit als ABC-Titel statt des generischen „ComposeMe“. Die Entfernung wiederholter Kurzbezeichnungen bleibt während der MIDI→ABC-Transkription länger aktiv, damit sie auch auf langsameren mobilen Geräten zuverlässig greift.
