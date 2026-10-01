@@ -1,6 +1,6 @@
 import {runPureMidiComposition,formatPureMidiProtocol} from './pure-midi-compose.js?v=0.8.36';
 import {runClassicComposition,formatClassicProtocol} from './classic-compose.js?v=0.8.36';
-import {historicalScoreToMusicXML} from './historical-musicxml.js?v=0.8.37';
+import {buildDisplayMidi} from './display-midi.js?v=0.8.37';
 import {formatHistoricalProtocol} from './historical-compose.js?v=0.8.36';
 import {initHistoricalControls,renderHistoricalScore} from './historical-ui.js?v=0.8.36';
 import {formatCostLine,todayTotals} from './cost-control.js?v=0.8.36';import {setupPwa} from './pwa.js?v=0.8.36';import {createBackup,restoreBackup,createKeyBackup,restoreKeyBackup,createDiagnostic,downloadJson} from './technical-tools.js?v=0.8.36';import {compose} from './compose.js?v=0.8.36';import {recognizeNotation} from './notation-recognition.js?v=0.8.36';import {formatCommunicationRecord} from './communication-protocol.js?v=0.8.36';import {createKeyStore} from './key-store.js';import {modelsFor} from './model-catalog.js';import {createPreferenceStore} from './preference-store.js';import {createExperimentStore} from './experiment-store.js';import {comparisonPair} from './comparison.js';import {formatHistoryDiagnostic} from './history-diagnostic.js';import {comparisonCandidates,chooseComparison} from './comparison-selection.js';import {responseFile,hacklilyUrl} from './response-file.js?v=0.8.36';import {historyLabel} from './history-label.js?v=0.8.36';
@@ -30,7 +30,7 @@ function openScoreTarget(target){
    :{format:target.format,content:target.content};
   localStorage.setItem('wibem1_abctools_handoff_v1',JSON.stringify(handoff));
   window.open('https://wibem1.github.io/abctools/?handoff=composeme','abc-tools');
-  status.textContent=(target.format==='midi'?'MIDI':target.format==='musicxml'?'MusicXML':'ABC')+' an ABC Tools übergeben.';
+  status.textContent=(target.format==='midi'?(target.displayQuantized?'darstellungsquantisierte MIDI':'MIDI'):target.format==='musicxml'?'MusicXML':'ABC')+' an ABC Tools übergeben.';
  }catch(err){status.textContent='Noten-App konnte nicht geöffnet werden: '+err.message;}
 }
 
@@ -141,7 +141,7 @@ function scoreAppTarget(record=null,text=null){
  if(parsed.format==='musicxml')return{app:'abctools',format:'musicxml',content:parsed.content};
  const source=record??(currentId?experiments.get(currentId):null);
  if(source?.mode==='historical'&&source?.historicalScore){
-  try{return{app:'abctools',format:'musicxml',content:historicalScoreToMusicXML(source.historicalScore)};}catch{}
+  try{return{app:'abctools',format:'midi',bytes:buildDisplayMidi(source.historicalScore,window.CompositionEngine?.buildMidi),displayQuantized:true};}catch{}
  }
  if(Array.isArray(source?.historicalMidi)&&source.historicalMidi.length)return{app:'abctools',format:'midi',bytes:Uint8Array.from(source.historicalMidi)};
  return null;
@@ -149,7 +149,7 @@ function scoreAppTarget(record=null,text=null){
 function updateScoreAppButton(record=null){
  const target=scoreAppTarget(record);
  openScoreApp.disabled=!target;
- openScoreApp.title=!target?'Keine übergebbare Notation erkannt':target.app==='hacklily'?'LilyPond in Hacklily öffnen':target.format==='midi'?'MIDI in ABC Tools als Noten öffnen':target.format==='musicxml'?'MusicXML in ABC Tools öffnen':'ABC in ABC Tools öffnen';
+ openScoreApp.title=!target?'Keine übergebbare Notation erkannt':target.app==='hacklily'?'LilyPond in Hacklily öffnen':target.format==='midi'?(target.displayQuantized?'Darstellungsquantisierte MIDI in ABC Tools öffnen':'MIDI in ABC Tools als Noten öffnen'):target.format==='musicxml'?'MusicXML in ABC Tools öffnen':'ABC in ABC Tools öffnen';
 }
 openScoreApp.addEventListener('click',()=>openScoreTarget(scoreAppTarget()));
 
@@ -162,7 +162,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.36',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.37',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
