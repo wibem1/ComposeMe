@@ -1,4 +1,4 @@
-# ComposeMe 0.8.50
+# ComposeMe 0.8.51
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -144,3 +144,7 @@ Beim Laden eines alten Pure-MIDI-Verlaufseintrags zeigt das editierbare Feld „
 
 ### 0.8.50 – „Auf Standard setzen“ für Zusatzangaben
 Beim Laden eines Verlaufseintrags zeigt das Feld „Zusätzliche Angaben an die KI“ wieder exakt den damals verwendeten Zusatztext. Es gibt nun direkt im Feld den Button „Auf Standard setzen“. Erst dieser ersetzt den sichtbaren Text bewusst durch den aktuellen Standard des gewählten Kompositionsmodus und speichert ihn als aktuelle Vorlage. Es findet keine automatische Ersetzung alter Zusatzangaben mehr statt.
+
+
+### 0.8.51 – Pure-MIDI-Zeitformat mit 480 PPQ
+Der Standardvertrag für Pure→MIDI/JSON verwendet nun echte MIDI-Ticks: 480 PPQ, StartTick und DauerTicks als ganze Zahlen. Die Tick-Auflösung ist ausdrücklich nur technisches Ausgabeformat und darf die frei komponierte Rhythmik nicht vereinfachen oder verändern. ComposeMe rechnet die Tickwerte lokal und deterministisch in interne Beat-Werte um; es gibt dabei keine musikalische Nachbearbeitung. Der Button „Auf Standard setzen“ lädt diesen aktuellen Vertrag bewusst in das sichtbare Zusatzfeld. Alte Verlaufseinträge bleiben unverändert.
