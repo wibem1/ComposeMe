@@ -1,4 +1,4 @@
-# ComposeMe 0.8.51
+# ComposeMe 0.8.52
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -148,3 +148,7 @@ Beim Laden eines Verlaufseintrags zeigt das Feld „Zusätzliche Angaben an die 
 
 ### 0.8.51 – Pure-MIDI-Zeitformat mit 480 PPQ
 Der Standardvertrag für Pure→MIDI/JSON verwendet nun echte MIDI-Ticks: 480 PPQ, StartTick und DauerTicks als ganze Zahlen. Die Tick-Auflösung ist ausdrücklich nur technisches Ausgabeformat und darf die frei komponierte Rhythmik nicht vereinfachen oder verändern. ComposeMe rechnet die Tickwerte lokal und deterministisch in interne Beat-Werte um; es gibt dabei keine musikalische Nachbearbeitung. Der Button „Auf Standard setzen“ lädt diesen aktuellen Vertrag bewusst in das sichtbare Zusatzfeld. Alte Verlaufseinträge bleiben unverändert.
+
+
+### 0.8.52 – Direkte MIDI-Datei als eigener Versuchsweg
+Neuer Modus „Pure → MIDI-Datei – direkte Binärdatei“ für OpenAI: Die KI erhält den Kompositionsauftrag und eine sichtbare technische Anweisung, die fertige Komposition mit Code Interpreter direkt als .mid-Datei zu erzeugen. ComposeMe lädt die binäre Datei aus dem Container und übernimmt sie unverändert. Der Wiedergabebereich funktioniert auch ohne internes Partitur-JSON und enthält einen klaren Button „MIDI herunterladen“. Der bisherige Pure→MIDI/JSON-Weg bleibt parallel erhalten.
