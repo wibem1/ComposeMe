@@ -49,3 +49,9 @@ test('Pure MIDI tick score is converted locally to beat units without musical ch
  assert.equal('ppq' in score,false);
  assert.deepEqual(raw.tracks[0].notes,[[0,480,60,80],[480,240,62,70]]);
 });
+
+
+test('legacy beat score without ppq stays unchanged',()=>{
+ const legacy={title:'Alt',bpm:90,timeSignature:[4,4],tracks:[{name:'Klavier',notes:[[0,1.5,60,80]]}]};
+ assert.deepEqual(tickScoreToBeatScore(legacy),legacy);
+});
