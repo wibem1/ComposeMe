@@ -1,4 +1,4 @@
-# ComposeMe 0.8.40
+# ComposeMe 0.8.41
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -104,3 +104,7 @@ Im Pure→MIDI/JSON-Modus wird der technische JSON/MIDI-Vertrag nicht mehr unsic
 
 ### 0.8.40 – Zusätzliche Angaben dauerhaft speichern
 Editierte Inhalte im Feld „Zusätzliche Angaben an die KI“ werden pro Kompositionsmodus dauerhaft im Browser gespeichert und beim Neustart wiederhergestellt. Das Laden eines alten Verlaufseintrags überschreibt diesen aktuellen gespeicherten Text nicht mehr.
+
+
+### 0.8.41 – Verlauf zeigt damalige Zusatzangaben
+Beim Laden eines Verlaufseintrags zeigt „Zusätzliche Angaben an die KI“ wieder exakt den damals verwendeten Zusatztext. Das bloße Laden überschreibt die dauerhaft gespeicherte aktuelle Vorlage nicht. Erst eine Bearbeitung oder ein neuer Kompositionslauf speichert den Feldinhalt als aktuelle Vorlage.
