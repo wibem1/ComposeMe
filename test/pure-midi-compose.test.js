@@ -11,11 +11,17 @@ const engine={
  buildMidi:()=>Uint8Array.from([77,84,104,100])
 };
 
-test('pure MIDI keeps the musical request bare apart from optional additions and technical output contract',()=>{
+test('pure MIDI sends exactly the visible additions plus the musical request',()=>{
  const task='Komponiere einen Walzer für Violine und Klavier.';
- const p=pureMidiPrompt(task);
- assert.ok(p.startsWith(task+'\n\nTECHNISCHE AUSGABEANFORDERUNG'));
- assert.doesNotMatch(p,/Klangvorstellung|vollständigen musikalischen Entwurf|Komponiere das verlangte Stück musikalisch frei/);
+ const extra='SICHTBARER TECHNISCHER VERTRAG';
+ const p=pureMidiPrompt(task,extra);
+ assert.equal(p,extra+'\n\nKOMPOSITIONSAUFTRAG:\n'+task);
+ assert.doesNotMatch(p,/TECHNISCHE AUSGABEANFORDERUNG/);
+});
+
+test('pure MIDI adds no hidden instructions when additions are empty',()=>{
+ const task='Komponiere einen Walzer für Violine und Klavier.';
+ assert.equal(pureMidiPrompt(task),task);
 });
 
 test('pure MIDI makes one AI call and creates local MIDI',async()=>{
