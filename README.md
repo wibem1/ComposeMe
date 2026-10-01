@@ -1,4 +1,4 @@
-# ComposeMe 0.8.43
+# ComposeMe 0.8.44
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -116,3 +116,7 @@ Bei in mehrere Notationsstimmen aufgeteilten Klavierspuren wird die höhere Stim
 
 ### 0.8.43 – Titel in der Notendarstellung
 Beim MIDI-Handoff an ABC Tools wird der tatsächliche Kompositionstitel mitgegeben. ABC Tools verwendet ihn für die virtuelle MIDI-Datei und damit als ABC-Titel statt des generischen „ComposeMe“. Die Entfernung wiederholter Kurzbezeichnungen bleibt während der MIDI→ABC-Transkription länger aktiv, damit sie auch auf langsameren mobilen Geräten zuverlässig greift.
+
+
+### 0.8.44 – Migration alter Pure-MIDI-Zusätze
+Beim Laden älterer Pure-MIDI-Verlaufseinträge wird geprüft, ob deren damalige vollständige Anfrage den früher versteckt angehängten technischen JSON/MIDI-Vertrag enthielt. Falls ja, wird dieser Vertrag zusammen mit den damaligen persönlichen Zusatzangaben sichtbar im Feld „Zusätzliche Angaben an die KI“ rekonstruiert. Neue Anfragen erhalten weiterhin keine versteckten Zusätze.
