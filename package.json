@@ -1,1 +1,1 @@
-{"name":"composeme","version":"0.8.35","private":true,"type":"module","scripts":{"syntax":"find src test -name '*.js' -print0 | xargs -0 -n1 node --check","unit":"node --test test/*.test.js","smoke":"node test/smoke.test.js","verify":"npm run syntax && npm run unit && npm run smoke"}}
+{"name":"composeme","version":"0.8.36","private":true,"type":"module","scripts":{"syntax":"find src test -name '*.js' -print0 | xargs -0 -n1 node --check","unit":"node --test test/*.test.js","smoke":"node test/smoke.test.js","verify":"npm run syntax && npm run unit && npm run smoke"}}
