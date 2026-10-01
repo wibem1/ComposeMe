@@ -1,4 +1,4 @@
-# ComposeMe 0.8.49
+# ComposeMe 0.8.50
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -140,3 +140,7 @@ Der sichtbare technische Vertrag im Pure→MIDI/JSON-Modus fordert normale binä
 
 ### 0.8.49 – Aktueller Pure-MIDI-Vertrag auch bei Verlauf
 Beim Laden eines alten Pure-MIDI-Verlaufseintrags zeigt das editierbare Feld „Zusätzliche Angaben an die KI“ nun dessen persönlichen Zusatz zusammen mit dem aktuellen technischen Pure-MIDI-Vertrag. So wird beim erneuten Senden nicht versehentlich ein veralteter Vertrag verwendet. Die damals tatsächlich gesendete vollständige Anfrage bleibt unverändert im Kommunikationsprotokoll und in der Diagnose erhalten.
+
+
+### 0.8.50 – „Auf Standard setzen“ für Zusatzangaben
+Beim Laden eines Verlaufseintrags zeigt das Feld „Zusätzliche Angaben an die KI“ wieder exakt den damals verwendeten Zusatztext. Es gibt nun direkt im Feld den Button „Auf Standard setzen“. Erst dieser ersetzt den sichtbaren Text bewusst durch den aktuellen Standard des gewählten Kompositionsmodus und speichert ihn als aktuelle Vorlage. Es findet keine automatische Ersetzung alter Zusatzangaben mehr statt.
