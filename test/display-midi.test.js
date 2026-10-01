@@ -7,7 +7,7 @@ test('display MIDI quantizes only a cloned score',()=>{
  const q=displayQuantizedScore(score);
  assert.notEqual(q,score);
  assert.notEqual(q.tracks[0],score.tracks[0]);
- assert.deepEqual(q.tracks[0].notes,[[0,2,60,80],[2,1,64,70]]);
+ assert.deepEqual(q.tracks[0].notes,[[0,1.75,60,80],[2,1,64,70]]);
  assert.deepEqual(q.tracks[0].cc,score.tracks[0].cc);
  assert.deepEqual(score.tracks[0].notes,[[0,1.8,60,80],[2.1,.8,64,70]]);
 });
@@ -26,7 +26,7 @@ test('overlapping piano lines are split into independent notation voices',()=>{
  assert.equal(voices[0].name,'Klavier :: rechte Hand');
  assert.equal(voices[1].name,'Klavier :: linke Hand');
  assert.deepEqual(voices[0].notes,[[0.5,1.5,57,54],[0.5,1.5,65,58],[2.5,1.5,60,52],[2.5,1.5,65,57]]);
- assert.deepEqual(voices[1].notes,[[0,2,38,62],[2,2,45,56]]);
+ assert.deepEqual(voices[1].notes,[[0,1.75,38,62],[2,1.75,45,56]]);
 });
 
 test('simultaneous chord tones remain in one notation voice',()=>{
@@ -41,6 +41,6 @@ test('display MIDI is built from quantized polyphonic copy',()=>{
  let received;
  const bytes=buildDisplayMidi(score,s=>{received=s;return Uint8Array.from([77,84,104,100]);});
  assert.equal(received.tracks.length,2);
- assert.equal(received.tracks[0].notes[0][1],4);
+ assert.equal(received.tracks[0].notes[0][1],3.75);
  assert.deepEqual([...bytes],[77,84,104,100]);
 });
