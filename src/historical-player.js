@@ -74,7 +74,7 @@ function order(e){return e.type==='tempo'?0:e.type==='program'?1:e.type==='cc'?2
 function waitForLoader(player){
  return new Promise((resolve,reject)=>{
   let done=false;
-  const timer=setTimeout(()=>{if(!done){done=true;reject(new Error('SoundFont-Laden hat zu lange gedauert.'));}},30000);
+  const timer=setTimeout(()=>{if(!done){done=true;reject(new Error('SoundFont-Laden hat zu lange gedauert.'));}},8000);
   try{
    player.loader.waitLoad(()=>{if(done)return;done=true;clearTimeout(timer);resolve();});
   }catch(err){clearTimeout(timer);reject(err);}
@@ -123,9 +123,22 @@ function scheduleSoundFontNote(player,ctx,dest,n,start,end,presets,drumPresets){
  if(!info||!window[info.variable])throw new Error('FluidR3-Preset fehlt für GM-Programm '+n.program+'.');
  player.queueWaveTable(ctx,dest,window[info.variable],start,n.pitch,duration,volume);
 }
+function scheduleFallbackNote(ctx,dest,n,start,end){
+ const osc=ctx.createOscillator(),gain=ctx.createGain();
+ const frequency=440*Math.pow(2,(Number(n.pitch)-69)/12);
+ const volume=Math.max(.015,Math.min(.12,(Number(n.velocity)||80)/127*.12));
+ osc.type=n.channel===9?'square':'triangle';
+ osc.frequency.setValueAtTime(frequency,start);
+ gain.gain.setValueAtTime(0,start);
+ gain.gain.linearRampToValueAtTime(volume,start+.01);
+ gain.gain.setValueAtTime(volume,Math.max(start+.011,end-.04));
+ gain.gain.exponentialRampToValueAtTime(.0001,Math.max(start+.02,end));
+ osc.connect(gain);gain.connect(dest);
+ osc.start(start);osc.stop(Math.max(start+.03,end+.02));
+}
 export function createMidiPlayer(record,{onState=()=>{}}={}){
  const midi=Uint8Array.from(record?.historicalMidi||[]),parsed=parseMidi(midi);
- let ctx=null,soundfont=null,position=0,startedAt=0,raf=0,playing=false,loading=false,presets=null,drumPresets=null;
+ let ctx=null,soundfont=null,position=0,startedAt=0,raf=0,playing=false,loading=false,presets=null,drumPresets=null,engine='soundfont';
  const Ctx=()=>window.AudioContext||window.webkitAudioContext;
  const current=()=>playing?Math.min(parsed.duration,position+(ctx.currentTime-startedAt)):position;
  function cancelAudio(){
@@ -134,31 +147,39 @@ export function createMidiPlayer(record,{onState=()=>{}}={}){
   if(ctx){ctx.close().catch(()=>{});ctx=null;}
   soundfont=null;presets=null;drumPresets=null;loading=false;
  }
- function tick(){if(!playing)return;const now=current();onState({playing,loading:false,position:now,duration:parsed.duration,engine:'soundfont'});if(now>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,loading:false,position,duration:parsed.duration,engine:'soundfont'});return;}raf=requestAnimationFrame(tick);}
+ function tick(){if(!playing)return;const now=current();onState({playing,loading:false,position:now,duration:parsed.duration,engine});if(now>=parsed.duration-.01){playing=false;position=0;cancelAudio();onState({playing,loading:false,position,duration:parsed.duration,engine});return;}raf=requestAnimationFrame(tick);}
  async function play(){
   if(playing||loading)return;
   const Klass=Ctx();if(!Klass)throw Error('AudioContext ist nicht verfügbar.');
-  if(typeof window.WebAudioFontPlayer!=='function')throw Error('SoundFont-Engine wurde nicht geladen.');
-  ctx=new Klass();await ctx.resume();soundfont=new window.WebAudioFontPlayer();loading=true;
-  onState({playing:false,loading:true,position,duration:parsed.duration,engine:'soundfont'});
-  try{
-   ({presets,drumPresets}=await loadSoundFonts(ctx,parsed,soundfont));
-  }catch(err){cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});throw err;}
+  ctx=new Klass();await ctx.resume();loading=true;engine='soundfont';
+  onState({playing:false,loading:true,position,duration:parsed.duration,engine});
+  let useFallback=typeof window.WebAudioFontPlayer!=='function';
+  if(!useFallback){
+   soundfont=new window.WebAudioFontPlayer();
+   try{
+    ({presets,drumPresets}=await loadSoundFonts(ctx,parsed,soundfont));
+   }catch(_){
+    try{await ctx.close();}catch{}
+    ctx=new Klass();await ctx.resume();soundfont=null;presets=null;drumPresets=null;useFallback=true;
+   }
+  }
+  engine=useFallback?'oscillator':'soundfont';
   loading=false;playing=true;startedAt=ctx.currentTime;
   const t0=ctx.currentTime+.06;
   for(const n of parsed.notes){
    if(n.end<=position)continue;
    const start=t0+Math.max(0,n.start-position),end=t0+Math.max(.03,n.end-position);
-   scheduleSoundFontNote(soundfont,ctx,ctx.destination,n,start,end,presets,drumPresets);
+   if(useFallback)scheduleFallbackNote(ctx,ctx.destination,n,start,end);
+   else scheduleSoundFontNote(soundfont,ctx,ctx.destination,n,start,end,presets,drumPresets);
   }
-  onState({playing,loading:false,position,duration:parsed.duration,engine:'soundfont'});raf=requestAnimationFrame(tick);
+  onState({playing,loading:false,position,duration:parsed.duration,engine});raf=requestAnimationFrame(tick);
  }
- function pause(){if(!playing&&!loading)return;position=playing?current():position;playing=false;cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});}
- function stop(){playing=false;position=0;cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});}
+ function pause(){if(!playing&&!loading)return;position=playing?current():position;playing=false;cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine});}
+ function stop(){playing=false;position=0;cancelAudio();onState({playing:false,loading:false,position,duration:parsed.duration,engine});}
  async function seek(seconds){
-  const was=playing;if(was)pause();position=Math.max(0,Math.min(parsed.duration,Number(seconds)||0));onState({playing:false,loading:false,position,duration:parsed.duration,engine:'soundfont'});if(was)await play();
+  const was=playing;if(was)pause();position=Math.max(0,Math.min(parsed.duration,Number(seconds)||0));onState({playing:false,loading:false,position,duration:parsed.duration,engine});if(was)await play();
  }
- return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed,engine:'soundfont'};
+ return {play,pause,stop,seek,get position(){return current();},get duration(){return parsed.duration;},parsed,engine};
 }
 export function downloadOriginalMidi(record){
  if(!Array.isArray(record?.historicalMidi))throw new Error('Keine originale MIDI-Datei vorhanden.');
