@@ -1,4 +1,4 @@
-# ComposeMe 0.8.29
+# ComposeMe 0.8.37
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -88,3 +88,7 @@ Im Zweistufenmodus akzeptiert ComposeMe nun auch technisch korrektes JSON, das e
 
 ### 0.8.29 – Allgemeine Partiturstruktur
 Der technische JSON-Vertrag kann musikalisch eigenständige Stimmen desselben Instruments nun explizit als getrennte Spuren kennzeichnen (`Instrument :: Stimme`). Das gilt allgemein für Klavier, Streicher, Chor und andere mehrstimmige Besetzungen; einzelne Instrumente bleiben normale eigene Spuren. Der lokale MusicXML-Konverter gruppiert solche Stimmen wieder zu einem Instrument, erhält ihre Stimmenstruktur und übernimmt vorhandene enharmonische Notennamen. Keine zusätzliche KI-Anfrage und keine musikalische Nachkorrektur.
+
+
+### 0.8.37 – Darstellungsquantifizierung
+Die direkte MIDI/JSON-Komposition bleibt unverändert und behält freie Start- und Dauernwerte für die Wiedergabe. Ausschließlich beim lokalen MusicXML-Export für die Noten-App werden Start und Ende auf ein Sechzehntel-Raster gesetzt. Nicht als einzelner Standardnotenwert darstellbare Dauern werden in gebundene reguläre Notenwerte zerlegt. Dadurch verändert die Notenansicht weder das gespeicherte JSON noch die Original-MIDI-Datei.
