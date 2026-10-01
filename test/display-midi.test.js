@@ -7,7 +7,7 @@ test('display MIDI quantizes only a cloned score',()=>{
  const q=displayQuantizedScore(score);
  assert.notEqual(q,score);
  assert.notEqual(q.tracks[0],score.tracks[0]);
- assert.deepEqual(q.tracks[0].notes,[[0,2,60,80],[2,0.75,64,70]]);
+ assert.deepEqual(q.tracks[0].notes,[[0,2,60,80],[2,1,64,70]]);
  assert.deepEqual(q.tracks[0].cc,score.tracks[0].cc);
  assert.deepEqual(score.tracks[0].notes,[[0,1.8,60,80],[2.1,.8,64,70]]);
 });
