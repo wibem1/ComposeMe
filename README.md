@@ -1,4 +1,4 @@
-# ComposeMe 0.8.39
+# ComposeMe 0.8.40
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -100,3 +100,7 @@ Für die Übergabe an ABC Tools werden überlappende Noten eines Tracks in getre
 
 ### 0.8.39 – Transparente technische Zusatzangaben
 Im Pure→MIDI/JSON-Modus wird der technische JSON/MIDI-Vertrag nicht mehr unsichtbar im Code an die Anfrage angehängt. Er steht sichtbar und editierbar im Feld „Zusätzliche Angaben an die KI“. Gesendet wird ausschließlich der dort sichtbare Inhalt plus der Kompositionsauftrag. Das Feld speichert seinen Inhalt getrennt pro Kompositionsmodus.
+
+
+### 0.8.40 – Zusätzliche Angaben dauerhaft speichern
+Editierte Inhalte im Feld „Zusätzliche Angaben an die KI“ werden pro Kompositionsmodus dauerhaft im Browser gespeichert und beim Neustart wiederhergestellt. Das Laden eines alten Verlaufseintrags überschreibt diesen aktuellen gespeicherten Text nicht mehr.
