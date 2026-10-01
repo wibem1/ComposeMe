@@ -1,7 +1,31 @@
-export const PURE_MIDI_TECHNICAL_CONTRACT="TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:\nAntworte ausschließlich mit validem JSON, ohne Markdown und ohne Text außerhalb des JSON.\nDie Partitur steht entweder direkt im Wurzelobjekt oder im Feld \"score\".\nPartiturformat:\n{\n  \"title\": \"optional\",\n  \"bpm\": Zahl,\n  \"timeSignature\": [Zaehler, Nenner],\n  \"tracks\": [{\n    \"name\": \"Instrument\",\n    \"program\": 0-127,\n    \"channel\": 0-15,\n    \"notes\": [[StartBeat, DauerInBeats, MIDIPitch, Velocity], ...],\n    \"cc\": [[StartBeat, CCNummer, Wert], ...]\n  }]\n}\nStartBeat und DauerInBeats werden in Viertelnoten-Beats angegeben. Für normale binäre Rhythmen verwende ein feines musikalisches Raster von 1/16-Noten, also Vielfache von 0.25 Beat. 1/32-Werte (0.125 Beat), Triolen oder andere Teilungen dürfen verwendet werden, wenn sie musikalisch tatsächlich beabsichtigt sind. Vermeide beliebige Zwischenwerte wie 1.4 oder 1.8 Beat. Bevorzuge metrisch klar lesbare Startpunkte und Dauern; vermeide unnötig schwer lesbare Folgen wie mehrere punktierte Achtel über Zählzeitgrenzen, wenn dieselbe musikalische Idee mit einer klareren Rasterung ausdrückbar ist. Kurze Verzierungen wie Vorschläge oder Triller dürfen bewusst feiner gerastert werden. MIDI-Pitch, Velocity, CCNummer und CC-Wert verwenden die MIDI-Wertebereiche. Das CC-Feld ist optional und bildet MIDI-Control-Change-Ereignisse unverändert ab. Das technische Format macht keinerlei Vorgaben zu Stil, Harmonik, Melodik, Form oder musikalischer Qualität.";
+export const PURE_MIDI_TECHNICAL_CONTRACT="TECHNISCHE AUSGABEANFORDERUNG – MIDI-EREIGNISSE:\nAntworte ausschließlich mit validem JSON, ohne Markdown und ohne Text außerhalb des JSON.\nDie Partitur steht entweder direkt im Wurzelobjekt oder im Feld \"score\".\nPartiturformat:\n{\n  \"title\": \"optional\",\n  \"bpm\": Zahl,\n  \"timeSignature\": [Zaehler, Nenner],\n  \"ppq\": 480,\n  \"tracks\": [{\n    \"name\": \"Instrument\",\n    \"program\": 0-127,\n    \"channel\": 0-15,\n    \"notes\": [[StartTick, DauerTicks, MIDIPitch, Velocity], ...],\n    \"cc\": [[StartTick, CCNummer, Wert], ...]\n  }]\n}\nZeitwerte werden ausschließlich als ganze MIDI-Ticks angegeben. PPQ ist fest 480 Ticks pro Viertelnote. StartTick und DauerTicks sind ganze Zahlen. Die Tick-Auflösung ist nur das technische Ausgabeformat und darf die musikalische Rhythmik nicht vereinfachen oder verändern. MIDI-Pitch, Velocity, CCNummer und CC-Wert verwenden die MIDI-Wertebereiche. Das CC-Feld ist optional und bildet MIDI-Control-Change-Ereignisse unverändert ab. Das technische Format macht keinerlei Vorgaben zu Stil, Harmonik, Melodik, Rhythmik, Form oder musikalischer Qualität.";
 import {normalizeScoreJson} from './historical-compose.js';
 import {diagnosticRequest,diagnosticResponse} from './api-diagnostic.js';
 import {extractUsage,estimateCost} from './cost-control.js';
+
+
+export function tickScoreToBeatScore(value){
+ const root=value&&value.score&&Array.isArray(value.score.tracks)?value.score:value;
+ if(!root||!Array.isArray(root.tracks))return value;
+ const ppq=Number(root.ppq)||480;
+ if(!Number.isFinite(ppq)||ppq<=0)throw new Error('Ungültiger PPQ-Wert.');
+ const score={...root,tracks:root.tracks.map(track=>({
+  ...track,
+  notes:(track.notes||[]).map(note=>{
+   if(!Array.isArray(note)||note.length<4)return note;
+   const start=Number(note[0]),duration=Number(note[1]);
+   if(!Number.isFinite(start)||!Number.isFinite(duration))return note;
+   return [start/ppq,duration/ppq,...note.slice(2)];
+  }),
+  cc:Array.isArray(track.cc)?track.cc.map(event=>{
+   if(!Array.isArray(event)||event.length<3)return event;
+   const start=Number(event[0]);
+   return Number.isFinite(start)?[start/ppq,...event.slice(1)]:event;
+  }):track.cc
+ }))};
+ delete score.ppq;
+ return score;
+}
 
 export function pureMidiPrompt(task,additionalInstructions=''){
  const clean=String(task||'').trim(),extra=String(additionalInstructions||'').trim();
@@ -49,7 +73,7 @@ export async function runPureMidiComposition({engine,task,additionalInstructions
   if(!call.response?.trim())throw new Error('Leere KI-Antwort.');
   call.usage=extractUsage(provider,data);call.responseMetadata=diagnosticResponse(provider,data,res);call.status='completed';
   const parsed=normalizeScoreJson(call.response);call.normalized=parsed.text;if(parsed.repaired)call.recovery=parsed.explanation;
-  const score=engine.findScore(engine.extractJson(parsed.text)),midi=Array.from(engine.buildMidi(score));
+  const rawScore=engine.extractJson(parsed.text),score=engine.findScore(tickScoreToBeatScore(rawScore)),midi=Array.from(engine.buildMidi(score));
   onProgress('Pure-MIDI-Komposition fertig.');return partial('','completed',score,midi);
  }catch(e){call.status='failed';call.error=e.message;e.partialRecord=partial(e.message);throw e;}
  finally{clearTimeout(timer);}
