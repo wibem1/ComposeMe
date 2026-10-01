@@ -1,4 +1,4 @@
-# ComposeMe 0.8.47
+# ComposeMe 0.8.48
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -132,3 +132,7 @@ Im Pure→MIDI/JSON-Modus enthält „Zusätzliche Angaben an die KI“ sichtbar
 
 ### 0.8.47 – Robuster Player und metrische Darstellungsquantisierung
 Wenn das externe FluidR3-SoundFont nicht innerhalb von 8 Sekunden lädt oder nicht verfügbar ist, wechselt der MIDI-Player automatisch auf einen lokalen Web-Audio-Ersatzklang, statt mit einem Wiedergabefehler abzubrechen. Für die Noten-App werden Start und Ende der Anzeige-MIDI nun auf ein Achtelraster gesetzt. Das reduziert schwer lesbare, beat-übergreifende Werte wie zwei aufeinanderfolgende punktierte Achtel. Original-JSON und Original-MIDI bleiben unverändert.
+
+
+### 0.8.48 – Quantisierte Pure-MIDI-Ausgabe statt grober Nachreparatur
+Der sichtbare technische Vertrag im Pure→MIDI/JSON-Modus fordert normale binäre Rhythmen nun auf einem 1/16-Raster (0,25 Beat). 1/32-Werte, Triolen und kurze Verzierungen dürfen bewusst feiner sein. Beliebige Zwischenwerte wie 1,4 oder 1,8 Beat sollen vermieden werden; metrisch unnötig schwer lesbare Folgen wie mehrere punktierte Achtel über Zählzeitgrenzen ebenfalls. Die aktuelle sichtbare Pure-MIDI-Vorlage wird einmalig auf diesen neuen Vertrag aktualisiert. Alte Verlaufseinträge bleiben unverändert. Die Anzeigequantisierung ist wieder fein auf 1/16 gestellt; Original-JSON und Original-MIDI bleiben unangetastet.
