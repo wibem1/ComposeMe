@@ -48,3 +48,11 @@ test('additional instructions remain editable in every mode',()=>{
  assert.match(ui,/additional\.readOnly=false/);
  assert.doesNotMatch(html,/<textarea id="additional"[^>]*(disabled|readonly)/i);
 });
+
+test('Pure MIDI comparison mode is exposed',()=>{
+ assert.match(html,/value="pure-midi"/);
+ const src=fs.readFileSync(new URL('../src/pure-midi-compose.js',import.meta.url),'utf8');
+ assert.match(src,/Ein einziger KI-Aufruf/);
+ assert.match(src,/CLASSIC_TECHNICAL_CONTRACT/);
+ assert.doesNotMatch(src,/Klangvorstellung|vollständigen musikalischen Entwurf/);
+});
