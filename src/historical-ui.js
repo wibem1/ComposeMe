@@ -1,5 +1,5 @@
 import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.36';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.36';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.47';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -214,7 +214,7 @@ export function renderHistoricalScore({record,paper,audio}){
  try{
   player=createMidiPlayer(record,{onState:s=>{
    playing=Boolean(s.playing);
-   state.textContent=s.loading?'SoundFont wird geladen …':playing?'Wiedergabe':'SoundFont bereit';
+   state.textContent=s.loading?'SoundFont wird geladen …':playing?(s.engine==='oscillator'?'Wiedergabe · lokaler Ersatzklang':'Wiedergabe'):(s.engine==='oscillator'?'Lokaler Ersatzklang bereit':'SoundFont bereit');
    play.textContent=playing?'❚❚':'▶';play.title=playing?'Pause':'Abspielen';play.setAttribute('aria-label',play.title);
    play.disabled=Boolean(s.loading);
    range.value=s.duration?String(Math.round(1000*s.position/s.duration)):'0';
