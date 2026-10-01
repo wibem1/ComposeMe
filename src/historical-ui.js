@@ -1,5 +1,5 @@
-import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.31';
-import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.31';
+import {originalHistoricalPrompts,runHistoricalComposition,resumeHistoricalComposition} from './historical-compose.js?v=0.8.32';
+import {createMidiPlayer,downloadOriginalMidi} from './historical-player.js?v=0.8.32';
 
 const $=id=>document.getElementById(id);
 const baseEngine=()=>window.CompositionEngine;
@@ -108,7 +108,7 @@ export function initHistoricalControls(){
  function refresh(){
   section.hidden=select.value!=='historical';
   model.disabled=false;provider.disabled=false;
-  additional.disabled=!section.hidden||select.value==='classic';
+  additional.disabled=!section.hidden;
   const classicInfo=$('classic-info');if(classicInfo)classicInfo.hidden=select.value!=='classic';
   if(!section.hidden)initial();
  }

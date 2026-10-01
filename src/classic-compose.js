@@ -11,13 +11,13 @@ function scoreBarCount(score){
  let end=0;for(const tr of score?.tracks||[])for(const n of tr.notes||[])end=Math.max(end,Number(n[0])+Number(n[1]));
  return Math.max(1,Math.ceil(end/beats));
 }
-function snapshot({task,provider,model,calls,draft='',score=null,midi=null,idea='',error='',status='partial'}){
+function snapshot({task,additionalInstructions='',provider,model,calls,draft='',score=null,midi=null,idea='',error='',status='partial'}){
  const usage=calls.filter(c=>c.status==='completed').reduce((u,c)=>({
   input:u.input+(c.usage?.input||0),output:u.output+(c.usage?.output||0),
   total:u.total+(c.usage?.total||0),cached:u.cached+(c.usage?.cached||0)
  }),{input:0,output:0,total:0,cached:0});
  return {mode:'historical',workflow:'classic-0.4.24',historicalVersion:CLASSIC_VERSION,
-  userInput:task,appAdditions:'',provider,model,actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
+  userInput:task,appAdditions:additionalInstructions,provider,model,actualRequest:calls.map(c=>c.prompt).join('\n\n---\n\n'),
   aiResponse:calls.find(c=>c.stage==='midi_translation')?.response||'',
   historicalCalls:calls.map(c=>({...c})),concept:draft,musicalDraft:draft,compositionIdea:idea,
   historicalScore:score,historicalMidi:midi,historicalScoreJson:calls.find(c=>c.stage==='midi_translation')?.normalized||'',
@@ -27,7 +27,7 @@ function snapshot({task,provider,model,calls,draft='',score=null,midi=null,idea=
 }
 export function formatClassicProtocol(record){
  const labels={musical_draft:'1. MUSIKALISCHER ENTWURF',midi_translation:'2. TECHNISCHE ÜBERTRAGUNG',composition_idea_afterwards:'3. NACHTRÄGLICHE BESCHREIBUNG'};
- const lines=['VERFAHREN: Originalanweisungen aus MiniComposer 0.4.24.','NUTZERAUFTRAG: '+record.userInput,
+ const lines=['VERFAHREN: Originalanweisungen aus MiniComposer 0.4.24.','NUTZERAUFTRAG: '+record.userInput,'ZUSÄTZLICHE ANGABEN: '+(record.appAdditions||'(keine)'),
   'PROVIDER / MODELL: '+record.provider+' / '+record.model];
  for(const c of record.historicalCalls||[]){
   lines.push('','=== '+(labels[c.stage]||c.stage)+' ===','VOLLSTÄNDIGE ANFRAGE:',c.prompt,
@@ -40,15 +40,15 @@ export function formatClassicProtocol(record){
  return lines.join('\n');
 }
 export async function runClassicComposition({
- engine,task,provider='openai',model='gpt-5.6-sol',apiKey,
+ engine,task,additionalInstructions='',provider='openai',model='gpt-5.6-sol',apiKey,
  onStage1=()=>{},onStage2=()=>{},onProgress=()=>{},fetchImpl=fetch
 }){
- const clean=String(task||'').trim();
+ const clean=String(task||'').trim(),extra=String(additionalInstructions||'').trim();
  if(!clean||!apiKey)throw new Error('Auftrag und API-Key fehlen.');
  if(!engine?.makeRequest||!engine?.actualRequest||!engine?.extractText||!engine?.extractJson||!engine?.findScore||!engine?.buildMidi)
   throw new Error('Historische MIDI-Funktionen fehlen.');
  const calls=[];let draft='',score=null,midi=null,idea='';
- const partial=(error='',status='partial')=>snapshot({task:clean,provider,model,calls,draft,score,midi,idea,error,status});
+ const partial=(error='',status='partial')=>snapshot({task:clean,additionalInstructions:extra,provider,model,calls,draft,score,midi,idea,error,status});
  const call=async(stage,prompt)=>{
   const c={stage,prompt,response:'',usage:null,status:'started'};calls.push(c);
   const tmpl=engine.makeRequest(provider,model,prompt,stage),req=engine.actualRequest(tmpl,apiKey);
@@ -67,7 +67,7 @@ export async function runClassicComposition({
   finally{clearTimeout(timer);}
  };
  try{
-  draft=await call('musical_draft',classicDraftPrompt(clean));onStage1(partial());
+  draft=await call('musical_draft',classicDraftPrompt(clean)+(extra?'\n\nZUSÄTZLICHE ANGABEN AN DIE KI:\n'+extra:''));onStage1(partial());
   const raw=await call('midi_translation',classicTranslationPrompt(clean,draft));
   const parsed=normalizeScoreJson(raw),translation=calls.at(-1);
   translation.normalized=parsed.text;if(parsed.repaired)translation.recovery=parsed.explanation;

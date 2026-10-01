@@ -29,3 +29,16 @@ test('a failed optional description cannot discard completed composition',async(
  }});
  assert.equal(r.runStatus,'completed_without_description');assert.deepEqual(r.historicalMidi,[77,84,104,100]);
 });
+
+test('classic sends optional additional instructions only in creative stage and records them',async()=>{
+ const requests=[],task='Komponiere einen Walzer.',extra='Entwickle die Stimmen aus der Klangvorstellung.',draft='Titel: Walzer';
+ const score=JSON.stringify({title:'W',bpm:126,timeSignature:[3,4],tracks:[]});
+ const r=await runClassicComposition({engine,task,additionalInstructions:extra,apiKey:'test',fetchImpl:async(_u,o)=>{
+  requests.push(JSON.parse(o.body).input);
+  return{ok:true,json:async()=>({output_text:[draft,score,'Idee'][requests.length-1]})};
+ }});
+ assert.equal(requests[0],classicDraftPrompt(task)+'\n\nZUSÄTZLICHE ANGABEN AN DIE KI:\n'+extra);
+ assert.equal(requests[1],classicTranslationPrompt(task,draft));
+ assert.equal(requests[2],classicIdeaPrompt(task,draft,score));
+ assert.equal(r.userInput,task);assert.equal(r.appAdditions,extra);
+});
