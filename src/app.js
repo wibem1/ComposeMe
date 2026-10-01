@@ -173,7 +173,7 @@ keyBackupFile.addEventListener('change',async()=>{const file=keyBackupFile.files
 diagnosticSave.addEventListener('click',()=>{try{
  // Diagnosis is read-only; it must not mutate stored credentials.
  const notation=recognizeNotation(result.value??'');
- const diagnostic=createDiagnostic({appVersion:'0.8.41',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
+ const diagnostic=createDiagnostic({appVersion:'0.8.42',provider:provider.value,model:selectedModel(),task:$('task').value,additional:$('additional').value,response:result.value,currentId,history:experiments.list(),notation});
  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
  downloadJson(diagnostic,'ComposeMe-Diagnose-'+stamp+'.json');
  status.textContent='Diagnosedatei erstellt. Die API-Keys wurden nicht verändert.';
