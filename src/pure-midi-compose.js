@@ -6,8 +6,7 @@ import {extractUsage,estimateCost} from './cost-control.js';
 export function pureMidiPrompt(task,additionalInstructions=''){
  const clean=String(task||'').trim(),extra=String(additionalInstructions||'').trim();
  if(!clean)throw new Error('Kompositionsauftrag fehlt.');
- const musicalRequest=extra?extra+'\n\nKOMPOSITIONSAUFTRAG:\n'+clean:clean;
- return musicalRequest+'\n\n'+PURE_MIDI_TECHNICAL_CONTRACT;
+ return extra?extra+'\n\nKOMPOSITIONSAUFTRAG:\n'+clean:clean;
 }
 
 function scoreBarCount(score){
