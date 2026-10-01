@@ -1,4 +1,4 @@
-# ComposeMe 0.8.44
+# ComposeMe 0.8.45
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -120,3 +120,7 @@ Beim MIDI-Handoff an ABC Tools wird der tatsächliche Kompositionstitel mitgegeb
 
 ### 0.8.44 – Migration alter Pure-MIDI-Zusätze
 Beim Laden älterer Pure-MIDI-Verlaufseinträge wird geprüft, ob deren damalige vollständige Anfrage den früher versteckt angehängten technischen JSON/MIDI-Vertrag enthielt. Falls ja, wird dieser Vertrag zusammen mit den damaligen persönlichen Zusatzangaben sichtbar im Feld „Zusätzliche Angaben an die KI“ rekonstruiert. Neue Anfragen erhalten weiterhin keine versteckten Zusätze.
+
+
+### 0.8.45 – Einmalige Migration der Pure-MIDI-Vorlage
+Beim ersten Start dieser Version wird eine alte gespeicherte Pure-MIDI-Vorlage aus der Übergangsphase einmalig geprüft. Fehlt dort der technische JSON/MIDI-Vertrag, wird er sichtbar an den vorhandenen Zusatz angefügt und gespeichert. Danach greift diese Migration nicht erneut; spätere Bearbeitungen oder auch das bewusste Entfernen bleiben erhalten und es gibt weiterhin keine versteckten Zusätze.
