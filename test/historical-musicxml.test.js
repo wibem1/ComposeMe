@@ -74,3 +74,15 @@ test('written enharmonic pitch spelling from the score is preserved',()=>{
  assert.match(xml,/<step>C<\/step><alter>-1<\/alter><octave>5<\/octave>/);
  assert.match(xml,/<step>B<\/step><alter>1<\/alter><octave>4<\/octave>/);
 });
+
+
+test('MusicXML display quantizes free MIDI durations but leaves them readable',()=>{
+ const score={title:'Freies Timing',bpm:92,timeSignature:[4,4],tracks:[
+  {name:'Klavier',program:0,channel:0,notes:[[0,1.8,50,65],[2,0.8,57,58],[4,3.5,62,62],[8,3.8,65,61]]}
+ ]};
+ const xml=historicalScoreToMusicXML(score);
+ assert.doesNotMatch(xml,/<duration>14</duration>/); // raw 1.8 * 8 would have produced 14 ticks
+ assert.match(xml,/<type>quarter</type><dot\/><tie type="start"\/>/);
+ assert.match(xml,/<type>16th</type><tie type="stop"\/>/);
+ assert.match(xml,/<type>eighth</type><dot\/>/);
+});
