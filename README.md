@@ -1,4 +1,4 @@
-# ComposeMe 0.8.41
+# ComposeMe 0.8.42
 
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
@@ -108,3 +108,7 @@ Editierte Inhalte im Feld „Zusätzliche Angaben an die KI“ werden pro Kompos
 
 ### 0.8.41 – Verlauf zeigt damalige Zusatzangaben
 Beim Laden eines Verlaufseintrags zeigt „Zusätzliche Angaben an die KI“ wieder exakt den damals verwendeten Zusatztext. Das bloße Laden überschreibt die dauerhaft gespeicherte aktuelle Vorlage nicht. Erst eine Bearbeitung oder ein neuer Kompositionslauf speichert den Feldinhalt als aktuelle Vorlage.
+
+
+### 0.8.42 – Klavierdarstellung
+Bei in mehrere Notationsstimmen aufgeteilten Klavierspuren wird die höhere Stimme als rechte Hand oben und die tiefere als linke Hand darunter ausgegeben. ABC Tools entfernt bei ComposeMe-Übergaben die wiederholten Kurzbezeichnungen der Instrumente in Folgesystemen.
