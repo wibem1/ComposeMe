@@ -23,10 +23,10 @@ test('overlapping piano lines are split into independent notation voices',()=>{
  ]};
  const voices=splitNotationVoices(track);
  assert.equal(voices.length,2);
- assert.equal(voices[0].name,'Klavier :: Stimme 1');
- assert.equal(voices[1].name,'Klavier :: Stimme 2');
- assert.deepEqual(voices[0].notes,[[0,2,38,62],[2,2,45,56]]);
- assert.deepEqual(voices[1].notes,[[0.5,1.5,57,54],[0.5,1.5,65,58],[2.5,1.5,60,52],[2.5,1.5,65,57]]);
+ assert.equal(voices[0].name,'Klavier :: rechte Hand');
+ assert.equal(voices[1].name,'Klavier :: linke Hand');
+ assert.deepEqual(voices[0].notes,[[0.5,1.5,57,54],[0.5,1.5,65,58],[2.5,1.5,60,52],[2.5,1.5,65,57]]);
+ assert.deepEqual(voices[1].notes,[[0,2,38,62],[2,2,45,56]]);
 });
 
 test('simultaneous chord tones remain in one notation voice',()=>{
