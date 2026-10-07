@@ -1,5 +1,13 @@
 # ComposeMe 0.8.52
 
+> **Historische Referenz – aktive Entwicklung abgeschlossen (07.10.2026).**
+>
+> Nachfolge für die alltägliche Komposition: [LilyPond Composition Lab v0.1.36](https://lilypond-composition-lab.wibem1.chatgpt.site). Übernommen wurden die optionale bearbeitbare Klangvorstellung, das Speichern/Fortsetzen des Zwischenstands und die Verlaufssicherung. Die konkrete Ausarbeitung erfolgt dort direkt in LilyPond mit dem vorhandenen Notensatz und Player.
+>
+> ComposeMe 0.8.52 bleibt mit seinen Quellen und speziellen historischen JSON-/MIDI-Verfahren erhalten. Keine weitere Funktionsentwicklung oder Reparatur ohne neuen ausdrücklichen Auftrag. Keine vollständige Funktionsgleichheit und kein musikalischer Qualitätsnachweis für den optionalen Ablauf behauptet. Details: [ARCHIVE.md](ARCHIVE.md).
+>
+> **Technischer GitHub-Status:** `archived=true` ist noch nicht gesetzt. Die verfügbare Verbindung kann diese Einstellung nicht ändern; Stilllegung und technischer Schreibschutz werden ausdrücklich unterschieden.
+
 GitHub Pages: https://wibem1.github.io/ComposeMe/
 
 ## Komponieren
